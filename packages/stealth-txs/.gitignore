@@ -1,0 +1,18 @@
+# General
+node_modules
+.DS_STORE
+
+# Coverage
+coverage.json
+coverage
+
+# Hardhat files
+cache
+artifacts
+typechained
+deployments/hardhat
+deployments/localhost
+gasReporterOutput.json
+
+# Config files
+.env

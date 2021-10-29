@@ -1,0 +1,167 @@
+{
+  "accounts": {
+    "mainnet": {
+      "publicKey": "0xfeb4acf3df3cdea7399794d0869ef76a6efaff52",
+      "keep3rGovernance": "0x0D5Dc686d0a2ABBfDaFDFb4D0533E886517d4E83",
+      "keeper": "0x1ea056C13F8ccC981E51c5f1CDF87476666D0A74",
+      "deployer": "0x1ea056C13F8ccC981E51c5f1CDF87476666D0A74",
+      "whale": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8"
+    }
+  },
+  "contracts": {
+    "mainnet": {
+      "escrow": {
+        "escrow1": "0x9fA395901A92490D1496c94a8578e1f4eF9fB1d1",
+        "escrow2": "0x8f2245D1051f3777E314ba6FdEe1152774CE868C",
+        "sugarMommy": "0xef9512E5F33e2d1c66f77Ad61b3434A2fc97d321",
+        "proxyJob": "0x6D5a780fe782E90B49a85926cc77ddAB0D024645",
+        "proxyJobV2": "",
+        "keep3rV1Helper": "0x24e1565ED1D6530cd977A6A8B3e327b9F53A9fd2",
+        "keep3r": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44",
+        "whale": "0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd",
+        "lpToken": "0xaf988aff99d3d0cb870812c325c588d8d8cb7de8",
+        "governance": "0xfeb4acf3df3cdea7399794d0869ef76a6efaff52",
+        "jobs": {
+          "escrowJob": "0x83A34a6469dbFd7654aE6D842d20977E89CcD73D",
+          "crvStrategyKeep3rJob": "0xBa0b43AB3966Db791b4Db1811C3096568aD8a99c",
+          "vaultKeep3rJob": "0xB06b3394B34e2f80CEdad89CfC62bfa43CDf7D83",
+          "genericV2Keep3rJob": "0xf796c1a96c1E803cb748F2E7124B427536277480"
+        }
+      },
+      "mechanics": {
+        "registry": "0xE8d5A85758FE98F7Dce251CAd552691D49b499Bb"
+      },
+      "jobs": {
+        "tendV2Keep3rJob": "0x2ef7801c6A9d451EF20d0F513c738CC012C57bC3",
+        "cooldownTendV2Keep3rJob": "",
+        "harvestV2Keep3rJob": "0x3Da70a551C0F785580A291b7d8c7D0F3Dc4c6688",
+        "harvestV2QueueKeep3rJob": "0xE5a7db399dEC2c5ddEfeBc52ea70f127284D118d",
+        "crvStrategyKeep3rJob": "0x02027bDA2425204f152B8aa35Fb78687D65E1AF5",
+        "crvStrategyKeep3rJob2": "0xeE15010105b9BB564CFDfdc5cee676485092AEDd",
+        "vaultKeep3rJob": "0x4a479E4457841D2D2Ff86e5A5389300963880C10"
+      },
+      "oldJobs": {
+        "tendV2Keep3rJob": "0x7b28163e7a3db17eF2dba02BCf7250A8Dc505057",
+        "tendV2Keep3rJob.1.unused": "0xD6e720733EDb27FD2110D06Bba3DF258187D4148",
+        "harvestV2Keep3rJob": "0x620bd1E1D1d845c8904aC03F6cd6b87706B7596b",
+        "harvestV2Keep3rJob.0": "0x6947aA05A900153Ef4CC28D893484A4e7ad7EC77",
+        "harvestV2Keep3rJob.1.unused": "0xCb71fe9529CecB5B440819eFC85824D133b8ed54"
+      },
+      "proxyJobs": {
+        "crvStrategyKeep3rJob": "0xb990961d30A5fa10F7929851a76d8017Cf4a8eBb",
+        "v2Keeper": "0x736D7e3c5a6CB2CE3B764300140ABF476F6CFCCF",
+        "tendV2Keep3rJob": "",
+        "harvestV2Keep3rJob": "0x82084ed9fd5a582aa2994c0f07f535735e85f318"
+      },
+      "genericV2Keep3rJob": {
+        "keep3rHelperV2": "0x2720535578096f1dE6C8c9B5255F1Bda40e8067A",
+        "slidingOracleV2": "0xe20B3f175F9f4e1EDDf333f96b72Bba138c9e83a",
+        "keep3rHelperV1": "0x24e1565ED1D6530cd977A6A8B3e327b9F53A9fd2",
+        "slidingOracleV1": "0x73353801921417F465377c8d898c6f4C0270282C"
+      },
+      "oracle": {
+        "oracleBondedKeeper": "0xA8646cE5d983E996EbA22eb39e5956653ec63762",
+        "partialKeep3rV1OracleJob": "0x5efD850044Ba76b8ffE49437CB301be3568bA696",
+        "yearnKeep3rV2OracleFactory": "0xcEA967B693e89B1FFb08718c3106847616e95607",
+        "keep3rV2OracleFactoryWrapper": "0xa07662C041C4F7B31Fd61C13C44212fF35b5296D",
+        "yUnsafeOracleV1": "0xD1f5aEe3f025d2f4e42dd74DEC17d5FaA4707CbC"
+      },
+      "stealth": {
+        "stealthVault": ""
+      },
+      "v1registry": {
+        "address": "0x3eE41C098f9666ed2eA246f4D2558010e59d63A0"
+      },
+      "keep3r": {
+        "address": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+      },
+      "keep3rV1Oracle": {
+        "address": "0x73353801921417f465377c8d898c6f4c0270282c"
+      },
+      "ycrv": {
+        "address": "0x07DB4B9b3951094B9E278D336aDf46a036295DE7"
+      },
+      "busd": {
+        "address": "0x112570655b32A8c747845E0215ad139661e66E7F"
+      },
+      "sbtc": {
+        "address": "0x6D6c1AD13A5000148Aa087E7CbFb53D402c81341"
+      },
+      "pool3": {
+        "address": "0xC59601F0CC49baa266891b7fc63d2D5FE097A79D"
+      },
+      "comp": {
+        "address": "0x530da5aeF3c8f9CCbc75C97C182D6ee2284B643F"
+      },
+      "gusd-deprecated": {
+        "address": "0xc8327D8E1094a94466e05a2CC1f10fA70a1dF119"
+      },
+      "gusd3crv": {
+        "address": "0xD42eC70A590C6bc11e9995314fdbA45B4f74FABb"
+      },
+      "musd": {
+        "address": "0xBA0c07BBE9C22a1ee33FE988Ea3763f21D0909a0"
+      },
+      "usdn": {
+        "address": "0x406813fF2143d178d1Ebccd2357C20A424208912"
+      },
+      "susd": {
+        "address": "0xd7F641697ca4e0e19F6C9cF84989ABc293D24f84"
+      },
+      "crvStrategyKeep3r": {
+        "address": "0xd0aC37E3524F295D141d3839d5ed5F26A40b589D"
+      },
+      "dforce-usdc": {
+        "address": "0xA30d1D98C502378ad61Fe71BcDc3a808CF60b897"
+      },
+      "dforce-usdt": {
+        "address": "0x787C771035bDE631391ced5C083db424A4A64bD8"
+      },
+      "dforceStrategyKeep3r": {
+        "address": "0x30084324619D9645019C3f2cb3a94611601a3078"
+      },
+      "mkr-dai": {
+        "address": "0x932fc4fd0eEe66F22f1E23fBA74D7058391c0b15"
+      },
+      "ycrvVault": {
+        "address": "0x5dbcF33D8c2E976c6b560249878e6F1491Bca25c"
+      },
+      "busdVault": {
+        "address": "0x2994529C0652D127b7842094103715ec5299bBed"
+      },
+      "sbtcVault": {
+        "address": "0x7Ff566E1d69DEfF32a7b244aE7276b9f90e9D0f6"
+      },
+      "pool3Vault": {
+        "address": "0x9cA85572E6A3EbF24dEDd195623F188735A5179f"
+      },
+      "compVault": {
+        "address": "0x629c759D1E83eFbF63d84eb3868B564d9521C129"
+      },
+      "usdtVault": {
+        "address": "0x2f08119C6f07c006695E079AAFc638b8789FAf18"
+      },
+      "tusdVault": {
+        "address": "0x37d19d1c4E1fa9DC47bD1eA12f742a0887eDa74a"
+      },
+      "musdVault": {
+        "address": "0x0FCDAeDFb8A7DfDa2e9838564c5A1665d856AFDF"
+      },
+      "gusdVault": {
+        "address": "0xcC7E70A958917cCe67B4B87a8C30E6297451aE98"
+      },
+      "yvUSDC": {
+        "address": "0x597aD1e0c13Bfe8025993D9e79C69E1c0233522e"
+      },
+      "musdVault2": {
+        "address": "0xE0db48B4F71752C4bEf16De1DBD042B82976b8C7"
+      },
+      "eursVault": {
+        "address": "0x98B058b2CBacF5E99bC7012DF757ea7CFEbd35BC"
+      },
+      "vaultKeep3r": {
+        "address": "0x054A87DdFdE3ccb5DDB03739375329BcC1b03203"
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "name": "@yearn/strategies-keep3r",
+  "version": "0.0.0",
+  "description": "Strategies Keep3r",
+  "keywords": [
+    "ethereum",
+    "yearn",
+    "keep3r",
+    "smart",
+    "contracts",
+    "solidity",
+    "hardhat"
+  ],
+  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/strategies-keep3r#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yearn/hardhat-monorepo",
+    "directory": "packages/strategies-keep3r"
+  },
+  "files": [
+    "contracts",
+    "!contracts/mock",
+    "!artifacts/contracts/mock/**/*.json",
+    "!artifacts/contracts/**/**/*.dbg.json",
+    "typechained",
+    "deployments",
+    "!deployments/localhost",
+    "!.env"
+  ],
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "coverage": "npx hardhat coverage",
+    "fork": "FORK=true npx hardhat node",
+    "fork:script": "FORK=true npx hardhat run",
+    "fork:test": "FORK=true npx hardhat test",
+    "lint:check": "solhint 'contracts/**/*.sol' && prettier --check './**'",
+    "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol'",
+    "sizer": "TEST=true hardhat compile && TEST=true npx hardhat size-contracts",
+    "test": "TEST=true npx hardhat compile && TEST=true npx hardhat test",
+    "test:all": "yarn test ./test/e2e/*.spec.ts test/integration/*.spec.ts test/unit/*.spec.ts",
+    "test:e2e": "yarn test ./test/e2e/*.spec.ts",
+    "test:gas": "yarn test ./test/e2e/*.spec.ts test/unit/*.spec.ts",
+    "test:integration": "yarn test ./test/integration/*.spec.ts",
+    "test:unit": "yarn test test/unit/*.spec.ts"
+  },
+  "dependencies": {
+    "@gnosis.pm/safe-core-sdk": "0.3.1",
+    "@gnosis.pm/safe-service-client": "0.1.1",
+    "@openzeppelin/contracts": "4.3.2",
+    "@yearn/contract-utils": "file:../contract-utils",
+    "deasync": "0.1.23",
+    "inquirer": "8.2.0",
+    "prompt-confirm": "2.0.4",
+    "qs": "6.10.1",
+    "queue-microtask": "1.2.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "authors": [
+    {
+      "name": "Luciano Bertenasco",
+      "email": "mail",
+      "url": "https://github.com/lbertenasco"
+    },
+    {
+      "name": "b0dhidharma",
+      "email": "b0dhidharma@protonmail.com",
+      "url": "https://github.com/b0dhidharma"
+    }
+  ]
+}

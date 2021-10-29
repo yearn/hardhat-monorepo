@@ -1,0 +1,3 @@
+- Be able to reference internal packages without typescript error
+- Husky pre commit should only lint fix changed packages
+- Fix cache issues on CI

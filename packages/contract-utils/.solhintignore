@@ -1,0 +1,4 @@
+node_modules
+contracts/mock/*
+contracts-no-compile/*
+*.skip

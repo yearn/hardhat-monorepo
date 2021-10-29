@@ -1,0 +1,26 @@
+# General
+.prettierignore
+.solhintignore
+.husky
+.gitignore
+.gitattributes
+.env.example
+.env
+.DS_STORE
+CHANGELOG.md
+workspace.code-workspace
+
+# Hardhat
+typechained
+artifacts
+cache
+deployments
+gasReporterOutput.json
+
+# JS
+node_modules
+yarn.lock
+
+# Solidity
+contracts/mock
+*.skip
