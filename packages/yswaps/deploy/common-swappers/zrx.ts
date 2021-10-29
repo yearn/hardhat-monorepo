@@ -7,6 +7,8 @@ export const ZRX: { [chainId: string]: string } = {
   '1': '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
   // Polygon
   '137': '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
+  // Fantom
+  '250': '0xdef189deaef76e379df891899eb5a00a94cbc250',
 };
 
 const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -31,5 +33,5 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
   }
 };
 deployFunction.dependencies = ['TradeFactory'];
-deployFunction.tags = ['Mainnet', 'Polygon', 'ZRX'];
+deployFunction.tags = ['Mainnet', 'Fantom', 'Polygon', 'ZRX'];
 export default deployFunction;

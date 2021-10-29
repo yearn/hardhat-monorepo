@@ -13,6 +13,7 @@ axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 const API_URL: { [chainId: number]: string } = {
   1: 'api.0x.org',
   137: 'polygon.api.0x.org',
+  250: 'fantom.api.0x.org',
 };
 
 export type QuoteRequest = {
