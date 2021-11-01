@@ -90,6 +90,79 @@ describe('ZRX', function () {
     });
   });
 
+  context('on fantom', () => {
+    const CHAIN_ID = 250;
+
+    const WFTM_ADDRESS = '0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83';
+    const DAI_ADDRESS = '0x8d11ec38a3eb5e956b052f67da8bdc9bef8abf3e';
+
+    const WFTM_WHALE_ADDRESS = '0x39b3bd37208cbade74d0fcbdbb12d606295b430a';
+
+    let WFTM: IERC20;
+    let DAI: IERC20;
+
+    const AMOUNT_IN = utils.parseEther('10000');
+
+    let zrxAPIResponse: QuoteResponse;
+
+    before(async () => {
+      strategy = await wallet.generateRandom();
+
+      await evm.reset({
+        jsonRpcUrl: getNodeUrl('fantom'),
+      });
+
+      // We get information for trade first, 1inch API starts returning non-valid data
+
+      zrxAPIResponse = await zrx.quote({
+        chainId: CHAIN_ID,
+        sellToken: WFTM_ADDRESS,
+        buyToken: DAI_ADDRESS,
+        sellAmount: AMOUNT_IN,
+        slippagePercentage: 0.05,
+      });
+
+      ({
+        fromToken: WFTM,
+        toToken: DAI,
+        yMech,
+        tradeFactory,
+        swapper,
+      } = await setup.async({
+        chainId: CHAIN_ID,
+        fixture: ['Common', 'ZRX'],
+        swapper: 'ZRX',
+        fromTokenAddress: WFTM_ADDRESS,
+        toTokenAddress: DAI_ADDRESS,
+        fromTokenWhaleAddress: WFTM_WHALE_ADDRESS,
+        amountIn: AMOUNT_IN,
+        strategy,
+      }));
+
+      snapshotId = await evm.snapshot.take();
+    });
+
+    beforeEach(async () => {
+      await evm.snapshot.revert(snapshotId);
+    });
+
+    describe('swap', () => {
+      beforeEach(async () => {
+        await tradeFactory
+          .connect(yMech)
+          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, zrxAPIResponse.minAmountOut!, zrxAPIResponse.data);
+      });
+
+      then('WFTM gets taken from strategy', async () => {
+        expect(await WFTM.balanceOf(strategy.address)).to.equal(0);
+      });
+
+      then('DAI gets airdropped to strategy', async () => {
+        expect(await DAI.balanceOf(strategy.address)).to.be.gt(0);
+      });
+    });
+  });
+
   context('on polygon', () => {
     const CHAIN_ID = 137;
 
