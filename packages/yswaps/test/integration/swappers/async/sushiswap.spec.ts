@@ -5,9 +5,10 @@ import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
-import * as setup from '../setup';
 import uniswapV2, { SwapResponse } from '@scripts/libraries/uniswap-v2';
 import { WETH, SUSHISWAP_ROUTER, SUSHISWAP_FACTORY } from '@deploy/common-swappers/sushiswap';
+import forkBlockNumber from '@integration/fork-block-numbers';
+import * as setup from '../setup';
 
 const AMOUNT_IN = utils.parseEther('10000');
 
@@ -25,8 +26,7 @@ describe('Sushiswap', function () {
   let sushiswapResponse: SwapResponse;
 
   when('on mainnet', () => {
-    // We set a fixed block number so tests can cache blockchain state
-    const FORK_BLOCK_NUMBER = 13533134;
+    const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
 
     const CHAIN_ID = 1;
 
@@ -94,9 +94,6 @@ describe('Sushiswap', function () {
   });
 
   when('on polygon', () => {
-    // We set a fixed block number so tests can cache blockchain state
-    const FORK_BLOCK_NUMBER = 17080654;
-
     const CHAIN_ID = 137;
 
     const CRV_ADDRESS = '0x172370d5cd63279efa6d502dab29171933a610af';
@@ -109,7 +106,7 @@ describe('Sushiswap', function () {
 
       await evm.reset({
         jsonRpcUrl: getNodeUrl('polygon'),
-        blockNumber: FORK_BLOCK_NUMBER,
+        blockNumber: forkBlockNumber['polygon-swappers'],
       });
 
       ({

@@ -5,9 +5,10 @@ import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
-import * as setup from '../setup';
+import forkBlockNumber from '@integration/fork-block-numbers';
 import uniswapV2, { SwapResponse } from '@scripts/libraries/uniswap-v2';
 import { WETH, UNISWAP_V2_ROUTER, UNISWAP_V2_FACTORY } from '@deploy/mainnet-swappers/uniswap_v2';
+import * as setup from '../setup';
 
 const AMOUNT_IN = utils.parseEther('10000');
 
@@ -25,8 +26,7 @@ describe('Uniswap', function () {
   let uniswapResponse: SwapResponse;
 
   when('on mainnet', () => {
-    // We set a fixed block number so tests can cache blockchain state
-    const FORK_BLOCK_NUMBER = 13533134;
+    const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
 
     const CHAIN_ID = 1;
 

@@ -4,11 +4,9 @@ import { ethers } from 'hardhat';
 import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
-import * as setup from '../setup';
 import { IERC20 } from '@typechained';
-
-// We set a fixed block number so tests can cache blockchain state
-const FORK_BLOCK_NUMBER = 16548550;
+import forkBlockNumber from '@integration/fork-block-numbers';
+import * as setup from '../setup';
 
 const MAX_SLIPPAGE = 10_000; // 1%
 const AMOUNT_IN = utils.parseEther('10000');
@@ -34,7 +32,7 @@ describe('Spiritswap', function () {
 
       await evm.reset({
         jsonRpcUrl: getNodeUrl('fantom'),
-        blockNumber: FORK_BLOCK_NUMBER,
+        blockNumber: forkBlockNumber['fantom-swappers'],
       });
 
       ({
