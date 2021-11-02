@@ -26,7 +26,6 @@ describe('Sushiswap', function () {
   let sushiswapResponse: SwapResponse;
 
   when('on mainnet', () => {
-    // We set a fixed block number so tests can cache blockchain state
     const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
 
     const CHAIN_ID = 1;

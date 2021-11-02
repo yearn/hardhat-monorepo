@@ -21,7 +21,6 @@ describe('Sushiswap', function () {
   let snapshotId: string;
 
   when('on mainnet', () => {
-    // We set a fixed block number so tests can cache blockchain state
     const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
 
     const CHAIN_ID = 1;
@@ -79,7 +78,6 @@ describe('Sushiswap', function () {
   });
 
   when('on polygon', () => {
-    // We set a fixed block number so tests can cache blockchain state
     const FORK_BLOCK_NUMBER = forkBlockNumber['polygon-swappers'];
 
     const CHAIN_ID = 137;
