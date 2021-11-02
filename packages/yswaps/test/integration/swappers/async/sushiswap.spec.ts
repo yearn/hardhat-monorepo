@@ -1,23 +1,28 @@
 import { expect } from 'chai';
 import { utils, Wallet } from 'ethers';
-import { ethers } from 'hardhat';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
-import { IERC20, TradeFactory } from '@typechained';
+import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import * as setup from '../setup';
+import uniswapV2, { SwapResponse } from '@scripts/libraries/uniswap-v2';
+import { WETH, SUSHISWAP_ROUTER, SUSHISWAP_FACTORY } from '@deploy/common-swappers/sushiswap';
 
-const MAX_SLIPPAGE = 10_000; // 1%
 const AMOUNT_IN = utils.parseEther('10000');
 
 describe('Sushiswap', function () {
+  let yMech: JsonRpcSigner;
   let strategy: Wallet;
   let tradeFactory: TradeFactory;
+  let swapper: ISwapper;
 
   let CRV: IERC20;
   let DAI: IERC20;
 
   let snapshotId: string;
+
+  let sushiswapResponse: SwapResponse;
 
   when('on mainnet', () => {
     // We set a fixed block number so tests can cache blockchain state
@@ -42,16 +47,28 @@ describe('Sushiswap', function () {
         fromToken: CRV,
         toToken: DAI,
         tradeFactory,
-      } = await setup.sync({
+        yMech,
+        swapper,
+      } = await setup.async({
         chainId: CHAIN_ID,
         fixture: ['Common', 'Mainnet', 'Sushiswap'],
-        swapper: 'SyncSushiswap',
+        swapper: 'AsyncSushiswap',
         fromTokenAddress: CRV_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: CRV_WHALE_ADDRESS,
         amountIn: AMOUNT_IN,
         strategy,
       }));
+
+      sushiswapResponse = await uniswapV2.getBestPathEncoded({
+        tokenIn: CRV_ADDRESS,
+        tokenOut: DAI_ADDRESS,
+        amountIn: AMOUNT_IN,
+        uniswapV2Router: SUSHISWAP_ROUTER[CHAIN_ID],
+        uniswapV2Factory: SUSHISWAP_FACTORY[CHAIN_ID],
+        hopTokensToTest: [WETH[CHAIN_ID]],
+        slippage: 3,
+      });
 
       snapshotId = await evm.snapshot.take();
     });
@@ -61,11 +78,10 @@ describe('Sushiswap', function () {
     });
 
     describe('swap', () => {
-      const data = ethers.utils.defaultAbiCoder.encode([], []);
       beforeEach(async () => {
         await tradeFactory
-          .connect(strategy)
-          ['execute(address,address,uint256,uint256,bytes)'](CRV_ADDRESS, DAI_ADDRESS, AMOUNT_IN, MAX_SLIPPAGE, data);
+          .connect(yMech)
+          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, sushiswapResponse.minAmountOut!, sushiswapResponse.data);
       });
 
       then('CRV gets taken from strategy', async () => {
@@ -100,16 +116,28 @@ describe('Sushiswap', function () {
         fromToken: CRV,
         toToken: DAI,
         tradeFactory,
-      } = await setup.sync({
+        yMech,
+        swapper,
+      } = await setup.async({
         chainId: CHAIN_ID,
-        fixture: ['Common', 'Polygon', 'SyncSushiswap'],
-        swapper: 'SyncSushiswap',
+        fixture: ['Common', 'Polygon', 'Sushiswap'],
+        swapper: 'AsyncSushiswap',
         fromTokenAddress: CRV_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: CRV_WHALE_ADDRESS,
         amountIn: AMOUNT_IN,
         strategy,
       }));
+
+      sushiswapResponse = await uniswapV2.getBestPathEncoded({
+        tokenIn: CRV_ADDRESS,
+        tokenOut: DAI_ADDRESS,
+        amountIn: AMOUNT_IN,
+        uniswapV2Router: SUSHISWAP_ROUTER[CHAIN_ID],
+        uniswapV2Factory: SUSHISWAP_FACTORY[CHAIN_ID],
+        hopTokensToTest: [WETH[CHAIN_ID]],
+        slippage: 3,
+      });
 
       snapshotId = await evm.snapshot.take();
     });
@@ -119,11 +147,10 @@ describe('Sushiswap', function () {
     });
 
     describe('swap', () => {
-      const data = ethers.utils.defaultAbiCoder.encode([], []);
       beforeEach(async () => {
         await tradeFactory
-          .connect(strategy)
-          ['execute(address,address,uint256,uint256,bytes)'](CRV_ADDRESS, DAI_ADDRESS, AMOUNT_IN, MAX_SLIPPAGE, data);
+          .connect(yMech)
+          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, sushiswapResponse.minAmountOut!, sushiswapResponse.data);
       });
 
       then('CRV gets taken from strategy', async () => {
