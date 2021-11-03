@@ -48,6 +48,7 @@
     "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts"
   },
   "dependencies": {
+    "@bancor/sdk": "^0.2.10",
     "@openzeppelin/contracts": "4.3.2",
     "@uniswap/v2-periphery": "1.1.0-beta.0",
     "@yearn/contract-utils": "file:../contract-utils",
