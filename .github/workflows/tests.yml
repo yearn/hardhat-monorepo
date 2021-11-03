@@ -27,7 +27,7 @@ jobs:
       - name: Cache node modules
         id: cache-node-modules
         uses: actions/cache@v2
-        if: contains(steps.changed-files.outputs.modified_files, matrix.package)
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
@@ -35,18 +35,18 @@ jobs:
       - name: Install node
         id: install-node
         uses: actions/setup-node@v1
-        if: steps.cache-node-modules.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           node-version: "12.x"
 
       - name: Install dependencies & compile contracts
         id: install-dependencies
-        if: steps.install-node.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna bootstrap ; lerna exec --ignore @yearn/commons -- yarn compile ; rm -rf node_modules ; lerna bootstrap
 
       - name: Run unit tests
         id: unit-test
-        if: steps.install-dependencies.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna exec --scope @yearn/${{ matrix.package }} -- yarn test:unit
 
   e2e:
@@ -69,7 +69,7 @@ jobs:
       - name: Cache node modules
         id: cache-node-modules
         uses: actions/cache@v2
-        if: contains(steps.changed-files.outputs.modified_files, matrix.package)
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
@@ -77,18 +77,18 @@ jobs:
       - name: Install node
         id: install-node
         uses: actions/setup-node@v1
-        if: steps.cache-node-modules.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           node-version: "12.x"
 
       - name: Install dependencies & compile contracts
         id: install-dependencies
-        if: steps.install-node.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna bootstrap ; lerna exec --ignore @yearn/commons -- yarn compile ; rm -rf node_modules ; lerna bootstrap
 
       - name: Run e2e tests
         id: e2e-test
-        if: steps.install-dependencies.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna exec --scope @yearn/${{ matrix.package }} -- yarn test:e2e
 
   integration:
@@ -111,7 +111,7 @@ jobs:
       - name: Cache node modules
         id: cache-node-modules
         uses: actions/cache@v2
-        if: contains(steps.changed-files.outputs.modified_files, matrix.package)
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
@@ -127,18 +127,18 @@ jobs:
       - name: Install node
         id: install-node
         uses: actions/setup-node@v1
-        if: steps.cache-node-modules.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         with:
           node-version: "12.x"
 
       - name: Install dependencies & compile contracts
         id: install-dependencies
-        if: steps.install-node.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna bootstrap ; lerna exec --ignore @yearn/commons -- yarn compile ; rm -rf node_modules ; lerna bootstrap
 
       - name: Run integration tests
         id: integration-test
-        if: steps.install-dependencies.outputs.triggered == 'true'
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, matrix.package)
         run: lerna exec --scope @yearn/${{ matrix.package }} -- yarn test:integration
         env:
           ETH_NODE_URI_MAINNET: https://eth-mainnet.alchemyapi.io/v2/${{ secrets.ALCHEMYKEY }}
