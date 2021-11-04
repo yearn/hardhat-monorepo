@@ -1,6 +1,7 @@
 import hardhatConfig from '../commons/hardhat.config';
 
 const config = hardhatConfig({
+  networks: ['mainnet', 'ropsten', 'polygon', 'fantom'],
   namedAccounts: {
     deployer: 0, // yMECH Alejo
     governor: {
