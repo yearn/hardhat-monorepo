@@ -1,6 +1,7 @@
 import hardhatConfig from '../commons/hardhat.config';
 
 const config = hardhatConfig({
+  networks: ['mainnet'],
   solidity: {
     compilers: [
       {

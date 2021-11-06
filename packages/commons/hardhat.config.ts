@@ -9,7 +9,7 @@ import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 import 'solidity-coverage';
 import { HardhatUserConfig, MultiSolcUserConfig, NetworksUserConfig, SolcUserConfig, SolidityUserConfig } from 'hardhat/types';
-import { DEFAULT_ACCOUNT, getNodeUrl } from './utils/network';
+import { getAccounts, getNodeUrl } from './utils/network';
 import 'tsconfig-paths/register';
 
 type NamedAccounts = {
@@ -19,44 +19,32 @@ type NamedAccounts = {
     | {[network: string]: null | number | string}
 }
 
-const networks: NetworksUserConfig = process.env.TEST
-  ? {}
-  : {
-      hardhat: {
-        forking: {
-          enabled: process.env.FORK ? true : false,
-          url: getNodeUrl('mainnet'),
-        },
-      },
-      localhost: {
-        url: getNodeUrl('localhost'),
-        live: false,
-        accounts: [(process.env.LOCAL_PRIVATE_KEY as string) || DEFAULT_ACCOUNT],
-        tags: ['local'],
-      },
-      mainnet: {
-        url: getNodeUrl('mainnet'),
-        accounts: [(process.env.MAINNET_PRIVATE_KEY as string) || DEFAULT_ACCOUNT],
-        tags: ['production'],
-      },
-      polygon: {
-        url: getNodeUrl('polygon'),
-        accounts: [(process.env.POLYGON_PRIVATE_KEY as string) || DEFAULT_ACCOUNT],
-        tags: ['production'],
-      },
-      ftm: {
-        url: getNodeUrl('ftm'),
-        accounts: [(process.env.FTM_PRIVATE_KEY as string) || DEFAULT_ACCOUNT],
-        tags: ['production'],
-      },
-    };
+const encrypted = !!process.env.ENCRYPTED_CREDENTIALS;
+
+const getNetworks = (networksName: string[]): NetworksUserConfig => {
+  if (!!process.env.TEST || process.argv[process.argv.length - 1] == 'compile') return {};
+  const networks: NetworksUserConfig = {
+    // hardhat: {
+    //   forking: {
+    //     enabled: process.env.FORK ? true : false,
+    //     url: getNodeUrl('fantom'),
+    //   },
+    // },
+  };
+  networksName.forEach((network: string) => {
+    networks[network] = {
+      url: getNodeUrl(network),
+      accounts: getAccounts({ typeOfAccount: 'privateKey', networkName: network, encrypted }),
+    }
+  });
+  return networks;
+};
 
 const defaultConfig: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   mocha: {
     timeout: process.env.MOCHA_TIMEOUT || 300000,
   },
-  networks,
   gasReporter: {
     currency: process.env.COINMARKETCAP_DEFAULT_CURRENCY || 'USD',
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
@@ -76,15 +64,20 @@ const defaultConfig: HardhatUserConfig = {
 };
 
 const getConfig = ({ 
+  networks,
+  namedAccounts,
   solidity, 
-  namedAccounts 
 }: { 
+  networks?: string[],
   solidity: SolcUserConfig | MultiSolcUserConfig,
   namedAccounts?: NamedAccounts
 }): HardhatUserConfig => {
   namedAccounts = namedAccounts ?? {};
+  networks = networks ?? [];
+  const networksConfigs = getNetworks(networks);
   const config = {
     ...defaultConfig,
+    ...networksConfigs,
     namedAccounts,
     solidity
   };
