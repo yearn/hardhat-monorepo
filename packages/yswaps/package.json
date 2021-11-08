@@ -1,7 +1,7 @@
 {
   "name": "@yearn/yswaps",
   "version": "0.0.0",
-  "description": "Yearn strategy swappers",
+  "description": "Yearn module to handle swaps for strategies",
   "keywords": [
     "ethereum",
     "smart",
@@ -9,14 +9,16 @@
     "test",
     "solidity",
     "hardhat",
+    "swaps",
     "yearn"
   ],
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/yswaps#readme",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/yswaps#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/yswaps"
   },
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",
