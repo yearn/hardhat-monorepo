@@ -17,7 +17,6 @@ interface MechanicsRegistryFixture {
 
 export const mechanicsRegistryFixture = async (mechanic: string): Promise<MechanicsRegistryFixture> => {
   const [deployer] = await ethers.getSigners();
-  console.log('yswaps');
   const mechanicsRegistry = await deployContract(deployer, { abi: MECHANICS_REGISTRY_ABI, bytecode: MECHANICS_REGISTRY_EVMCODE }, [mechanic]);
   return { mechanicsRegistry };
 };

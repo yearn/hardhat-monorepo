@@ -1,8 +1,11 @@
 import { SDK as BancorSDK } from '@bancor/sdk';
 import { BlockchainType } from '@bancor/sdk/dist/types';
 import { BigNumber } from '@ethersproject/bignumber';
+import { abi as IERC20MetadataABI } from '@artifacts/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol/IERC20Metadata.json';
+import { IERC20Metadata } from '@typechained';
 import { getNodeUrl } from '@utils/network';
-import { ethers, utils } from 'ethers';
+import { utils } from 'ethers';
+import { ethers } from 'hardhat';
 
 export type SwapParams = {
   tokenIn: string;
@@ -34,7 +37,9 @@ export const swap = async ({ tokenIn, tokenOut, amountIn, slippage }: SwapParams
     utils.formatEther(amountIn)
   );
   const simpleAmountOut = await bancorSDK.pricing.getRateByPath(pathAndRate.path, utils.formatEther(amountIn));
-  const amountOut = utils.parseUnits(Number(simpleAmountOut).toFixed(18), 18);
+  const tokenTo = (await ethers.getContractAt(IERC20MetadataABI, tokenOut)) as IERC20Metadata;
+  const decimalsOut = await tokenTo.decimals();
+  const amountOut = utils.parseUnits(Number(simpleAmountOut).toFixed(decimalsOut), decimalsOut);
   const minAmountOut = amountOut.sub(amountOut.mul(slippage).div(100));
   const path = pathAndRate.path.map((step) => step.blockchainId);
   return {
