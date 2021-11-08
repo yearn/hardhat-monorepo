@@ -17,6 +17,7 @@
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/strategies-keep3r"
   },
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",

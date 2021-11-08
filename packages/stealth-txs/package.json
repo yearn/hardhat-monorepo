@@ -1,14 +1,14 @@
 {
   "name": "@yearn/stealth-txs",
   "version": "0.0.0",
-  "description": "bonded stealth tx vault smart contracts",
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/stealth-txs#readme",
+  "description": "Enforces private realyer transactions while keeping safety from uncled transactions",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/stealth-txs#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/stealth-txs"
   },
-  "license": "MIT",
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",

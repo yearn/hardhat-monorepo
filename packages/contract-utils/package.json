@@ -1,14 +1,14 @@
 {
   "name": "@yearn/contract-utils",
   "version": "0.0.0",
-  "description": "utility smart contracts",
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/contract-utils#readme",
+  "description": "Smart contract to handle usual operations",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/contract-utils#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/contract-utils"
   },
-  "license": "MIT",
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",
