@@ -17,22 +17,22 @@ describe('Bancor', function () {
   let tradeFactory: TradeFactory;
   let swapper: ISwapper;
 
-  let MPH: IERC20;
-  let DAI: IERC20;
+  let BNT: IERC20;
+  let USDC: IERC20;
 
   let snapshotId: string;
 
   let bancorResponse: SwapResponse;
 
   when('on mainnet', () => {
-    const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
+    const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-bancor-swapper'];
 
     const CHAIN_ID = 1;
 
-    const MPH_ADDRESS = '0x8888801af4d980682e47f1a9036e589479e835c5';
-    const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f';
+    const BNT_ADDRESS = '0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c';
+    const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
 
-    const MPH_WHALE_ADDRESS = '0x1702f18c1173b791900f81ebae59b908da8f689b';
+    const BNT_WHALE_ADDRESS = '0xf977814e90da44bfa03b6295a0616a897441acec';
 
     before(async () => {
       strategy = await wallet.generateRandom();
@@ -43,8 +43,8 @@ describe('Bancor', function () {
       });
 
       ({
-        fromToken: MPH,
-        toToken: DAI,
+        fromToken: BNT,
+        toToken: USDC,
         tradeFactory,
         yMech,
         swapper,
@@ -52,18 +52,18 @@ describe('Bancor', function () {
         chainId: CHAIN_ID,
         fixture: ['Common', 'Mainnet', 'Bancor'],
         swapper: 'AsyncBancor',
-        fromTokenAddress: MPH_ADDRESS,
-        toTokenAddress: DAI_ADDRESS,
-        fromTokenWhaleAddress: MPH_WHALE_ADDRESS,
+        fromTokenAddress: BNT_ADDRESS,
+        toTokenAddress: USDC_ADDRESS,
+        fromTokenWhaleAddress: BNT_WHALE_ADDRESS,
         amountIn: AMOUNT_IN,
         strategy,
       }));
 
       bancorResponse = await bancor.swap({
-        tokenIn: MPH_ADDRESS,
-        tokenOut: DAI_ADDRESS,
+        tokenIn: BNT_ADDRESS,
+        tokenOut: USDC_ADDRESS,
         amountIn: AMOUNT_IN,
-        slippage: 3,
+        slippage: 5,
       });
 
       snapshotId = await evm.snapshot.take();
@@ -80,11 +80,11 @@ describe('Bancor', function () {
           ['execute(uint256,address,uint256,bytes)'](1, swapper.address, bancorResponse.minAmountOut!, bancorResponse.data);
       });
 
-      then('MPH gets taken from strategy', async () => {
-        expect(await MPH.balanceOf(strategy.address)).to.equal(0);
+      then('BNT gets taken from strategy', async () => {
+        expect(await BNT.balanceOf(strategy.address)).to.equal(0);
       });
-      then('DAI gets airdropped to strategy', async () => {
-        expect(await DAI.balanceOf(strategy.address)).to.be.gt(0);
+      then('USDC gets airdropped to strategy', async () => {
+        expect(await USDC.balanceOf(strategy.address)).to.be.gt(0);
       });
     });
   });

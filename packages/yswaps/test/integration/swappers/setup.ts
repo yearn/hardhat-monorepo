@@ -50,6 +50,7 @@ const integrationSwapperSetup = async ({
   setTestChainId(chainId);
 
   await deployments.fixture(fixture, { keepExistingDeployments: false });
+
   const fromToken = await ethers.getContractAt<IERC20>(IERC20_ABI, fromTokenAddress);
   const toToken = await ethers.getContractAt<IERC20>(IERC20_ABI, toTokenAddress);
 
