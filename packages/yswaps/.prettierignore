@@ -8,6 +8,8 @@
 .env
 .DS_STORE
 CHANGELOG.md
+LICENSE
+README.md
 workspace.code-workspace
 
 # Hardhat
