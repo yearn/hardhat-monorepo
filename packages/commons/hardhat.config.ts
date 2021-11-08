@@ -77,7 +77,7 @@ const getConfig = ({
   const networksConfigs = getNetworks(networks);
   const config = {
     ...defaultConfig,
-    ...networksConfigs,
+    networks: networksConfigs,
     namedAccounts,
     solidity
   };
