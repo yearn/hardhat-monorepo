@@ -9,6 +9,9 @@ This repository contains all the smart contracts pertaining to yswaps.
 
 These contracts have not been audited yet, use at your own risk.
 
+## 📘 Registry
+Deployed contracts are at the [registry](./REGISTRY.md).
+
 ## 👨‍💻 Development environment
 
 - Copy environment file
