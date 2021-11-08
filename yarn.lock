@@ -2038,10 +2038,10 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.2.tgz#423c77877d0569db20e1fc80885ac4118314010e"
   integrity sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==
 
-"@typechain/ethers-v5@8.0.1":
-  version "8.0.1"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-8.0.1.tgz#26d8a8aa53524865aff62cd68a77329664a390a4"
-  integrity sha512-HFYlrdZWkKtuRjkKAZFY8WU7hcW0HPlDaQEX1W0Qo2VvpE7eCzhM4BcEGycjisKcBeb03fXMoBtHVcO1rZ9e9A==
+"@typechain/ethers-v5@8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-8.0.2.tgz#0f2cc0db1513cb02e3e78929139216b153c9d2c0"
+  integrity sha512-oRMA3X5UWrsUiNb/lFTusa8xBpw6CckOHAk7sZBHeDQh4tAp+ZU24wdwdURcOtPnagzdCv5Dvl1qlD038brf1A==
   dependencies:
     lodash "^4.17.15"
     ts-essentials "^7.0.1"
@@ -2342,7 +2342,7 @@
   version "0.0.0"
   dependencies:
     "@openzeppelin/contracts" "4.2.0"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-stealth-txs-0.0.0-e83ecb23-95ec-47eb-b825-3131f8eb95ff-1636376149032/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-stealth-txs-0.0.0-ffc85935-63de-4cfe-9e8d-66f9004d58d9-1636397998103/node_modules/@yearn/contract-utils"
 
 "@yearn/strategies-keep3r@file:packages/strategies-keep3r":
   version "0.0.0"
@@ -2350,7 +2350,7 @@
     "@gnosis.pm/safe-core-sdk" "0.3.1"
     "@gnosis.pm/safe-service-client" "0.1.1"
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-strategies-keep3r-0.0.0-b752b113-ddff-4970-b8a5-8fceaf4773b8-1636376149033/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-strategies-keep3r-0.0.0-95bfd20a-fd2d-4b8a-8074-eb21643f8309-1636397998104/node_modules/@yearn/contract-utils"
     deasync "0.1.23"
     inquirer "8.2.0"
     prompt-confirm "2.0.4"
@@ -2363,7 +2363,7 @@
     "@bancor/sdk" "0.2.10"
     "@openzeppelin/contracts" "4.3.2"
     "@uniswap/v2-periphery" "1.1.0-beta.0"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-yswaps-0.0.0-2fef94d4-e18f-4eed-a401-31782639f2f9-1636376149091/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../.cache/yarn/v4/npm-@yearn-yswaps-0.0.0-66b2bfa0-adf3-451b-a9f0-256d778ba768-1636397998159/node_modules/@yearn/contract-utils"
     qs "6.10.1"
 
 JSONStream@^1.0.4:
@@ -3051,10 +3051,10 @@ available-typed-arrays@^1.0.5:
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-aws-sdk@2.1019.0:
-  version "2.1019.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1019.0.tgz#3859bcadcabc02aa7c663ee3aca42eb1345c8251"
-  integrity sha512-mnL9CROb3JHdAIbwjy0yr7Lj76KVA8+LyDFexIq/J/YtjbqdfEsb/KdeQIGEBCdlOqUrcJmeD0GcklZ4ve6fnQ==
+aws-sdk@2.1023.0:
+  version "2.1023.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1023.0.tgz#0de16e4e8878ccec4fcd0146322dcf94fdbe09ba"
+  integrity sha512-RAI8sUfK+00yL9i3xz5kbM3+t/0mjjnKhKyauXAlJN4seDYtIX5+BqMghpkZwvLBdi6idXIuz+FHWETHZccyuA==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -7397,10 +7397,10 @@ hardhat-contract-sizer@2.1.1:
     cli-table3 "^0.6.0"
     colors "^1.4.0"
 
-hardhat-deploy@0.9.4:
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.9.4.tgz#8039b6283e8adc8bc908a3af8079f0d4c9850387"
-  integrity sha512-0Zr8R5SAq6oK/gi170yCDqPTvKNPHdlm6wQe3ZQg/uiIDZxofpRM2frQVPUFlgdI2yUXtVcGBiPcC2r2fEockw==
+hardhat-deploy@0.9.5:
+  version "0.9.5"
+  resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.9.5.tgz#0d20c0270ea3dd6e49f2cd4e30e60948ef66d944"
+  integrity sha512-y0ckqSesN3X75OPi7s9ssOF1X0jLhTqllrMlssMCExNh9TODtEAWirSbma1CV2+Xl/BFxlkjiNwL3su6mINXGA==
   dependencies:
     "@ethersproject/abi" "^5.4.0"
     "@ethersproject/abstract-signer" "^5.4.1"
@@ -7440,10 +7440,10 @@ hardhat-preprocessor@0.1.4:
   dependencies:
     murmur-128 "^0.2.1"
 
-hardhat@2.6.7:
-  version "2.6.7"
-  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.6.7.tgz#f9949e58f019439f0c5299b24e7f91d6c6a5ff29"
-  integrity sha512-Mua01f6ZN1feQLktHSH2p5A5LCdA+Wf7+O2lJDH6wClvWPtI2eqKNNY2gxBwYXoQ28GZrT3K6mqQOZeRWAca6Q==
+hardhat@2.6.8:
+  version "2.6.8"
+  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.6.8.tgz#9ef6f8c16f9044acb95609d15a760b89177b8181"
+  integrity sha512-iRVd5DgcIVV3rNXMlogOfwlXAhHp7Wy/OjjFiUhTey8Unvo6oq5+Is5ANiKVN+Iw07Pcb/HpkGt7jCB6a4ITgg==
   dependencies:
     "@ethereumjs/block" "^3.4.0"
     "@ethereumjs/blockchain" "^5.4.0"
