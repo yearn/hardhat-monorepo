@@ -1,6 +1,6 @@
 {
   "name": "@yearn/stealth-txs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Enforces private realyer transactions while keeping safety from uncled transactions",
   "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/stealth-txs#readme",
   "repository": {

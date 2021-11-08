@@ -1,6 +1,6 @@
 {
   "name": "@yearn/contract-utils",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Smart contract to handle usual operations",
   "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/contract-utils#readme",
   "repository": {
