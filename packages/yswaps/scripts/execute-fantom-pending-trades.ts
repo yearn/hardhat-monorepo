@@ -36,12 +36,13 @@ async function main() {
   const pendingTrades: PendingTrade[] = [];
   const tradesSetup: TradeSetup[] = [];
 
+  console.log('Pending trades:', pendingTradesIds.length);
+
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
 
   for (const pendingTrade of pendingTrades) {
-    // let data;
     if (pendingTrade._deadline.lt(moment().unix())) {
       console.log(`Expiring trade ${pendingTrade._id.toString()}`);
       await tradeFactory.expire(pendingTrade._id);

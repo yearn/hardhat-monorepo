@@ -47,7 +47,8 @@
     "test:e2e": "yarn test ./test/e2e/**/*.spec.ts",
     "test:gas": "yarn test ./test/e2e/**/*.spec.ts test/unit/**/*.spec.ts",
     "test:integration": "yarn test ./test/integration/**/**/*.spec.ts",
-    "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts"
+    "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts",
+    "watch:fantom": "pm2 start 'npx hardhat run scripts/execute-fantom-pending-trades.ts --network fantom' --cron '*/5 * * * *' --no-autorestart"
   },
   "dependencies": {
     "@bancor/sdk": "0.2.10",
