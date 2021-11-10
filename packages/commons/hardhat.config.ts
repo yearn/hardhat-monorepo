@@ -19,7 +19,7 @@ type NamedAccounts = {
     | {[network: string]: null | number | string}
 }
 
-const encrypted = !!process.env.ENCRYPTED_CREDENTIALS;
+const encrypted = !!process.env.ENCRYPTED_CREDENTIALS && process.env.ENCRYPTED_CREDENTIALS === 'true';
 
 const getNetworks = (networksName: string[]): NetworksUserConfig => {
   if (!!process.env.TEST || process.argv[process.argv.length - 1] == 'compile') return {};
