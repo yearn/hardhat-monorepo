@@ -1,12 +1,13 @@
 import { ethers, hardhatArguments, network } from 'hardhat';
 import _ from 'lodash';
-import { BigNumber, Contract, utils, Transaction, constants } from 'ethers';
+import { BigNumber, utils, Transaction, constants } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import * as contracts from '../../utils/contracts';
 import Web3 from 'web3';
 import * as gasprice from './tools/gasprice';
 import * as alive from './tools/alive';
 import { getChainId, getReporterPrivateKey, getWSUrl } from './tools/env';
+import { StealthVault, StealthRelayer } from '@typechained';
 
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
 const MAX_PRIORITY_FEE_GAS_PRICE = 30;
@@ -21,8 +22,8 @@ const ethersWebSocketProvider = new ethers.providers.WebSocketProvider(wsUrlProv
 
 let nonce: number;
 let reporterSigner: SignerWithAddress;
-let stealthVault: Contract;
-let stealthRelayer: Contract;
+let stealthVault: StealthVault;
+let stealthRelayer: StealthRelayer;
 let callers: string[];
 let jobs: string[];
 let stealthRelayerPenalty: BigNumber;
@@ -43,9 +44,13 @@ async function main(): Promise<void> {
     [reporterSigner] = await ethers.getSigners();
     console.log('Reporter address:', reporterSigner.address);
     nonce = await reporterSigner.getTransactionCount();
-    stealthVault = await ethers.getContractAt('contracts/StealthVault.sol:StealthVault', stealthVaultAddress, reporterSigner);
+    stealthVault = await ethers.getContractAt<StealthVault>('contracts/StealthVault.sol:StealthVault', stealthVaultAddress, reporterSigner);
     stealthVault.provider.call = ethersWebSocketProvider.call;
-    stealthRelayer = await ethers.getContractAt('contracts/StealthRelayer.sol:StealthRelayer', stealthRelayerAddress, reporterSigner);
+    stealthRelayer = await ethers.getContractAt<StealthRelayer>(
+      'contracts/StealthRelayer.sol:StealthRelayer',
+      stealthRelayerAddress,
+      reporterSigner
+    );
     stealthRelayer.provider.call = ethersWebSocketProvider.call;
     console.log('Getting penalty ...');
     stealthRelayerPenalty = await stealthRelayer.penalty();
