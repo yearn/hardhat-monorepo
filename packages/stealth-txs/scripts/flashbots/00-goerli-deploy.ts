@@ -1,5 +1,5 @@
-import { Contract, ContractFactory } from 'ethers';
-import { run, ethers, network } from 'hardhat';
+import { StealthRelayer, StealthRelayer__factory, StealthVault, StealthVault__factory } from '@typechained';
+import { run, ethers } from 'hardhat';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'Do you wish to deploy Stealth contracts on goerli?' });
@@ -17,15 +17,15 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const stealthVaultFactory: ContractFactory = await ethers.getContractFactory('StealthVault');
-          const stealthVault: Contract = await stealthVaultFactory.deploy();
+          const stealthVaultFactory: StealthVault__factory = await ethers.getContractFactory<StealthVault__factory>('StealthVault');
+          const stealthVault: StealthVault = await stealthVaultFactory.deploy();
           console.log('stealthVault address:', stealthVault.address);
 
           console.log('PLEASE add to utils/contracts.ts');
           console.log(`export const stealthVault = goerli: '${stealthVault.address}'`);
 
-          const stealthRelayerFactory: ContractFactory = await ethers.getContractFactory('StealthRelayer');
-          const stealthRelayer: Contract = await stealthRelayerFactory.deploy(stealthVault.address);
+          const stealthRelayerFactory: StealthRelayer__factory = await ethers.getContractFactory<StealthRelayer__factory>('StealthRelayer');
+          const stealthRelayer: StealthRelayer = await stealthRelayerFactory.deploy(stealthVault.address);
           console.log('stealthRelayer address:', stealthRelayer.address);
 
           console.log('PLEASE add to utils/contracts.ts');
