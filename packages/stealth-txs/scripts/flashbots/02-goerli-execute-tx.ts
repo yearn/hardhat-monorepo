@@ -93,18 +93,18 @@ function mainExecute(): Promise<void | Error> {
     let simulation: SimulationResponse;
     try {
       simulation = await flashbotsProvider.simulate(signedBundle, blockNumber + 1);
-    } catch (error) {
+      if ('error' in simulation) {
+        return reject(`Simulation Error: ${simulation.error.message}`);
+      } else {
+        console.log(`Simulation Success: ${JSON.stringify(simulation, null, 2)}`);
+      }
+    } catch (error: any) {
       if ('body' in error && 'message' in JSON.parse(error.body).error) {
         console.log('[Simulation Error] Message:', JSON.parse(error.body).error.message);
       } else {
         console.log(error);
       }
       return reject('simulation error');
-    }
-    if ('error' in simulation) {
-      return reject(`Simulation Error: ${simulation.error.message}`);
-    } else {
-      console.log(`Simulation Success: ${JSON.stringify(simulation, null, 2)}`);
     }
     console.log(simulation);
 

@@ -1,4 +1,4 @@
-import { StealthERC20, StealthERC20__factory } from '@typechained';
+import { StealthERC20, StealthERC20__factory, StealthRelayer, StealthVault } from '@typechained';
 import { utils } from 'ethers';
 import { run, ethers } from 'hardhat';
 import * as contracts from '../../utils/contracts';
@@ -14,17 +14,16 @@ function promptAndSubmit(): Promise<void | Error> {
     const [owner] = await ethers.getSigners();
     console.log('using address:', owner.address);
 
-    const stealthVault = await ethers.getContractAt('StealthVault', contracts.stealthVault.goerli);
-    const stealthRelayer = await ethers.getContractAt('StealthRelayer', contracts.stealthRelayer.goerli);
+    const stealthVault = await ethers.getContractAt<StealthVault>('StealthVault', contracts.stealthVault.goerli);
+    const stealthRelayer = await ethers.getContractAt<StealthRelayer>('StealthRelayer', contracts.stealthRelayer.goerli);
     const penalty = utils.parseEther('1');
-
-    const stealthERC20Factory: StealthERC20__factory = await ethers.getContractFactory<StealthERC20__factory>('StealthERC20');
 
     let stealthERC20: StealthERC20;
 
     if (contracts.stealthERC20.goerli) {
       stealthERC20 = await ethers.getContractAt('StealthERC20', contracts.stealthERC20.goerli);
     } else {
+      const stealthERC20Factory: StealthERC20__factory = await ethers.getContractFactory<StealthERC20__factory>('StealthERC20');
       stealthERC20 = await stealthERC20Factory.deploy(
         'stealth token', // string memory _name,
         'sToken', // string memory _symbol,
@@ -36,7 +35,7 @@ function promptAndSubmit(): Promise<void | Error> {
       console.log(`export const stealthERC20 = goerli: '${stealthERC20.address}'`);
 
       // set penalty and enables stealth ERC20 to be called from stealthRelayer
-      await stealthRelayer.setPenalty(penalty); // (default is 1 ETH)
+      await stealthRelayer.setPenalty(penalty, { gasLimit: 100000 }); // (default is 1 ETH)
       await stealthRelayer.addJob(stealthERC20.address);
     }
 

@@ -35,6 +35,7 @@
     "test:gas": "yarn test ./test/e2e/*.spec.ts test/unit/*.spec.ts",
     "test:integration": "yarn test ./test/integration/*.spec.ts",
     "test:unit": "yarn test test/unit/*.spec.ts",
+    "watcher:start:goerli": "npx hardhat run ./scripts/watcher/yearn.ts --network goerli",
     "watcher:start:mainnet": "npx hardhat run ./scripts/watcher/yearn.ts --network mainnet"
   },
   "dependencies": {

@@ -1,6 +1,8 @@
-import { utils } from 'ethers';
+import { StealthERC20, StealthRelayer } from '@typechained';
+import { BigNumber, BytesLike, ContractTransaction, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import moment from 'moment';
+import { TransactionResponse } from '@ethersproject/abstract-provider';
 import * as contracts from '../utils/contracts';
 
 const generateRandomNumber = (min: number, max: number): string => {
@@ -8,15 +10,42 @@ const generateRandomNumber = (min: number, max: number): string => {
 };
 
 async function execute() {
-  const [, caller] = await ethers.getSigners();
-  const stealthRelayer = await ethers.getContractAt('contracts/StealthRelayer.sol:StealthRelayer', contracts.stealthRelayer.goerli, caller);
-  const stealthERC20 = await ethers.getContractAt('contracts/mock/StealthERC20.sol:StealthERC20', contracts.stealthERC20.goerli, caller);
-  const rawTx = await stealthERC20.populateTransaction.stealthMint(caller.address, utils.parseEther('666'));
-  const hash = utils.formatBytes32String(generateRandomNumber(1, 1000000));
-  console.log('hash', hash);
-  await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data, hash);
-  console.log('sent at', moment().unix());
-  console.log('Executing without block protection');
+  const [, submitter] = await ethers.getSigners();
+  const stealthRelayer = await ethers.getContractAt<StealthRelayer>(
+    'contracts/StealthRelayer.sol:StealthRelayer',
+    contracts.stealthRelayer.goerli,
+    submitter
+  );
+  const stealthERC20 = await ethers.getContractAt<StealthERC20>(
+    'contracts/mock/StealthERC20.sol:StealthERC20',
+    contracts.stealthERC20.goerli,
+    submitter
+  );
+  const rawTx = await stealthERC20.populateTransaction.stealthMint(submitter.address, utils.parseEther('666'));
+  console.log('submitter address', submitter.address);
+  const hash = utils.formatBytes32String(generateRandomNumber(1, 100000000));
+  console.log('random hash', hash);
+  let submitted = false;
+  let tx: TransactionResponse;
+
+  while (!submitted) {
+    try {
+      const pendingBlock = await ethers.provider.send('eth_getBlockByNumber', ['latest', false]);
+      const blockGasLimit = BigNumber.from(pendingBlock.gasLimit);
+      tx = await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data as BytesLike, hash, {
+        gasLimit: blockGasLimit.sub(15_000),
+        maxPriorityFeePerGas: utils.parseUnits('1.6', 'gwei'),
+        nonce: 55,
+      });
+      console.log('tx hash', tx.hash);
+      console.log('tx nonce', tx.nonce);
+      console.log('sent at', moment().unix());
+      console.log('Executing without block protection');
+      submitted = true;
+    } catch (err) {}
+  }
+  await tx!.wait();
+  console.log('raw tx', tx!.raw!);
 }
 
 execute()

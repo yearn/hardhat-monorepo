@@ -9,11 +9,11 @@ export const startCheck = (): void => {
 };
 
 export const stillAlive = (): void => {
-  clearTimeout(aliveInterval);
-  startCheck();
+  // clearTimeout(aliveInterval);
+  // startCheck();
 };
 
 const dead = (): void => {
   console.error('Aliveness check failed');
-  process.exit(1);
+  // process.exit(1);
 };
