@@ -16,6 +16,8 @@ import './interfaces/IStealthVault.sol';
 contract StealthVault is Governable, Manageable, CollectableDust, ReentrancyGuard, IStealthVault {
   using EnumerableSet for EnumerableSet.AddressSet;
 
+  bool public override eoaAuthCallProtection;
+
   uint256 public override gasBuffer = 69_420; // why not
   uint256 public override totalBonded;
   mapping(address => uint256) public override bonded;
@@ -99,8 +101,10 @@ contract StealthVault is Governable, Manageable, CollectableDust, ReentrancyGuar
   }
 
   modifier OnlyOneCallStack() {
-    uint256 _gasLeftPlusBuffer = gasleft() + gasBuffer;
-    require(_gasLeftPlusBuffer >= (block.gaslimit * 63) / 64, 'SV: eoa gas check failed');
+    if (eoaAuthCallProtection) {
+      uint256 _gasLeftPlusBuffer = gasleft() + gasBuffer;
+      require(_gasLeftPlusBuffer >= (block.gaslimit * 63) / 64, 'SV: eoa gas check failed');
+    }
     _;
   }
 
@@ -183,6 +187,11 @@ contract StealthVault is Governable, Manageable, CollectableDust, ReentrancyGuar
   }
 
   // Manageable: restricted-access
+  function setEoaAuthCallProtection(bool _eoaAuthCallProtection) external override onlyManager {
+    require(eoaAuthCallProtection != _eoaAuthCallProtection, 'SV: no change');
+    eoaAuthCallProtection = _eoaAuthCallProtection;
+  }
+
   function setGasBuffer(uint256 _gasBuffer) external virtual override onlyManager {
     require(_gasBuffer < (block.gaslimit * 63) / 64, 'SV: gasBuffer too high');
     gasBuffer = _gasBuffer;
