@@ -70,15 +70,11 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
   ) external view override {
     if (overrideGuardChecks) return;
 
-    if (!safe.isSigner(msgSender)) {
+    address _caller = IStealthRelayer(stealthRelayer).caller();
+
+    if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
       revert NotStealthRelayer();
     }
-
-    // address _caller = IStealthRelayer(stealthRelayer).caller();
-
-    // if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
-    //   revert NotStealthRelayer();
-    // }
   }
 
   // unused
