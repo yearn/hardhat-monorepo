@@ -43,6 +43,7 @@ describe('e2e: eoa check', () => {
     await stealthRelayer.addJob(stealthERC20.address);
     await stealthVault.connect(alice).bond({ value: penalty });
     await stealthVault.connect(alice).enableStealthContract(stealthRelayer.address);
+    await stealthVault.setEoaAuthCallProtection(true);
   });
 
   it('receives proper gas', async () => {
@@ -90,6 +91,7 @@ describe('e2e: eoa check', () => {
       await stealthRelayer.addJob(stealthERC20.address);
       await stealthVault.connect(alice).bond({ value: penalty });
       await stealthVault.connect(alice).enableStealthContract(stealthRelayer.address);
+      await stealthVault.setEoaAuthCallProtection(true);
     });
     it('cannot be called though a proxy', async () => {
       // deploy proxy

@@ -23,8 +23,8 @@ export async function getTransaction(chainId: number, id: string) {
 
 export async function getGasPrice() {
   try {
-    const res = await axios.get(`https://www.gasnow.org/api/v3/gas/price`);
-    return res.data.data;
+    const res = await axios.get(`https://blocknative-api.herokuapp.com/data`);
+    return res.data.estimatedPrices[1].price;
   } catch (error) {
     console.error(error);
     return;

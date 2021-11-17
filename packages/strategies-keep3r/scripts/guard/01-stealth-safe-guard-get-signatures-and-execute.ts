@@ -16,7 +16,8 @@ import { makeid } from '../../utils/hash';
 import * as gnosis from '../../utils/gnosis';
 import * as contracts from '../../utils/contracts';
 import { Provider } from '@ethersproject/abstract-provider';
-import { NETWORK_ID_NAMES } from '@utils/network';
+import { NETWORK_ID_NAMES } from '@yearn/commons/utils/network';
+import kms from '@yearn/commons/tools/kms';
 
 const { Confirm } = require('enquirer');
 const { Input } = require('enquirer');
@@ -66,7 +67,7 @@ function mainExecute(): Promise<void | Error> {
         // }
         console.log('safeQueuedTransaction.id');
         console.log(safeQueuedTransaction.id);
-        const txDetails: gnosis.SafeTransactionData = await gnosis.getTransaction(safeChainId, safeQueuedTransaction.id);
+        const txDetails: gnosis.SafeTransactionData = (await gnosis.getTransaction(safeChainId, safeQueuedTransaction.id)) as any;
         console.log(txDetails);
 
         const transactions: SafeTransactionData[] = [
@@ -138,8 +139,10 @@ function mainExecute(): Promise<void | Error> {
         } else {
           // mainnet
           const gasPriceResponse = await gnosis.getGasPrice();
-          const gasPrice = ethers.BigNumber.from(gasPriceResponse.fast);
-          const maxGwei = 150;
+          console.log(gasPriceResponse);
+          const gasPrice = gwei.mul(gasPriceResponse);
+          // const gasPrice = ethers.BigNumber.from(gasPriceResponse.fast);
+          const maxGwei = 200;
           if (gasPrice.gt(gwei.mul(maxGwei))) {
             reject(`gas price > ${maxGwei}gwei`);
           }
@@ -162,8 +165,10 @@ function mainExecute(): Promise<void | Error> {
           );
 
           // flashbots
-          const signer = new ethers.Wallet(process.env[`${networkName.toUpperCase()}_PRIVATE_KEY`] as string).connect(ethers.provider);
-          const flashbotSigner = new ethers.Wallet(process.env.FLASHBOTS_PRIVATE_KEY as string).connect(ethers.provider);
+          const signer = new ethers.Wallet(kms.decryptSync(process.env[`${networkName.toUpperCase()}_PRIVATE_KEY`] as string)).connect(
+            ethers.provider
+          );
+          const flashbotSigner = new ethers.Wallet(kms.decryptSync(process.env.FLASHBOTS_PRIVATE_KEY as string)).connect(ethers.provider);
           const flashbotsProvider = await FlashbotsBundleProvider.create(ethers.provider, flashbotSigner);
           const signedTransaction = await signer.signTransaction(executeTx);
 
