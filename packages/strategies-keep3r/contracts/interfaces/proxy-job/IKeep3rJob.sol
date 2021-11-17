@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 interface IKeep3rJob {
   function keep3r() external view returns (address _keep3r);

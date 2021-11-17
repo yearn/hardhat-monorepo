@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import '@yearn/contract-utils/contracts/abstract/UtilsReady.sol';
@@ -70,11 +70,15 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
   ) external view override {
     if (overrideGuardChecks) return;
 
-    address _caller = IStealthRelayer(stealthRelayer).caller();
-
-    if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
+    if (!safe.isSigner(msgSender)) {
       revert NotStealthRelayer();
     }
+
+    // address _caller = IStealthRelayer(stealthRelayer).caller();
+
+    // if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
+    //   revert NotStealthRelayer();
+    // }
   }
 
   // unused
