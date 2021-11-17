@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 interface IStealthVault {
   //events
@@ -20,6 +20,8 @@ interface IStealthVault {
   function isStealthVault() external pure returns (bool);
 
   // getters
+  function eoaAuthCallProtection() external view returns (bool _eoaAuthCallProtection);
+
   function callers() external view returns (address[] memory _callers);
 
   function callerContracts(address _caller) external view returns (address[] memory _contracts);
@@ -42,6 +44,8 @@ interface IStealthVault {
   function hashReportedBy(bytes32 _hash) external view returns (address _reportedBy);
 
   // governor
+  function setEoaAuthCallProtection(bool _eoaAuthCallProtection) external;
+
   function setGasBuffer(uint256 _gasBuffer) external;
 
   function transferGovernorBond(address _caller, uint256 _amount) external;

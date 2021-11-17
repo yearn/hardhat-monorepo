@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity ^0.8.4;
 
 interface ICrvStrategyKeep3rJobV2 {
   function v2Keeper() external view returns (address _v2Keeper);
