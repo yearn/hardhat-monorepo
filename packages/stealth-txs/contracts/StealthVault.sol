@@ -177,7 +177,7 @@ contract StealthVault is Governable, Manageable, CollectableDust, ReentrancyGuar
   }
 
   function _addCallerContract(address _contract) internal {
-    if (!_callers.contains(msg.sender)) _callers.add(msg.sender);
+    _callers.add(msg.sender);
     require(_callerStealthContracts[msg.sender].add(_contract), 'SV: contract already added');
   }
 
