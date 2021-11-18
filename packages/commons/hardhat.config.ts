@@ -11,6 +11,7 @@ import 'solidity-coverage';
 import { HardhatUserConfig, MultiSolcUserConfig, NetworksUserConfig, SolcUserConfig, SolidityUserConfig } from 'hardhat/types';
 import { getAccounts, getNodeUrl } from './utils/network';
 import 'tsconfig-paths/register';
+import { utils } from 'ethers';
 
 type NamedAccounts = {
   [name: string]:
@@ -34,7 +35,7 @@ const getNetworks = (networksName: string[]): NetworksUserConfig => {
   networksName.forEach((network: string) => {
     networks[network] = {
       url: getNodeUrl(network),
-      accounts: getAccounts({ typeOfAccount: 'privateKey', networkName: network, encrypted }),
+      accounts: getAccounts({ typeOfAccount: 'privateKey', networkName: network, encrypted })
     }
   });
   return networks;

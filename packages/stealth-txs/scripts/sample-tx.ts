@@ -30,19 +30,20 @@ async function execute() {
 
   while (!submitted) {
     try {
-      const pendingBlock = await ethers.provider.send('eth_getBlockByNumber', ['latest', false]);
-      const blockGasLimit = BigNumber.from(pendingBlock.gasLimit);
+      // const pendingBlock = await ethers.provider.send('eth_getBlockByNumber', ['latest', false]);
+      // const blockGasLimit = BigNumber.from(pendingBlock.gasLimit);
       tx = await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data as BytesLike, hash, {
-        gasLimit: blockGasLimit.sub(15_000),
-        maxPriorityFeePerGas: utils.parseUnits('1.6', 'gwei'),
-        nonce: 55,
+        // gasLimit: blockGasLimit.sub(15_000),
+        // maxPriorityFeePerGas: utils.parseUnits('2.6', 'gwei'),
       });
       console.log('tx hash', tx.hash);
       console.log('tx nonce', tx.nonce);
       console.log('sent at', moment().unix());
       console.log('Executing without block protection');
       submitted = true;
-    } catch (err) {}
+    } catch (err) {
+      console.log(err);
+    }
   }
   await tx!.wait();
   console.log('raw tx', tx!.raw!);
