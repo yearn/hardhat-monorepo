@@ -4,6 +4,16 @@ import kms from '../tools/kms';
 // const DEFAULT_ACCOUNT = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 const MAX_ACCOUNTS = 10;
 
+export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'ftm';
+
+export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
+  1: 'mainnet',
+  4: 'rinkeby',
+  5: 'goerli',
+  137: 'polygon',
+  250: 'ftm',
+};
+
 export function getNodeUrl(networkName: string): string {
   const uri = process.env[`ETH_NODE_URI_${networkName.toUpperCase()}`] as string;
 

@@ -39,7 +39,7 @@
     "watcher:start:mainnet": "npx hardhat run ./scripts/watcher/yearn.ts --network mainnet"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.2.0",
+    "@openzeppelin/contracts": "4.3.2",
     "@yearn/contract-utils": "file:../contract-utils"
   },
   "publishConfig": {
