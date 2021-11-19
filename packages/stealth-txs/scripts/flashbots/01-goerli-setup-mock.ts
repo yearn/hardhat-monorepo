@@ -16,7 +16,6 @@ function promptAndSubmit(): Promise<void | Error> {
 
     const stealthVault = await ethers.getContractAt<StealthVault>('StealthVault', contracts.stealthVault.goerli);
     const stealthRelayer = await ethers.getContractAt<StealthRelayer>('StealthRelayer', contracts.stealthRelayer.goerli);
-    const penalty = utils.parseEther('1');
 
     let stealthERC20: StealthERC20;
 
@@ -35,11 +34,10 @@ function promptAndSubmit(): Promise<void | Error> {
       console.log(`export const stealthERC20 = goerli: '${stealthERC20.address}'`);
 
       // set penalty and enables stealth ERC20 to be called from stealthRelayer
-      await stealthRelayer.setPenalty(penalty, { gasLimit: 100000 }); // (default is 1 ETH)
       await stealthRelayer.addJob(stealthERC20.address);
     }
 
-    await stealthVault.bond({ value: penalty });
+    await stealthVault.bond({ value: utils.parseEther('1') });
     await stealthVault.enableStealthContract(stealthRelayer.address);
   });
 }

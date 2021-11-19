@@ -17,7 +17,6 @@ import {
   FlashbotsTransactionResponse,
   SimulationResponse,
 } from '@flashbots/ethers-provider-bundle';
-import { TransactionDescription } from '@ethersproject/abi';
 import { encode } from 'rlp';
 import kms from '../../../commons/tools/kms';
 
@@ -176,7 +175,6 @@ async function reportHash(hash: string, transaction: Transaction): Promise<void>
         ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
         : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
   };
-  gasParams.maxPriorityFeePerGas = utils.parseUnits('8', 'gwei');
   console.log('gas params max fee per gas', utils.formatUnits(gasParams.maxFeePerGas, 'gwei'));
   console.log('gas params max priority', utils.formatUnits(gasParams.maxPriorityFeePerGas, 'gwei'));
   const populatedTx = await stealthVault.populateTransaction.reportHash(hash, {
@@ -184,16 +182,23 @@ async function reportHash(hash: string, transaction: Transaction): Promise<void>
     gasLimit: 100000,
     nonce,
   });
-  const signer = new ethers.Wallet(await kms.decrypt(process.env.GOERLI_1_PRIVATE_KEY as string));
-  const signedTx = await signer.signTransaction(populatedTx);
+  const signedTx = await web3.eth.accounts.signTransaction(
+    {
+      ...gasParams,
+      to: populatedTx.to!,
+      gas: populatedTx.gasLimit!.toNumber(),
+      data: populatedTx.data!,
+    },
+    await kms.decrypt(process.env.GOERLI_1_PRIVATE_KEY as string)
+  );
   const executorTx = getRawTransaction(transaction);
   const bundle: FlashbotBundle = [
     {
-      signedTransaction: signedTx,
+      signedTransaction: signedTx.rawTransaction!,
     },
-    // {
-    //   signedTransaction: executorTx,
-    // },
+    {
+      signedTransaction: executorTx,
+    },
   ];
   if (await submitBundle(bundle)) {
     nonce = nonce.add(1);
@@ -204,21 +209,15 @@ async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
   let submitted = false;
   let rejected = false;
   const blockNumber = await ethers.provider.getBlockNumber();
-  while (!submitted || rejected) {
-    let targetBlock = blockNumber + 1;
-    if (!(await simulateBundle(bundle, targetBlock))) rejected = true;
+  let targetBlock = blockNumber + 1;
+  while (!(submitted || rejected)) {
+    if (!(await simulateBundle(bundle, targetBlock))) {
+      rejected = true;
+      continue;
+    }
     const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlock);
     flashbotsProvider.sendBundle(bundle, targetBlock + 1);
     flashbotsProvider.sendBundle(bundle, targetBlock + 2);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 3);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 4);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 5);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 6);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 7);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 8);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 9);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 10);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 11);
     const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
     if (resolution == FlashbotsBundleResolution.BundleIncluded) {
       console.log('BundleIncluded, sucess!');
@@ -238,7 +237,7 @@ async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Prom
   const signedBundle = await flashbotsProvider.signBundle(bundle);
   let simulation: SimulationResponse;
   try {
-    simulation = await flashbotsProvider.simulate(signedBundle, blockNumber + 1);
+    simulation = await flashbotsProvider.simulate(signedBundle, blockNumber);
     if ('error' in simulation) {
       console.error(`Simulation Error: ${simulation.error.message}`);
     } else {
@@ -246,12 +245,7 @@ async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Prom
       return true;
     }
   } catch (error: any) {
-    if ('body' in error && 'message' in JSON.parse(error.body).error) {
-      console.log('[Simulation Error] Message:', JSON.parse(error.body).error.message);
-    } else {
-      console.log(error);
-    }
-    console.error('simulation error');
+    console.error('simulation error', error);
   }
   return false;
 }
@@ -269,7 +263,6 @@ function validCallerJobs(caller: string, jobs: string): boolean {
 }
 
 function validBondForPenalty(caller: string): boolean {
-  console.log(bonded[normalizeAddress(caller)].toString(), stealthRelayerPenalty.toString());
   return bonded[normalizeAddress(caller)].gte(stealthRelayerPenalty);
 }
 
@@ -321,42 +314,55 @@ function normalizeAddress(address: string): string {
   return address.toLowerCase();
 }
 
-// Ref: https://docs.ethers.io/v5/cookbook/transactions/#cookbook--compute-raw-transaction
-// Ugly but works
+// Ref: https://eips.ethereum.org/EIPS/eip-2718, https://eips.ethereum.org/EIPS/eip-2930 and https://eips.ethereum.org/EIPS/eip-1559
 function getRawTransaction(transaction: Transaction): string {
-  // function addKey(accum: any, key: string) {
-  //   if ((transaction as any)[key]) { accum[key] = (transaction as any)[key]; }
-  //   return accum;
-  // }
-
-  // // Extract the relevant parts of the transaction and signature
-  // const txFields = "accessList chainId data gasPrice gasLimit maxFeePerGas maxPriorityFeePerGas nonce to type value".split(" ");
-  // const sigFields = "v r s".split(" ");
-
-  // // Seriailze the signed transaction
-  // const raw = utils.serializeTransaction(txFields.reduce(addKey, { }), sigFields.reduce(addKey, { }));
-
-  // // Double check things went well
-  // if (utils.keccak256(raw) !== transaction.hash) { throw new Error("serializing failed!"); }
-
-  // return raw;
-
-  const executorTx = encode([
-    transaction.chainId,
-    transaction.nonce,
-    transaction.maxPriorityFeePerGas!.toNumber(),
-    transaction.maxFeePerGas!.toNumber(),
-    transaction.gasLimit.toNumber(),
-    transaction.to!,
-    transaction.value.toNumber(),
-    transaction.data,
-    [], // access list
-    transaction.v!,
-    transaction.r!,
-    transaction.s!,
-  ]);
-
-  return `0x02${executorTx.toString('hex')}`;
+  let rawTransaction: string = '';
+  if (transaction.type! == 0) {
+    const executorTx = encode([
+      transaction.nonce,
+      transaction.gasPrice!.toNumber(),
+      transaction.gasLimit.toNumber(),
+      transaction.to!,
+      transaction.value.toNumber(),
+      transaction.data,
+      transaction.v!,
+      transaction.r!,
+      transaction.s!,
+    ]);
+    rawTransaction = `0x${executorTx.toString('hex')}`;
+  } else if (transaction.type! == 1) {
+    const executorTx = encode([
+      transaction.chainId,
+      transaction.nonce,
+      transaction.gasPrice!.toNumber(),
+      transaction.gasLimit.toNumber(),
+      transaction.to!,
+      transaction.value.toNumber(),
+      transaction.data,
+      [],
+      transaction.v!,
+      transaction.r!,
+      transaction.s!,
+    ]);
+    rawTransaction = `0x01${executorTx.toString('hex')}`;
+  } else if (transaction.type! == 2) {
+    const executorTx = encode([
+      transaction.chainId,
+      transaction.nonce,
+      transaction.maxPriorityFeePerGas!.toNumber(),
+      transaction.maxFeePerGas!.toNumber(),
+      transaction.gasLimit.toNumber(),
+      transaction.to!,
+      transaction.value.toNumber(),
+      transaction.data,
+      [], // access list
+      transaction.v!,
+      transaction.r!,
+      transaction.s!,
+    ]);
+    rawTransaction = `0x02${executorTx.toString('hex')}`;
+  }
+  return rawTransaction;
 }
 
 main()

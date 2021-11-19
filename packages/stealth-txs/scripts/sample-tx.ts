@@ -32,9 +32,14 @@ async function execute() {
     try {
       // const pendingBlock = await ethers.provider.send('eth_getBlockByNumber', ['latest', false]);
       // const blockGasLimit = BigNumber.from(pendingBlock.gasLimit);
+      // tx = await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data as BytesLike, hash, {
+      //   gasLimit: blockGasLimit.sub(15_000),
+      // });
       tx = await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data as BytesLike, hash, {
-        // gasLimit: blockGasLimit.sub(15_000),
-        // maxPriorityFeePerGas: utils.parseUnits('2.6', 'gwei'),
+        gasLimit: 100000,
+        // gasPrice: utils.parseUnits('0.5', 'gwei'),
+        maxFeePerGas: utils.parseUnits('0.04', 'gwei'),
+        maxPriorityFeePerGas: utils.parseUnits('0.01', 'gwei'),
       });
       console.log('tx hash', tx.hash);
       console.log('tx nonce', tx.nonce);
