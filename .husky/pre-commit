@@ -1,4 +1,4 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-lerna exec --ignore @yearn/commons -- "yarn lint:fix" && git add -A
+node $(git rev-parse --show-toplevel)/.husky/lint-modified-packages.js && git add -A
