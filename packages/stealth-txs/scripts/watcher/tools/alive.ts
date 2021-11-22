@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-const MAX_UNRESPONSIVE_TIME = moment.duration('5', 'seconds').as('milliseconds');
+const MAX_UNRESPONSIVE_TIME = moment.duration('45', 'seconds').as('milliseconds');
 
 let aliveInterval: NodeJS.Timeout;
 
@@ -9,12 +9,11 @@ export const startCheck = (): void => {
 };
 
 export const stillAlive = (): void => {
-  console.log('STILL ALIVE!');
-  // clearTimeout(aliveInterval);
-  // startCheck();
+  clearTimeout(aliveInterval);
+  startCheck();
 };
 
 const dead = (): void => {
   console.error('Aliveness check failed');
-  // process.exit(1);
+  process.exit(1);
 };

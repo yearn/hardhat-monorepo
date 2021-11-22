@@ -38,8 +38,8 @@ async function execute() {
       tx = await stealthRelayer.executeWithoutBlockProtection(stealthERC20.address, rawTx.data as BytesLike, hash, {
         gasLimit: 100000,
         // gasPrice: utils.parseUnits('0.5', 'gwei'),
-        maxFeePerGas: utils.parseUnits('0.04', 'gwei'),
-        maxPriorityFeePerGas: utils.parseUnits('0.01', 'gwei'),
+        maxFeePerGas: utils.parseUnits('0.0001', 'gwei'),
+        maxPriorityFeePerGas: utils.parseUnits('0.000009', 'gwei'),
       });
       console.log('tx hash', tx.hash);
       console.log('tx nonce', tx.nonce);

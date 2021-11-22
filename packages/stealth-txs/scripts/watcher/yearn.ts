@@ -4,6 +4,7 @@ import { BigNumber, utils, Transaction, constants, Wallet } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import * as contracts from '../../utils/contracts';
 import Web3 from 'web3';
+import { Account } from 'web3-core';
 import * as gasprice from './tools/gasprice';
 import * as alive from './tools/alive';
 import { getChainId, getWSUrl } from './tools/env';
@@ -17,12 +18,12 @@ import {
   FlashbotsTransactionResponse,
   SimulationResponse,
 } from '@flashbots/ethers-provider-bundle';
-import { encode } from 'rlp';
 import kms from '../../../commons/tools/kms';
+import { normalizeAddress, getRawTransaction } from '../../../commons/utils/commons';
 
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
-const MAX_PRIORITY_FEE_GAS_PRICE = 30;
+const MAX_PRIORITY_FEE_GAS_PRICE = 15;
 const wsUrlProvider = getWSUrl(hardhatArguments.network!);
 const stealthVaultAddress = contracts.stealthVault[hardhatArguments.network! as contracts.DeployedNetwork];
 const stealthRelayerAddress = contracts.stealthRelayer[hardhatArguments.network! as contracts.DeployedNetwork];
@@ -33,6 +34,7 @@ const ethersWebSocketProvider = new ethers.providers.WebSocketProvider(wsUrlProv
 
 let nonce: BigNumber;
 let reporterSigner: SignerWithAddress;
+let web3ReporterSigner: Account;
 let stealthVault: StealthVault;
 let stealthRelayer: StealthRelayer;
 let callers: string[];
@@ -48,13 +50,16 @@ const generateRandomNumber = (min: number, max: number): string => {
 };
 
 async function setup(): Promise<void> {
-  console.log(`Starting on network ${hardhatArguments.network!}(${chainId}) ...`);
+  console.log(`[Setup] Starting on network ${hardhatArguments.network!}(${chainId}) ...`);
   alive.startCheck();
-  console.log('Getting reporter ...');
+  console.log('[Setup] Getting reporter ...');
   [reporterSigner] = await ethers.getSigners();
-  console.log('Reporter address:', reporterSigner.address);
+  web3ReporterSigner = web3.eth.accounts.privateKeyToAccount(
+    await kms.decrypt((chainId === 1 ? process.env.MAINNET_1_PRIVATE_KEY : process.env.GOERLI_1_PRIVATE_KEY) as string)
+  );
+  console.log('[Setup] Reporter address:', reporterSigner.address);
   nonce = BigNumber.from(await reporterSigner.getTransactionCount());
-  console.log('Reporter nonce:', nonce.toString());
+  console.log('[Setup] Reporter nonce:', nonce.toString());
   stealthVault = await ethers.getContractAt<StealthVault>('contracts/StealthVault.sol:StealthVault', stealthVaultAddress, reporterSigner);
   stealthVault.provider.call = ethersWebSocketProvider.call;
   stealthRelayer = await ethers.getContractAt<StealthRelayer>(
@@ -62,9 +67,9 @@ async function setup(): Promise<void> {
     stealthRelayerAddress,
     reporterSigner
   );
-  alive.startCheck();
+  alive.stillAlive();
   stealthRelayer.provider.call = ethersWebSocketProvider.call;
-  console.log('Creating flashbots provider ...');
+  console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
     ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
     (await Wallet.createRandom()).connect(ethers.provider),
@@ -75,17 +80,17 @@ async function setup(): Promise<void> {
 }
 
 async function loadInformation(): Promise<void> {
-  console.log('Getting penalty ...');
+  console.log('[Load information] Getting penalty ...');
   stealthRelayerPenalty = await stealthRelayer.penalty();
   alive.stillAlive();
-  console.log('Penalty set to', utils.formatEther(stealthRelayerPenalty));
-  console.log('Getting callers ...');
+  console.log('[Load information] Penalty set to', utils.formatEther(stealthRelayerPenalty));
+  console.log('[Load information] Getting callers ...');
   callers = (await stealthVault.callers()).map((caller: string) => normalizeAddress(caller));
   alive.stillAlive();
-  console.log('Getting callers jobs ...');
+  console.log('[Load information] Getting callers jobs ...');
   for (let i = 0; i < callers.length; i++) {
     addCallerStealthContracts(callers[i], await stealthVault.callerContracts(callers[i]));
-    console.log('Getting bonded from', callers[i]);
+    console.log('[Load information] Getting bonded from', callers[i]);
     addBond(callers[i], await stealthVault.bonded(callers[i]));
     alive.stillAlive();
   }
@@ -97,10 +102,13 @@ async function main(): Promise<void> {
     await setup();
     await loadInformation();
 
-    console.log('Hooking up to mempool ...');
+    console.log('[Main] Hooking up to mempool ...');
+    ethersWebSocketProvider.on('block', () => {
+      // Avoid spamming still alive check on get transactions
+      alive.stillAlive();
+    });
     ethersWebSocketProvider.on('pending', (txHash: string) => {
       ethersWebSocketProvider.getTransaction(txHash).then((transaction) => {
-        alive.stillAlive();
         if (transaction && !checkedTxs[txHash]) {
           checkedTxs[txHash] = true;
           checkTx(transaction);
@@ -108,30 +116,37 @@ async function main(): Promise<void> {
       });
     });
 
-    console.log('Hooking up to events ...');
+    console.log('[Main] Hooking up to events ...');
     stealthRelayer.on('PenaltySet', (penalty: BigNumber) => {
-      console.log('Updating penalty to', utils.formatEther(penalty));
+      console.log('[Main] Updating penalty to', utils.formatEther(penalty));
       stealthRelayerPenalty = penalty;
     });
     stealthVault.on('StealthContractEnabled', (caller: string, job: string) => {
+      console.log('[Main] Event StealthContractEnabled received');
       addCallerStealthContracts(caller, [job]);
     });
     stealthVault.on('StealthContractsEnabled', (caller: string, jobs: string[]) => {
+      console.log('[Main] Event StealthContractsEnabled received');
       addCallerStealthContracts(caller, jobs);
     });
     stealthVault.on('StealthContractDisabled', (caller: string, job: string) => {
+      console.log('[Main] Event StealthContractDisabled received');
       removeCallerStealthContracts(caller, [job]);
     });
     stealthVault.on('StealthContractsDisabled', (caller: string, jobs: string[]) => {
+      console.log('[Main] Event StealthContractsDisabled received');
       removeCallerStealthContracts(caller, jobs);
     });
     stealthVault.on('Bonded', (caller: string, bonded: BigNumber, _: BigNumber) => {
+      console.log('[Main] Event Bonded received');
       addBond(caller, bonded);
     });
     stealthVault.on('Unbonded', (caller: string, unbonded: BigNumber, _: BigNumber) => {
+      console.log('[Main] Event Unbonded received');
       reduceBond(caller, unbonded);
     });
     stealthVault.on('PenaltyApplied', (hash: string, caller: string, penalty: BigNumber, reporter: string) => {
+      console.log('[Main] Event PenaltyApplied received');
       reduceBond(caller, penalty);
       addBond(reporter, penalty.div(10));
     });
@@ -139,34 +154,35 @@ async function main(): Promise<void> {
 }
 
 async function checkTx(tx: Transaction) {
-  const rand = generateRandomNumber(1, 1000000000);
-  console.time(`Whole tx analysis ${tx.hash}`);
-  console.time(`Is using stealth relayer ${rand}-${tx.hash!}`);
+  const rand = generateRandomNumber(1, 100);
+  console.time(`[Check TX] Whole tx analysis ${tx.hash}`);
+  console.time(`[Check TX] Is using stealth relayer ${rand}-${tx.hash!}`);
   if (!isUsingStealthRelayer(tx.to!)) return;
   console.log('*****************************************');
-  console.timeEnd(`Is using stealth relayer ${rand}-${tx.hash!}`);
-  console.time(`Transaction parse ${rand}-${tx.hash!}`);
+  console.timeEnd(`[Check TX] Is using stealth relayer ${rand}-${tx.hash!}`);
+  console.time(`[Check TX] Transaction parse ${rand}-${tx.hash!}`);
   const parsedTx = await stealthRelayer.interface.parseTransaction(tx);
-  console.timeEnd(`Transaction parse ${rand}-${tx.hash!}`);
-  console.time(`Transaction using stealth vault execution ${rand}-${tx.hash!}`);
+  console.timeEnd(`[Check TX] Transaction parse ${rand}-${tx.hash!}`);
+  console.time(`[Check TX] Transaction using stealth vault execution ${rand}-${tx.hash!}`);
   if (!isUsingStealthVaultExecution(parsedTx.name)) return;
-  console.timeEnd(`Transaction using stealth vault execution ${rand}-${tx.hash!}`);
-  console.time(`Validating hash was not reported ${rand}-${tx.hash!}`);
-  if (await isHashReported(parsedTx.args._stealthHash)) return;
-  console.timeEnd(`Validating hash was not reported ${rand}-${tx.hash!}`);
-  console.time(`Validate caller jobs ${rand}-${tx.hash!}`);
+  console.timeEnd(`[Check TX] Transaction using stealth vault execution ${rand}-${tx.hash!}`);
+  // COMMENTED: If hash was already validated, flashbots simulation will fail and we will not report it
+  // console.time(`[Check TX] Validating hash was not reported ${rand}-${tx.hash!}`);
+  // if (await isHashReported(parsedTx.args._stealthHash)) return;
+  // console.timeEnd(`[Check TX] Validating hash was not reported ${rand}-${tx.hash!}`);
+  console.time(`[Check TX] Validate caller jobs ${rand}-${tx.hash!}`);
   if (!validCallerJobs(tx.from!, stealthRelayerAddress)) return;
-  console.timeEnd(`Validate caller jobs ${rand}-${tx.hash!}`);
-  console.time(`Validate bond for penalty ${rand}-${tx.hash!}`);
+  console.timeEnd(`[Check TX] Validate caller jobs ${rand}-${tx.hash!}`);
+  console.time(`[Check TX] Validate bond for penalty ${rand}-${tx.hash!}`);
   if (!validBondForPenalty(tx.from!)) return;
-  console.timeEnd(`Validate bond for penalty ${rand}-${tx.hash!}`);
-  console.timeEnd(`Whole tx analysis ${tx.hash}`);
+  console.timeEnd(`[Check TX] Validate bond for penalty ${rand}-${tx.hash!}`);
+  console.timeEnd(`[Check TX] Whole tx analysis ${tx.hash}`);
   await reportHash(parsedTx.args._stealthHash, tx);
   console.log('*****************************************');
 }
 
 async function reportHash(hash: string, transaction: Transaction): Promise<void> {
-  console.log('reporting hash', hash);
+  console.log('[Reporting hash] Hash:', hash);
   const currentGas = gasprice.get(gasprice.Confidence.Highest);
   const gasParams = {
     maxFeePerGas: MAX_GAS_PRICE,
@@ -175,22 +191,19 @@ async function reportHash(hash: string, transaction: Transaction): Promise<void>
         ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
         : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
   };
-  console.log('gas params max fee per gas', utils.formatUnits(gasParams.maxFeePerGas, 'gwei'));
-  console.log('gas params max priority', utils.formatUnits(gasParams.maxPriorityFeePerGas, 'gwei'));
+  console.log('[Reporting hash] Max fee per gas:', utils.formatUnits(gasParams.maxFeePerGas, 'gwei'), 'gwei');
+  console.log('[Reporting hash] Max priority fee per gas:', utils.formatUnits(gasParams.maxPriorityFeePerGas, 'gwei'), 'gwei');
   const populatedTx = await stealthVault.populateTransaction.reportHash(hash, {
     ...gasParams,
-    gasLimit: 100000,
+    gasLimit: BigNumber.from('100000'),
     nonce,
   });
-  const signedTx = await web3.eth.accounts.signTransaction(
-    {
-      ...gasParams,
-      to: populatedTx.to!,
-      gas: populatedTx.gasLimit!.toNumber(),
-      data: populatedTx.data!,
-    },
-    await kms.decrypt(process.env.GOERLI_1_PRIVATE_KEY as string)
-  );
+  const signedTx = await web3ReporterSigner.signTransaction({
+    ...gasParams,
+    to: populatedTx.to!,
+    gas: populatedTx.gasLimit!.toNumber(),
+    data: populatedTx.data!,
+  });
   const executorTx = getRawTransaction(transaction);
   const bundle: FlashbotBundle = [
     {
@@ -211,6 +224,7 @@ async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
   const blockNumber = await ethers.provider.getBlockNumber();
   let targetBlock = blockNumber + 1;
   while (!(submitted || rejected)) {
+    alive.stillAlive();
     if (!(await simulateBundle(bundle, targetBlock))) {
       rejected = true;
       continue;
@@ -220,12 +234,12 @@ async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
     flashbotsProvider.sendBundle(bundle, targetBlock + 2);
     const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
     if (resolution == FlashbotsBundleResolution.BundleIncluded) {
-      console.log('BundleIncluded, sucess!');
+      console.log('[Flashbot] BundleIncluded, sucess!');
       submitted = true;
     } else if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
-      console.log('BlockPassedWithoutInclusion, re-build and re-send bundle...');
+      console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
     } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
-      console.log('AccountNonceTooHigh, adjust nonce');
+      console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
       rejected = true;
     }
     targetBlock += 1;
@@ -235,17 +249,16 @@ async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
 
 async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Promise<boolean> {
   const signedBundle = await flashbotsProvider.signBundle(bundle);
-  let simulation: SimulationResponse;
   try {
-    simulation = await flashbotsProvider.simulate(signedBundle, blockNumber);
+    const simulation = await flashbotsProvider.simulate(signedBundle, blockNumber);
     if ('error' in simulation) {
-      console.error(`Simulation Error: ${simulation.error.message}`);
+      console.error(`[Flashbot] Simulation error: ${simulation.error.message}`);
     } else {
-      console.log(`Simulation Success !`);
+      console.log('[Flashbot] Simulation success !');
       return true;
     }
   } catch (error: any) {
-    console.error('simulation error', error);
+    console.error('[Flashbot] Simulation error:', error.message);
   }
   return false;
 }
@@ -275,13 +288,13 @@ function isUsingStealthVaultExecution(functionName: string): boolean {
   );
 }
 
-async function isHashReported(hash: string): Promise<boolean> {
-  const hashReportedBy = await stealthVault.hashReportedBy(hash);
-  return hashReportedBy != constants.AddressZero;
-}
+// async function isHashReported(hash: string): Promise<boolean> {
+//   const hashReportedBy = await stealthVault.hashReportedBy(hash);
+//   return hashReportedBy != constants.AddressZero;
+// }
 
 function addCallerStealthContracts(caller: string, callerContracts: string[]): void {
-  console.log('Adding', callerContracts.length, 'jobs of', caller);
+  console.log('[State update] Adding', callerContracts.length, 'jobs of', caller);
   callerContracts = callerContracts.map((cj) => normalizeAddress(cj));
   caller = normalizeAddress(caller);
   if (!_.has(callersJobs, caller)) callersJobs[caller] = [];
@@ -290,7 +303,7 @@ function addCallerStealthContracts(caller: string, callerContracts: string[]): v
 }
 
 function removeCallerStealthContracts(caller: string, callerContracts: string[]): void {
-  console.log('Removing', callerContracts.length, 'jobs of', caller);
+  console.log('[State update] Removing', callerContracts.length, 'jobs of', caller);
   callerContracts = callerContracts.map((cj) => normalizeAddress(cj));
   caller = normalizeAddress(caller);
   callersJobs[caller] = _.difference(callersJobs[caller], callerContracts);
@@ -298,71 +311,16 @@ function removeCallerStealthContracts(caller: string, callerContracts: string[])
 }
 
 function reduceBond(caller: string, amount: BigNumber): void {
-  console.log('Reducing', utils.formatEther(amount), 'of', caller, 'bonds');
+  console.log('[State update] Reducing', utils.formatEther(amount), 'of', caller, 'bonds');
   caller = normalizeAddress(caller);
   bonded[caller] = bonded[caller].sub(amount);
 }
 
 function addBond(caller: string, amount: BigNumber): void {
-  console.log('Adding', utils.formatEther(amount), 'to', caller, 'bonds');
+  console.log('[State update] Adding', utils.formatEther(amount), 'to', caller, 'bonds');
   caller = normalizeAddress(caller);
   if (!_.has(bonded, caller)) bonded[caller] = BigNumber.from('0');
   bonded[caller] = bonded[caller].add(amount);
-}
-
-function normalizeAddress(address: string): string {
-  return address.toLowerCase();
-}
-
-// Ref: https://eips.ethereum.org/EIPS/eip-2718, https://eips.ethereum.org/EIPS/eip-2930 and https://eips.ethereum.org/EIPS/eip-1559
-function getRawTransaction(transaction: Transaction): string {
-  let rawTransaction: string = '';
-  if (transaction.type! == 0) {
-    const executorTx = encode([
-      transaction.nonce,
-      transaction.gasPrice!.toNumber(),
-      transaction.gasLimit.toNumber(),
-      transaction.to!,
-      transaction.value.toNumber(),
-      transaction.data,
-      transaction.v!,
-      transaction.r!,
-      transaction.s!,
-    ]);
-    rawTransaction = `0x${executorTx.toString('hex')}`;
-  } else if (transaction.type! == 1) {
-    const executorTx = encode([
-      transaction.chainId,
-      transaction.nonce,
-      transaction.gasPrice!.toNumber(),
-      transaction.gasLimit.toNumber(),
-      transaction.to!,
-      transaction.value.toNumber(),
-      transaction.data,
-      [],
-      transaction.v!,
-      transaction.r!,
-      transaction.s!,
-    ]);
-    rawTransaction = `0x01${executorTx.toString('hex')}`;
-  } else if (transaction.type! == 2) {
-    const executorTx = encode([
-      transaction.chainId,
-      transaction.nonce,
-      transaction.maxPriorityFeePerGas!.toNumber(),
-      transaction.maxFeePerGas!.toNumber(),
-      transaction.gasLimit.toNumber(),
-      transaction.to!,
-      transaction.value.toNumber(),
-      transaction.data,
-      [], // access list
-      transaction.v!,
-      transaction.r!,
-      transaction.s!,
-    ]);
-    rawTransaction = `0x02${executorTx.toString('hex')}`;
-  }
-  return rawTransaction;
 }
 
 main()
@@ -373,11 +331,11 @@ main()
   });
 
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
+  console.error('[Process] Uncaught exception:', err);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err);
+  console.error('[Process] Unhandled rejection:', err);
   process.exit(1);
 });
