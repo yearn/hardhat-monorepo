@@ -25,13 +25,13 @@ function promptAndSubmit(): Promise<void | Error> {
           console.log(`export const stealthVault = goerli: '${stealthVault.address}'`);
 
           const stealthRelayerFactory: StealthRelayer__factory = await ethers.getContractFactory<StealthRelayer__factory>('StealthRelayer');
-          const stealthRelayer: StealthRelayer = await stealthRelayerFactory.deploy(stealthVault.address);
+          const stealthRelayer: StealthRelayer = await stealthRelayerFactory.deploy(stealthVault.address, { gasLimit: 2000000 });
           console.log('stealthRelayer address:', stealthRelayer.address);
 
           console.log('PLEASE add to utils/contracts.ts');
           console.log(`export const stealthRelayer = goerli: '${stealthRelayer.address}'`);
           resolve();
-        } catch (err) {
+        } catch (err: any) {
           reject(`Error while deploying stealth contracts to goerli: ${err.message}`);
         }
       } else {
