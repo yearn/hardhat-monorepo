@@ -7,9 +7,7 @@
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/commons"
   },
-  "scripts": {
-    "lint:fix": "echo patch"
-  },
+  "scripts": {},
   "publishConfig": {
     "access": "public"
   },
