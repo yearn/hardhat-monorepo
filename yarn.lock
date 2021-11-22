@@ -2261,10 +2261,10 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@16.11.8":
-  version "16.11.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.8.tgz#a1aeb23f0aa33cb111e64ccaa1687b2ae0423b69"
-  integrity sha512-hmT5gfpRkkHr7DZZHMf3jBe/zNcVGN+jXSL2f8nAsYfBPxQFToKwQlS/zES4Sjp488Bi73i+p6bvrNRRGU0x9Q==
+"@types/node@*", "@types/node@16.11.9":
+  version "16.11.9"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.9.tgz#879be3ad7af29f4c1a5c433421bf99fab7047185"
+  integrity sha512-MKmdASMf3LtPzwLyRrFjtFFZ48cMf8jmX5VRYrDQiJa8Ybu5VAmkqBWqKU8fdCwD8ysw4mQ9nrEHvzg6gunR7A==
 
 "@types/node@^10.0.3", "@types/node@^10.3.2":
   version "10.17.60"
@@ -2423,7 +2423,7 @@
   version "0.1.0"
   dependencies:
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-0f90256b-69d3-4994-b7ef-838c8e4ab47e-1637279492114/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-b6a2bf0b-4dd3-42df-97bc-38856dea4f80-1637584331787/node_modules/@yearn/contract-utils"
 
 "@yearn/strategies-keep3r@file:packages/strategies-keep3r":
   version "0.1.0"
@@ -2431,7 +2431,7 @@
     "@gnosis.pm/safe-core-sdk" "0.3.1"
     "@gnosis.pm/safe-service-client" "0.1.1"
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-28f93a5d-447a-4b34-aca9-b99352bf9d0f-1637279492120/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-01522fff-d006-4925-9c8e-4a3e7d2a4590-1637584331793/node_modules/@yearn/contract-utils"
     deasync "0.1.23"
     inquirer "8.2.0"
     prompt-confirm "2.0.4"
@@ -2444,7 +2444,7 @@
     "@bancor/sdk" "0.2.10"
     "@openzeppelin/contracts" "4.3.2"
     "@uniswap/v2-periphery" "1.1.0-beta.0"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-2232bc4b-c192-4718-8d2e-9fbd1ee46d17-1637279493768/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-f63ea6fc-22c3-420a-9feb-92d3af3471fc-1637584337193/node_modules/@yearn/contract-utils"
     qs "6.10.1"
 
 JSONStream@^1.0.4:
@@ -3164,10 +3164,10 @@ available-typed-arrays@^1.0.5:
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-aws-sdk@2.1032.0:
-  version "2.1032.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1032.0.tgz#6711efdd61e9a4d306030a69684633702cc43113"
-  integrity sha512-e3477Kka0XoIKrxTMdbBKWxizdesWpZK77FUv0FtcviZtKJd/yxymz50NREP3+88OZIj5a0WihG4YIjuZOla5Q==
+aws-sdk@2.1033.0:
+  version "2.1033.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1033.0.tgz#8bd0084142b15cc2ca427483c36c86b27abc046b"
+  integrity sha512-cgcjiuR82bhfBWTffqt6e9+Cn/UgeC6QPQTrlJy3GxwPxChthyrt/h5pekj2l4PLFvETsG10Y6CqQysJEMsncw==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -5641,9 +5641,9 @@ ee-first@1.1.1:
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
 electron-to-chromium@^1.3.47:
-  version "1.3.902"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.902.tgz#926726705c17f9531be23bda545b819b35da665d"
-  integrity sha512-zFv5jbtyIr+V9FuT9o439isXbkXQ27mJqZfLXpBKzXugWE8+3RotHbXJlli0/r+Rvdlkut0OOMzeOWLAjH0jCw==
+  version "1.3.904"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.904.tgz#52a353994faeb0f2a9fab3606b4e0614d1af7b58"
+  integrity sha512-x5uZWXcVNYkTh4JubD7KSC1VMKz0vZwJUqVwY3ihsW0bst1BXDe494Uqbg3Y0fDGVjJqA8vEeGuvO5foyH2+qw==
 
 elliptic@6.3.3:
   version "6.3.3"
@@ -7680,10 +7680,10 @@ hardhat-contract-sizer@2.1.1:
     cli-table3 "^0.6.0"
     colors "^1.4.0"
 
-hardhat-deploy@0.9.8:
-  version "0.9.8"
-  resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.9.8.tgz#197375e043ff2b06e7879c4119f801bdd11a493b"
-  integrity sha512-f7s3mG4wHnZuQWR+W4QVnPIE0OshgBrf19gvqRBqMbH9cDw4IxBXKWYSVTPXHXNITjwE3CA9Rqx+52Ee1ovtAA==
+hardhat-deploy@0.9.10:
+  version "0.9.10"
+  resolved "https://registry.yarnpkg.com/hardhat-deploy/-/hardhat-deploy-0.9.10.tgz#b2346421624dceba73dc51483ca4c4b25b17a4da"
+  integrity sha512-Cu9uwpnvfk+pFuspcie6PVxxV/DOIpNGyBuffKayBAtrKHqU/wkKqiw+q8iR5eND+F63JXFmLlt2v8SMea7odQ==
   dependencies:
     "@ethersproject/abi" "^5.4.0"
     "@ethersproject/abstract-signer" "^5.4.1"
@@ -9278,9 +9278,9 @@ libnpmpublish@^4.0.0:
     ssri "^8.0.1"
 
 lines-and-columns@^1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
-  integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
+  integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
 load-json-file@^1.0.0:
   version "1.1.0"
@@ -13028,9 +13028,9 @@ source-map-support@^0.4.15:
     source-map "^0.5.6"
 
 source-map-support@^0.5.13, source-map-support@^0.5.17:
-  version "0.5.20"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.20.tgz#12166089f8f5e5e8c56926b377633392dd2cb6c9"
-  integrity sha512-n1lZZ8Ve4ksRqizaBQgxXDgKwttHDhyfQjA6YZZn8+AroHbsIz+JjwxQDxbp+7y5OYCI8t1Yk7etjD9CRd2hIw==
+  version "0.5.21"
+  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.21.tgz#04fe7c7f9e1ed2d662233c28cb2b35b9f63f6e4f"
+  integrity sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==
   dependencies:
     buffer-from "^1.0.0"
     source-map "^0.6.0"
@@ -13499,9 +13499,9 @@ sync-rpc@^1.2.1:
     get-port "^3.1.0"
 
 systeminformation@^5.7:
-  version "5.9.14"
-  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.9.14.tgz#20fd41ddb0a258b5958476769269b8dbe5f42f0d"
-  integrity sha512-s9/ikrNXM60LC+rYuTKzFFJHaXs9emwh4gLVfQwYzv1QejI1WW9XkgLJfnDbHbV70C5zmBIypCsuc1BNICuTfQ==
+  version "5.9.15"
+  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.9.15.tgz#0f02fa6175cfe5c46b6b50618f851a046cf61cdb"
+  integrity sha512-0tUYPXffFEsme8n/iTAMk09jpGgqtaGf46QOx7oFmiON9zDUQCahfSymQaCRr4tsq9BkKolaOzp8nqMVNrKIqQ==
 
 table@^5.2.3:
   version "5.4.6"
@@ -13856,10 +13856,10 @@ ts-node@^9, ts-node@^9.1.0:
     source-map-support "^0.5.17"
     yn "3.1.1"
 
-tsconfig-paths@3.11.0:
-  version "3.11.0"
-  resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.11.0.tgz#954c1fe973da6339c78e06b03ce2e48810b65f36"
-  integrity sha512-7ecdYDnIdmv639mmDwslG6KQg1Z9STTz1j7Gcz0xa+nshh/gKDAHcPxRbWOsA3SPp0tXP2leTcY9Kw+NAkfZzA==
+tsconfig-paths@3.12.0:
+  version "3.12.0"
+  resolved "https://registry.yarnpkg.com/tsconfig-paths/-/tsconfig-paths-3.12.0.tgz#19769aca6ee8f6a1a341e38c8fa45dd9fb18899b"
+  integrity sha512-e5adrnOYT6zqVnWqZu7i/BQ3BnhzvGbjEjejFXO20lKIKpwTaupkCPgEfv4GZK1IBciJUEhYs3J3p75FdaTFVg==
   dependencies:
     "@types/json5" "^0.0.29"
     json5 "^1.0.1"
@@ -13919,9 +13919,9 @@ tweetnacl@^1.0.0, tweetnacl@^1.0.3:
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
 
 tx2@~1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/tx2/-/tx2-1.0.4.tgz#cb9432df22e0b8c54daf711b51b708f094449ddf"
-  integrity sha512-rU+y30nUY3PyIi+znvv74HzxlpULKwMPAyRK+YiCjvGkk3rY3fic3D6Z+avLpun3V5A6HFwPQ9JrBTMNEV/dxg==
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/tx2/-/tx2-1.0.5.tgz#ee0b0e5e2c351f8d23e54bdf46dd60afa3bbc73d"
+  integrity sha512-sJ24w0y03Md/bxzK4FU8J8JveYYUbSs2FViLJ2D/8bytSiyPRbuE3DyL/9UKYXTZlV3yXq0L8GLlhobTnekCVg==
   dependencies:
     json-stringify-safe "^5.0.1"
 

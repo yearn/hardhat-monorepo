@@ -9,6 +9,7 @@ export const startCheck = (): void => {
 };
 
 export const stillAlive = (): void => {
+  console.log('STILL ALIVE!');
   // clearTimeout(aliveInterval);
   // startCheck();
 };
