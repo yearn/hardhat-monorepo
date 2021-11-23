@@ -2,6 +2,8 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 interface IGovernable {
+  error NoGovernor();
+
   event PendingGovernorSet(address pendingGovernor);
   event GovernorAccepted();
 
