@@ -68,7 +68,7 @@ contract BaseFeeOracle is Governable, IBaseFeeOracle {
 
   function setStrategistsMultisig(address _strategistsMultisig) external {
     if (_strategistsMultisig == strategistsMultisig) revert NoChange();
-    if (msg.sender != governor) revert NoGovernor();
+    if (msg.sender != governor) revert NotGovernor();
     strategistsMultisig = _strategistsMultisig;
   }
 }
