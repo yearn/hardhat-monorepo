@@ -17,14 +17,20 @@ export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
 export function getNodeUrl(networkName: string): string {
   const uri = process.env[`ETH_NODE_URI_${networkName.toUpperCase()}`] as string;
 
-  if (!uri) throw new Error(`No uri for network ${networkName}`);
+  if (!uri) {
+    console.warn(`No uri for network ${networkName}`);
+    return '';
+  } 
 
   return uri;
 }
 
 export function getMnemonic(networkName: string): string {
   const mnemonic = process.env[`MNEMONIC_${networkName.toUpperCase()}`] as string;
-  if (!mnemonic) throw new Error(`No mnemonic for network ${networkName}`);
+  if (!mnemonic) {
+    console.warn(`No mnemonic for network ${networkName}`);
+    return 'test test test test test test test test test test test junk';
+  }
   return mnemonic;
 }
 
@@ -33,6 +39,10 @@ export function getPrivateKeys(networkName: string): string[] {
   for (let i = 1; i <= MAX_ACCOUNTS; i ++) {
     const privateKey = process.env[`${networkName.toUpperCase()}_${i}_PRIVATE_KEY`];
     if (!!privateKey) privateKeys.push(privateKey);
+  }
+  if (privateKeys.length == 0) {
+    console.warn(`No private keys for network ${networkName}`);
+    privateKeys.push('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
   }
   return privateKeys;
 }

@@ -103,12 +103,9 @@ async function main(): Promise<void> {
     await loadInformation();
 
     console.log('[Main] Hooking up to mempool ...');
-    ethersWebSocketProvider.on('block', () => {
-      // Avoid spamming still alive check on get transactions
-      alive.stillAlive();
-    });
     ethersWebSocketProvider.on('pending', (txHash: string) => {
       ethersWebSocketProvider.getTransaction(txHash).then((transaction) => {
+        alive.stillAlive();
         if (transaction && !checkedTxs[txHash]) {
           checkedTxs[txHash] = true;
           checkTx(transaction);

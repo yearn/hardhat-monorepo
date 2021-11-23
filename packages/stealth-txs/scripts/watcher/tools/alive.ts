@@ -1,6 +1,6 @@
 import moment from 'moment';
 
-const MAX_UNRESPONSIVE_TIME = moment.duration('45', 'seconds').as('milliseconds');
+const MAX_UNRESPONSIVE_TIME = moment.duration('10', 'seconds').as('milliseconds');
 
 let aliveInterval: NodeJS.Timeout;
 
