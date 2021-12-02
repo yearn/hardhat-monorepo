@@ -14,7 +14,6 @@
 
 - SWAPPER SETTER
 
-  - Can set async swapper to a strategy
   - Can set sync swapper to a strategy
 
 - STRATEGY
@@ -29,7 +28,6 @@
 
 - TRADES MODIFIER
 
-  - Can change swapper on async trades
   - Can merge async trades
 
 - TRADES SETTLER

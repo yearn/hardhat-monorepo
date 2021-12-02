@@ -1,14 +1,14 @@
 {
   "name": "@yearn/contract-utils",
-  "version": "0.0.0",
-  "description": "utility smart contracts",
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/contract-utils#readme",
+  "version": "0.1.0",
+  "description": "Smart contract to handle usual operations",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/contract-utils#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/contract-utils"
   },
-  "license": "MIT",
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",
@@ -38,7 +38,7 @@
     "watcher:start:mainnet": "npx hardhat run ./scripts/watcher/yearn.ts --network mainnet"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.2.0"
+    "@openzeppelin/contracts": "4.3.2"
   },
   "publishConfig": {
     "access": "public"

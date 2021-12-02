@@ -1,6 +1,6 @@
 {
   "name": "@yearn/strategies-keep3r",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Strategies Keep3r",
   "keywords": [
     "ethereum",
@@ -17,6 +17,7 @@
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/strategies-keep3r"
   },
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",

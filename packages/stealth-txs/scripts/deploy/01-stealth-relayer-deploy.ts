@@ -1,5 +1,5 @@
-import { Contract, ContractFactory } from 'ethers';
-import { run, ethers, network } from 'hardhat';
+import { StealthRelayer, StealthRelayer__factory } from '@typechained';
+import { run, ethers } from 'hardhat';
 import * as contracts from '../../utils/contracts';
 
 const { Confirm } = require('enquirer');
@@ -18,14 +18,14 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const stealthRelayerFactory: ContractFactory = await ethers.getContractFactory('StealthRelayer');
-          const stealthRelayer: Contract = await stealthRelayerFactory.deploy(contracts.stealthVault.mainnet);
+          const stealthRelayerFactory: StealthRelayer__factory = await ethers.getContractFactory<StealthRelayer__factory>('StealthRelayer');
+          const stealthRelayer: StealthRelayer = await stealthRelayerFactory.deploy(contracts.stealthVault.mainnet);
           console.log('stealthRelayer address:', stealthRelayer.address);
 
           console.log('PLEASE add to utils/contracts.ts');
           console.log(`export const stealthRelayer = '${stealthRelayer.address}'`);
           resolve();
-        } catch (err) {
+        } catch (err: any) {
           reject(`Error while deploying stealthRelayer contract: ${err.message}`);
         }
       } else {

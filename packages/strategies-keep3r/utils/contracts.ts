@@ -1,4 +1,12 @@
-import { SUPPORTED_NETWORKS } from './network';
+export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'ftm';
+
+export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
+  1: 'mainnet',
+  4: 'rinkeby',
+  5: 'goerli',
+  137: 'polygon',
+  250: 'ftm',
+};
 
 export type ContractChainAddress = {
   [chainName in SUPPORTED_NETWORKS]?: string;
@@ -71,7 +79,7 @@ export const betaTendV2Keep3rJob: ContractChainAddress = {
 };
 
 export const stealthSafeGuard: ContractChainAddress = {
-  mainnet: '',
+  mainnet: '0xa6A8B8F06835d44E53Ae871b2EadbE659c335e5d', // ySwaps
   rinkeby: '0xC190B246e9fe7026240e464bf28c0ba645CD81c3',
 };
 

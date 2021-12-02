@@ -1,7 +1,7 @@
 {
   "name": "@yearn/yswaps",
-  "version": "0.0.0",
-  "description": "Yearn strategy swappers",
+  "version": "0.1.0",
+  "description": "Yearn module to handle swaps for strategies",
   "keywords": [
     "ethereum",
     "smart",
@@ -9,14 +9,16 @@
     "test",
     "solidity",
     "hardhat",
+    "swaps",
     "yearn"
   ],
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/yswaps#readme",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/yswaps#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/yswaps"
   },
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",
@@ -32,6 +34,7 @@
     "coverage": "npx hardhat coverage",
     "deploy": "npx hardhat deploy",
     "deploy:fantom": "npx hardhat deploy --tags Common,Fantom --network fantom",
+    "deploy:mainnet": "npx hardhat deploy --tags Common,Mainnet --network mainnet",
     "deploy:polygon": "npx hardhat deploy --tags Common,Polygon --network polygon",
     "fork": "FORK=true npx hardhat node",
     "fork:script": "FORK=true npx hardhat run",
@@ -44,9 +47,11 @@
     "test:e2e": "yarn test ./test/e2e/**/*.spec.ts",
     "test:gas": "yarn test ./test/e2e/**/*.spec.ts test/unit/**/*.spec.ts",
     "test:integration": "yarn test ./test/integration/**/**/*.spec.ts",
-    "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts"
+    "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts",
+    "watch:fantom": "pm2 start 'npx hardhat run scripts/execute-fantom-pending-trades.ts --network fantom' --cron '*/5 * * * *' --no-autorestart"
   },
   "dependencies": {
+    "@bancor/sdk": "0.2.10",
     "@openzeppelin/contracts": "4.3.2",
     "@uniswap/v2-periphery": "1.1.0-beta.0",
     "@yearn/contract-utils": "file:../contract-utils",

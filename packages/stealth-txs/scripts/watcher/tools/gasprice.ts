@@ -1,8 +1,8 @@
 import axios from 'axios';
 import moment from 'moment';
 
-const TIMEOUT = moment.duration('3', 'seconds').as('milliseconds');
-const INTERVAL = moment.duration('6', 'seconds').as('milliseconds');
+const TIMEOUT = moment.duration('4', 'seconds').as('milliseconds');
+const INTERVAL = moment.duration('8', 'seconds').as('milliseconds');
 
 let quoteInterval: NodeJS.Timer;
 let last: TxPriceResponse;

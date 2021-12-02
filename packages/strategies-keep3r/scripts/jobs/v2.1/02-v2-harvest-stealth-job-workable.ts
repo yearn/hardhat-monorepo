@@ -24,8 +24,12 @@ function promptAndSubmit(): Promise<void | Error> {
             'HarvestV2Keep3rStealthJob',
             contracts.harvestV2Keep3rStealthJob.mainnet as string
           );
-
           const strategies = await harvestV2Keep3rStealthJob.callStatic.strategies();
+
+          // const strategies = [
+          //   '0x564bf2844654f149821697cC56572eE4384c05f7',
+          //   '0x1D371Ae86c8316917373Ec572B18776655Fd11b7',
+          // ];
           console.log('strategies:', strategies);
           for (const strategy of strategies) {
             try {
@@ -39,6 +43,9 @@ function promptAndSubmit(): Promise<void | Error> {
               } catch (error) {}
               const workableStrategy = await harvestV2Keep3rStealthJob.callStatic.workable(strategy);
               console.log(strategy, 'workable:', workableStrategy);
+              if (!workableStrategy) continue;
+              const worked = await harvestV2Keep3rStealthJob.callStatic.forceWorkUnsafe(strategy);
+              console.log('worked:', worked);
             } catch (error) {
               console.log(strategy, 'error:');
               console.log(error);

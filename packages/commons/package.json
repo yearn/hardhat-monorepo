@@ -1,14 +1,13 @@
 {
   "name": "@yearn/commons",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "license": "GNU V3",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/commons"
   },
-  "scripts": {
-    "lint:fix": "echo patch"
-  },
+  "scripts": {},
   "publishConfig": {
     "access": "public"
   },

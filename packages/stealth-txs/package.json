@@ -1,14 +1,14 @@
 {
   "name": "@yearn/stealth-txs",
-  "version": "0.0.0",
-  "description": "bonded stealth tx vault smart contracts",
-  "homepage": "https://github.com/yearn/hardhat-monorepo/packages/stealth-txs#readme",
+  "version": "0.1.0",
+  "description": "Enforces private realyer transactions while keeping safety from uncled transactions",
+  "homepage": "https://github.com/yearn/hardhat-monorepo/tree/main/packages/stealth-txs#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yearn/hardhat-monorepo",
     "directory": "packages/stealth-txs"
   },
-  "license": "MIT",
+  "license": "GNU V3",
   "files": [
     "contracts",
     "!contracts/mock",
@@ -35,10 +35,11 @@
     "test:gas": "yarn test ./test/e2e/*.spec.ts test/unit/*.spec.ts",
     "test:integration": "yarn test ./test/integration/*.spec.ts",
     "test:unit": "yarn test test/unit/*.spec.ts",
+    "watcher:start:goerli": "npx hardhat run ./scripts/watcher/yearn.ts --network goerli",
     "watcher:start:mainnet": "npx hardhat run ./scripts/watcher/yearn.ts --network mainnet"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.2.0",
+    "@openzeppelin/contracts": "4.3.2",
     "@yearn/contract-utils": "file:../contract-utils"
   },
   "publishConfig": {
