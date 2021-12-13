@@ -33,12 +33,12 @@ function promptAndSubmit(): Promise<void | Error> {
     }
 
     const strategiesToAlwaysHarvest: string[] = [
-      '0xff3AeA00d3d58ba1a3672c766cc5060FfCb8cca3',
-      '0xAB1d2ABbe31FA5945BfA0864f29dadDcB9cd9eAc',
-      '0x399ee38023a914e953ab02ba164ddf941fe39bb9',
-      '0xca25d703cd814e8f5cef9aacee0e7424bb4bccc6',
-      '0x9d32f2bfc5dda3e82f364bf2f8a30d73247a01d1',
-      '0x20b5e014f7251dfee5e51b5d2d627dfa5ff73824',
+      // '0xff3AeA00d3d58ba1a3672c766cc5060FfCb8cca3',
+      // '0xAB1d2ABbe31FA5945BfA0864f29dadDcB9cd9eAc',
+      // '0x399ee38023a914e953ab02ba164ddf941fe39bb9',
+      // '0xca25d703cd814e8f5cef9aacee0e7424bb4bccc6',
+      // '0x9d32f2bfc5dda3e82f364bf2f8a30d73247a01d1',
+      // '0x20b5e014f7251dfee5e51b5d2d627dfa5ff73824',
     ];
 
     try {
