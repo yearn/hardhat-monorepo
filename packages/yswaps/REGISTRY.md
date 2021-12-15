@@ -4,14 +4,15 @@
 
 ### Base Protocol
 
-- yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.com/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
-- ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.com/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
-- TradeFactory: [0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d](https://etherscan.com/address/0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d)
-- OTCPool: [0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06](https://etherscan.com/address/0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06)
+- yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.io/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
+- ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.io/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
+- TradeFactory: [0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d](https://etherscan.io/address/0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d)
+- OTCPool: [0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06](https://etherscan.io/address/0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06)
 
 ### Swappers
 
-- OneInchAggregatorSwapper: [0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc](https://etherscan.com/address/0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc)
+- OneInchAggregatorSwapper: [0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc](https://etherscan.io/address/0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc)
+- AsyncSushiswapSwapper: [0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60](https://etherscan.io/address/0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60)
 
 ## 👻 Fantom
 

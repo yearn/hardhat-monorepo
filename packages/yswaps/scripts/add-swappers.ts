@@ -2,7 +2,9 @@ import { ethers } from 'hardhat';
 
 async function main() {
   const tradeFactory = await ethers.getContract('TradeFactory');
-  await tradeFactory.addSwappers([]);
+  const oneInchAggregator = await ethers.getContract('OneInchAggregator');
+  const asyncSushiswap = await ethers.getContract('AsyncSushiswap');
+  await tradeFactory.addSwappers([oneInchAggregator.address, asyncSushiswap.address]);
 }
 
 main()
