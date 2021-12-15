@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { getChainId, shouldVerifyContract } from '@utils/deploy';
+import { utils } from 'ethers/lib/ethers';
 
 export const MECHANICS_REGISTRY: { [chainId: string]: string } = {
   // Mainnet
@@ -13,7 +14,7 @@ export const MECHANICS_REGISTRY: { [chainId: string]: string } = {
 
 export const MASTER_ADMIN: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
@@ -22,7 +23,7 @@ export const MASTER_ADMIN: { [chainId: string]: string } = {
 
 export const SWAPPER_ADDER: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
@@ -31,7 +32,7 @@ export const SWAPPER_ADDER: { [chainId: string]: string } = {
 
 export const SWAPPER_SETTER: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
@@ -40,7 +41,7 @@ export const SWAPPER_SETTER: { [chainId: string]: string } = {
 
 export const STRATEGY_ADDER: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
@@ -49,7 +50,7 @@ export const STRATEGY_ADDER: { [chainId: string]: string } = {
 
 export const TRADE_MODIFIER: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
@@ -58,7 +59,7 @@ export const TRADE_MODIFIER: { [chainId: string]: string } = {
 
 export const TRADE_SETTLER: { [chainId: string]: string } = {
   // Mainnet
-  '1': '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // TODO: Change and put the real address
+  '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
   '137': '0x31ABE8B1A645ac2d81201869d6eC77CF192e7d7F',
   // Fantom
