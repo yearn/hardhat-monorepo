@@ -4,7 +4,7 @@ async function main() {
   const tradeFactory = await ethers.getContract('TradeFactory');
   const oneInchAggregator = await ethers.getContract('OneInchAggregator');
   const asyncSushiswap = await ethers.getContract('AsyncSushiswap');
-  await tradeFactory.addSwappers([oneInchAggregator.address, asyncSushiswap]);
+  await tradeFactory.addSwappers([oneInchAggregator.address, asyncSushiswap.address]);
 }
 
 main()
