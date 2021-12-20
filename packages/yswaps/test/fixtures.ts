@@ -147,3 +147,43 @@ export const uniswapV2SwapperFixture = async (
     ...uniswapDeployment,
   };
 };
+
+interface MultiCallSwapperFixture extends OTCPoolFixture {
+  multiSendCallOnly: Contract;
+  multiCallAsyncSwapper: Contract;
+}
+
+export const multiCallSwapperFixture = async (
+  masterAdmin: string,
+  swapperAdder: string,
+  swapperSetter: string,
+  strategyAdder: string,
+  tradeModifier: string,
+  tradeSettler: string,
+  mechanicsRegistry: string,
+  otcPoolGovernor: string
+): Promise<MultiCallSwapperFixture> => {
+  const { tradeFactory, otcPool } = await otcPoolFixture(
+    masterAdmin,
+    swapperAdder,
+    swapperSetter,
+    strategyAdder,
+    tradeModifier,
+    tradeSettler,
+    mechanicsRegistry,
+    otcPoolGovernor
+  );
+  const MultiSendCallOnlyFactory = await ethers.getContractFactory('contracts/libraries/MultiSendCallOnly.sol:MultiSendCallOnly');
+  const multiCallAsyncSwapperFactory = await ethers.getContractFactory('contracts/swappers/async/MultiCallSwapper.sol:MultiCallSwapper');
+  const owner = await wallet.generateRandom();
+  await ethers.provider.send('hardhat_setBalance', [owner.address, utils.parseEther('10').toHexString()]);
+  const multiSendCallOnlyContract = await MultiSendCallOnlyFactory.deploy();
+  const multiCallAsyncSwapper = await multiCallAsyncSwapperFactory.deploy(masterAdmin, tradeFactory.address, multiSendCallOnlyContract.address);
+
+  return {
+    tradeFactory,
+    otcPool,
+    multiCallAsyncSwapper,
+    multiSendCallOnly: multiSendCallOnlyContract,
+  };
+};

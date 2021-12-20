@@ -22,22 +22,19 @@ interface ISwapperEnabled {
     address _tokenIn,
     address _tokenOut,
     uint256 _amountIn,
-    uint256 _maxSlippage,
     uint256 _deadline
   ) external returns (uint256 _id);
 
   function executeTrade(
     address _tokenIn,
     address _tokenOut,
-    uint256 _amountIn,
-    uint256 _maxSlippage
+    uint256 _amountIn
   ) external returns (uint256 _receivedAmount);
 
   function executeTrade(
     address _tokenIn,
     address _tokenOut,
     uint256 _amountIn,
-    uint256 _maxSlippage,
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
 
