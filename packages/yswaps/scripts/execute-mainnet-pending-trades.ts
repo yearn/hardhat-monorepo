@@ -2,7 +2,7 @@ import { ethers, getChainId } from 'hardhat';
 import sleep from 'sleep-promise';
 import uniswap from '@libraries/uniswap-v2';
 import moment from 'moment';
-import { BigNumber, utils, Wallet } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { TradeFactory } from '@typechained';
 import zrx from './libraries/zrx';
 import * as gasprice from './libraries/gasprice';
@@ -17,6 +17,9 @@ import {
   FlashbotsTransactionResponse,
 } from '@flashbots/ethers-provider-bundle';
 
+import {PendingTrade, TradeSetup} from './types';
+import { ThreePoolCrvHook } from './hooks/ThreePoolCrvHook';
+
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
 const SLIPPAGE_PERCENTAGE = 3;
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
@@ -28,28 +31,17 @@ let flashbotsProvider: FlashbotsBundleProvider;
 
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
-type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNumber] & {
-  _id: BigNumber;
-  _strategy: string;
-  _tokenIn: string;
-  _tokenOut: string;
-  _amountIn: BigNumber;
-  _deadline: BigNumber;
-};
 
-type TradeSetup = {
-  swapper: string;
-  data: string;
-  minAmountOut: BigNumber | undefined;
-};
 
 async function main() {
+  const hooks = [new ThreePoolCrvHook()]
   const chainId = await getChainId();
+  // create fork as singleton
   console.log('[Setup] Chain ID:', chainId);
   const [signer] = await ethers.getSigners();
   console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
-    ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    ethers.provider, // a normal ethers.js provider, to perform gas estimations and nonce lookups
     signer // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
@@ -68,6 +60,9 @@ async function main() {
       await tradeFactory.expire(pendingTrade._id);
       continue;
     }
+
+    const hook = hooks.find(hook => hook.match(pendingTrade));
+    hook?.preSwap(pendingTrade);
 
     const { data: uniswapV2Data, minAmountOut: uniswapV2MinAmountOut } = await uniswap.getBestPathEncoded({
       tokenIn: pendingTrade._tokenIn,
@@ -136,13 +131,32 @@ async function main() {
       gas: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
+
+    // TODO sign preSwapTxs & postSwapTxs populated txs
+
+    /*
+      - EOA
+      - transaction array [populated txs]
+      - ds-proxy [multisend] onlyExecutor(EOA)
+      - ds-proxy.execute([populated txs]) (to[], data[], value[]?, blockNumber?)
+        - set block protection
+        - sign as EOA and send to flashbots
+
+    
+    */
+
     const bundle: FlashbotBundle = [
+      // ...preSwapTxs,
       {
         signedTransaction: signedTx.rawTransaction!,
       },
+      // ...postSwapTxs,
     ];
     if (await submitBundle(bundle)) console.log('Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
     await sleep(DELAY);
+
+
+    hook?.postSwap(pendingTrade);
   }
 }
 

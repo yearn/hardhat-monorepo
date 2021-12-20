@@ -7,26 +7,12 @@ import { SPIRITSWAP_FACTORY, SPIRITSWAP_ROUTER } from '@deploy/fantom-swappers/s
 import { BigNumber, utils } from 'ethers';
 import { TradeFactory } from '@typechained';
 import zrx from './libraries/zrx';
+import { PendingTrade, TradeSetup } from './types';
 
 const DELAY = moment.duration('1', 'minutes').as('milliseconds');
 const SPOOKY_TOKEN = '0x841fad6eae12c286d1fd18d1d525dffa75c7effe';
 const SPIRIT_TOKEN = '0x5cc61a78f164885776aa610fb0fe1257df78e59b';
 const SLIPPAGE_PERCENTAGE = 3;
-
-type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNumber] & {
-  _id: BigNumber;
-  _strategy: string;
-  _tokenIn: string;
-  _tokenOut: string;
-  _amountIn: BigNumber;
-  _deadline: BigNumber;
-};
-
-type TradeSetup = {
-  swapper: string;
-  data: string;
-  minAmountOut: BigNumber | undefined;
-};
 
 async function main() {
   const chainId = await getChainId();
