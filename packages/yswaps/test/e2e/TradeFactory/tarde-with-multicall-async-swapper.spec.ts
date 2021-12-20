@@ -1,12 +1,13 @@
 import { BigNumber, constants, Contract, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import moment from 'moment';
-import { erc20, evm, multiSendCallOnly } from '@test-utils';
+import { erc20, evm } from '@test-utils';
 import * as fixtures from '../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import { IERC20, TradeFactory } from '@typechained';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { mergeTransactions } from '@scripts/libraries/multicall';
 
 contract('MultiCallSwapper', () => {
   let masterAdmin: SignerWithAddress;
@@ -103,7 +104,7 @@ contract('MultiCallSwapper', () => {
       // swapper sends tokenOut (2) to strategy as the trade output
       transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 2));
 
-      const transactionsData = multiSendCallOnly.mergeTransactions(transactions);
+      const transactionsData = mergeTransactions(transactions);
 
       minAmountOut = BigNumber.from(1);
 

@@ -1,5 +1,8 @@
 import { hexDataLength } from '@ethersproject/bytes';
 import { pack } from '@ethersproject/solidity';
+import { BigNumber, PopulatedTransaction } from 'ethers';
+
+// h/t to https://github.com/gnosis/ethers-multisend
 
 export enum OperationType {
   Call = 0,
@@ -34,4 +37,15 @@ const remove0x = (hexString: string) => hexString.substr(2);
 // For more information refer to https://docs.gnosis.io/safe/docs/contracts_details/#gnosis-safe-transactions.
 export const encodeMulti = (transactions: readonly MetaTransaction[]): string => {
   return '0x' + transactions.map(encodePacked).map(remove0x).join('');
+};
+
+export const mergeTransactions = (transactions: PopulatedTransaction[]) => {
+  return encodeMulti(
+    transactions.map((transaction) => ({
+      to: transaction.to as string,
+      value: BigNumber.from(transaction.value || 0).toString(),
+      data: transaction.data as string,
+      operation: OperationType.Call, // Only Call are allowed
+    }))
+  );
 };
