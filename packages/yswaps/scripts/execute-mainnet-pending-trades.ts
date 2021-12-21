@@ -32,10 +32,10 @@ async function main() {
   const chainId = await getChainId();
   console.log('[Setup] Chain ID:', chainId);
   const [signer] = await ethers.getSigners();
-  const multicalls = [new ThreePoolCrvMulticall()]
+  const multicalls = [new ThreePoolCrvMulticall()];
   console.log('[Setup] Creating flashbots provider ...');
 
-  const multisig = await wallet.impersonate(multisigAddress);
+  // const multisig = await wallet.impersonate(multisigAddress);
 
   flashbotsProvider = await FlashbotsBundleProvider.create(
     ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
@@ -71,7 +71,7 @@ async function main() {
     let bestSetup: TradeSetup;
 
     // Check if we need to run over a multicall swapper
-    const multicall = multicalls.find(mc => mc.match(pendingTrade));
+    const multicall = multicalls.find((mc) => mc.match(pendingTrade));
     if (multicall) {
       bestSetup = await multicall.asyncSwap(pendingTrade);
     } else {

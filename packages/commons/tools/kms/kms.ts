@@ -27,7 +27,7 @@ const encryptSeveral = async (plainStrings: string[]): Promise<string[]> => {
 
 const decryptSync = (encryptedString: string): string => {
   // encryptedString is a plain PrivateKey (default privateKey)
-  if (encryptedString === '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') return encryptedString;
+  if (encryptedString === '0x0000000000000000000000000000000000000000000000000000000000000bad') return encryptedString;
 
   let decryptedInfo: KMS.DecryptResponse | unknown = undefined;
   let kill: boolean = false;
