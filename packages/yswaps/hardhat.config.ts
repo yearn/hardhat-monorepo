@@ -1,7 +1,7 @@
 import hardhatConfig from '../commons/hardhat.config';
 
 const config = hardhatConfig({
-  networks: ['mainnet', 'ropsten', 'polygon', 'fantom'],
+  networks: ['mainnet'],
   namedAccounts: {
     deployer: 0, // yMECH Alice
     governor: {

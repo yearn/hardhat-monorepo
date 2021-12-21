@@ -1,13 +1,10 @@
 import { ethers, getChainId } from 'hardhat';
 import sleep from 'sleep-promise';
-import uniswap from '@libraries/uniswap-v2';
 import moment from 'moment';
-import { BigNumber, utils, Wallet } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { TradeFactory } from '@typechained';
-import zrx from './libraries/zrx';
 import * as gasprice from './libraries/gasprice';
 import { Account } from 'web3-core';
-import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER, WETH } from '@deploy/mainnet-swappers/uniswap_v2';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -16,9 +13,11 @@ import {
   FlashbotsTransaction,
   FlashbotsTransactionResponse,
 } from '@flashbots/ethers-provider-bundle';
+import { PendingTrade, TradeSetup } from './types';
+import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
+import { Router } from './Router';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
-const SLIPPAGE_PERCENTAGE = 3;
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
 const MAX_PRIORITY_FEE_GAS_PRICE = 15;
 
@@ -28,25 +27,11 @@ let flashbotsProvider: FlashbotsBundleProvider;
 
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
-type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNumber] & {
-  _id: BigNumber;
-  _strategy: string;
-  _tokenIn: string;
-  _tokenOut: string;
-  _amountIn: BigNumber;
-  _deadline: BigNumber;
-};
-
-type TradeSetup = {
-  swapper: string;
-  data: string;
-  minAmountOut: BigNumber | undefined;
-};
-
 async function main() {
   const chainId = await getChainId();
   console.log('[Setup] Chain ID:', chainId);
   const [signer] = await ethers.getSigners();
+  const multicalls = [new ThreePoolCrvMulticall()]
   console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
     ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
@@ -56,11 +41,19 @@ async function main() {
   const tradeFactory = await ethers.getContract<TradeFactory>('TradeFactory');
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
-  const tradesSetup: TradeSetup[] = [];
 
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
+
+  pendingTrades.push({
+    _id: BigNumber.from("100"),
+    _strategy: "0x0",
+    _tokenIn: "0x0",
+    _tokenOut: "0x0",
+    _amountIn: BigNumber.from("200"),
+    _deadline: BigNumber.from("200")
+  } as PendingTrade);
 
   for (const pendingTrade of pendingTrades) {
     if (pendingTrade._deadline.lt(moment().unix())) {
@@ -69,51 +62,14 @@ async function main() {
       continue;
     }
 
-    // Check if it's not simple swap (go though multicall)
-    // TODO
+    let bestSetup: TradeSetup;
 
-    // If it's simple: check best outcome with below options
-
-    const { data: uniswapV2Data, minAmountOut: uniswapV2MinAmountOut } = await uniswap.getBestPathEncoded({
-      tokenIn: pendingTrade._tokenIn,
-      tokenOut: pendingTrade._tokenOut,
-      amountIn: pendingTrade._amountIn,
-      uniswapV2Router: UNISWAP_V2_ROUTER,
-      uniswapV2Factory: UNISWAP_V2_FACTORY,
-      hopTokensToTest: [WETH],
-      slippage: SLIPPAGE_PERCENTAGE,
-    });
-
-    tradesSetup.push({
-      swapper: (await ethers.getContract('AsyncUniswapV2')).address,
-      data: uniswapV2Data,
-      minAmountOut: uniswapV2MinAmountOut,
-    });
-
-    console.log('uniswap v2:', uniswapV2MinAmountOut, uniswapV2Data);
-
-    const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: Number(chainId),
-      sellToken: pendingTrade._tokenIn,
-      buyToken: pendingTrade._tokenOut,
-      sellAmount: pendingTrade._amountIn,
-      slippagePercentage: SLIPPAGE_PERCENTAGE / 100,
-    });
-
-    tradesSetup.push({
-      swapper: (await ethers.getContract('ZRX')).address,
-      data: zrxData,
-      minAmountOut: zrxMinAmountOut,
-    });
-
-    console.log('zrx:', zrxMinAmountOut, zrxData);
-
-    let bestSetup: TradeSetup = tradesSetup[0];
-
-    for (let i = 1; i < tradesSetup.length; i++) {
-      if (tradesSetup[i].minAmountOut!.gt(bestSetup.minAmountOut!)) {
-        bestSetup = tradesSetup[i];
-      }
+    // Check if we need to run over a multicall swapper
+    const multicall = multicalls.find(mc => mc.match(pendingTrade));
+    if (multicall) {
+      bestSetup = await multicall.asyncSwap(pendingTrade);
+    } else {
+      bestSetup = await new Router().route(pendingTrade);
     }
 
     const currentGas = gasprice.get(gasprice.Confidence.Highest);
