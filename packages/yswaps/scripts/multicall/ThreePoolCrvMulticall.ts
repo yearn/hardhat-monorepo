@@ -14,11 +14,9 @@ export class ThreePoolCrvMulticall implements IMulticall {
     }
 
     async asyncSwap(trade: PendingTrade): Promise<TradeSetup> {
-               
         const strategy: Signer = await ethers.getSigner(trade._strategy);
         const crv3Pool: ICurveFi  = ICurveFi__factory.connect("0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7", strategy);
         const usdc: IERC20 = IERC20__factory.connect("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", strategy)
-
         await crv3Pool.remove_liquidity_one_coin(trade._amountIn, 1, 0);
         const usdcBalance: BigNumber = await usdc.balanceOf(await strategy.getAddress())
         

@@ -16,6 +16,7 @@ import {
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
+import { wallet } from '@test-utils';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
@@ -33,6 +34,9 @@ async function main() {
   const [signer] = await ethers.getSigners();
   const multicalls = [new ThreePoolCrvMulticall()]
   console.log('[Setup] Creating flashbots provider ...');
+
+  const multisig = await wallet.impersonate(multisigAddress);
+
   flashbotsProvider = await FlashbotsBundleProvider.create(
     ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
     signer // ethers.js signer wallet, only for signing request payloads, not transactions
@@ -48,19 +52,21 @@ async function main() {
 
   pendingTrades.push({
     _id: BigNumber.from("100"),
-    _strategy: "0x0",
-    _tokenIn: "0x0",
-    _tokenOut: "0x0",
-    _amountIn: BigNumber.from("200"),
+    _strategy: "0x2923a58c1831205C854DBEa001809B194FDb3Fa5",
+    _tokenIn: "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490",
+    _tokenOut: "0xD533a949740bb3306d119CC777fa900bA034cd52",
+    _amountIn: BigNumber.from("1"),
     _deadline: BigNumber.from("200")
   } as PendingTrade);
 
   for (const pendingTrade of pendingTrades) {
-    if (pendingTrade._deadline.lt(moment().unix())) {
-      console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-      await tradeFactory.expire(pendingTrade._id);
-      continue;
-    }
+
+    // TODO: Uncomment. This removes expired trades 
+    // if (pendingTrade._deadline.lt(moment().unix())) {
+    //   console.log(`Expiring trade ${pendingTrade._id.toString()}`);
+    //   await tradeFactory.expire(pendingTrade._id);
+    //   continue;
+    // }
 
     let bestSetup: TradeSetup;
 
