@@ -100,15 +100,11 @@ contract('MultiCallSwapper', () => {
       await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
       const transactions: PopulatedTransaction[] = [];
       // swapper has tokenIn, it sends it all to the holder
-      // transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));
+      transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));
       // swapper grabs allowance (2) of tokenOut from holder to itself
       transactions.push(await tokenOut.populateTransaction.transferFrom(hodler.address, multiCallOptimizedAsyncSwapper.address, 2));
       // swapper sends tokenOut (2) to strategy as the trade output
-      transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 1));
-      transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 1));
-
-      // console.log('mergeTransactions(transactions)')
-      // console.log(mergeTransactions([await tokenOut.populateTransaction.transfer(strategy.address, 2)]))
+      transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 2));
 
       minAmountOut = BigNumber.from(1);
 
