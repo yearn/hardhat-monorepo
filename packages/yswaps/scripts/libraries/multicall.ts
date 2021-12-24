@@ -35,12 +35,12 @@ const remove0x = (hexString: string) => hexString.substr(2);
 // Encodes a batch of module transactions into a single multiSend module transaction.
 // A module transaction is an object with fields corresponding to a Gnosis Safe's (i.e., Zodiac IAvatar's) `execTransactionFromModule` method parameters.
 // For more information refer to https://docs.gnosis.io/safe/docs/contracts_details/#gnosis-safe-transactions.
-export const encodeMulti = (transactions: readonly MetaTransaction[], optimized: boolean = false): string => {
+export const encodeMulti = (transactions: readonly MetaTransaction[], optimized: boolean = true): string => {
   if (optimized) return '0x' + transactions.map(encodePackedOptimizedCallNoValue).map(remove0x).join('');
   return '0x' + transactions.map(encodePacked).map(remove0x).join('');
 };
 
-export const mergeTransactions = (transactions: PopulatedTransaction[], optimized: boolean = false) => {
+export const mergeTransactions = (transactions: PopulatedTransaction[], optimized: boolean = true): string => {
   const parsedTxs = transactions.map((transaction) => ({
     to: transaction.to as string,
     value: BigNumber.from(transaction.value || 0).toString(),
