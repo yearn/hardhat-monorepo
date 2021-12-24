@@ -27,7 +27,6 @@ contract('MultiCallSwapper', () => {
   let mechanicsRegistry: Contract;
   let tradeFactory: TradeFactory;
 
-  let multiCallAsyncSwapper: Contract;
   let multiCallOptimizedAsyncSwapper: Contract;
 
   let snapshotId: string;
@@ -51,7 +50,7 @@ contract('MultiCallSwapper', () => {
 
     ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
-    ({ tradeFactory, multiCallAsyncSwapper, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
+    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
@@ -63,7 +62,6 @@ contract('MultiCallSwapper', () => {
     ));
 
     await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
-    await tradeFactory.connect(swapperAdder).addSwappers([multiCallAsyncSwapper.address]);
     await tradeFactory.connect(swapperAdder).addSwappers([multiCallOptimizedAsyncSwapper.address]);
 
     tokenIn = await erc20.deploy({
@@ -84,7 +82,6 @@ contract('MultiCallSwapper', () => {
     await tokenIn.connect(strategy).approve(tradeFactory.address, amountIn);
 
     // allows amount out just for extra complexity
-    await tokenOut.connect(hodler).approve(multiCallAsyncSwapper.address, 2);
     await tokenOut.connect(hodler).approve(multiCallOptimizedAsyncSwapper.address, 2);
 
     snapshotId = await evm.snapshot.take();
