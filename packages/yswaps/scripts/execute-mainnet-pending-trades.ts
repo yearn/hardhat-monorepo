@@ -69,6 +69,11 @@ async function main() {
       continue;
     }
 
+    // Check if it's not simple swap (go though multicall)
+    // TODO
+
+    // If it's simple: check best outcome with below options
+
     const { data: uniswapV2Data, minAmountOut: uniswapV2MinAmountOut } = await uniswap.getBestPathEncoded({
       tokenIn: pendingTrade._tokenIn,
       tokenOut: pendingTrade._tokenOut,

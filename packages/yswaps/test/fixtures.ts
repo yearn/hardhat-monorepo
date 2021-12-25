@@ -147,3 +147,39 @@ export const uniswapV2SwapperFixture = async (
     ...uniswapDeployment,
   };
 };
+
+interface MultiCallSwapperFixture extends OTCPoolFixture {
+  multiCallOptimizedAsyncSwapper: Contract;
+}
+
+export const multiCallSwapperFixture = async (
+  masterAdmin: string,
+  swapperAdder: string,
+  swapperSetter: string,
+  strategyAdder: string,
+  tradeModifier: string,
+  tradeSettler: string,
+  mechanicsRegistry: string,
+  otcPoolGovernor: string
+): Promise<MultiCallSwapperFixture> => {
+  const { tradeFactory, otcPool } = await otcPoolFixture(
+    masterAdmin,
+    swapperAdder,
+    swapperSetter,
+    strategyAdder,
+    tradeModifier,
+    tradeSettler,
+    mechanicsRegistry,
+    otcPoolGovernor
+  );
+  const multiCallOptimizedAsyncSwapperFactory = await ethers.getContractFactory(
+    'contracts/swappers/async/MultiCallOptimizedSwapper.sol:MultiCallOptimizedSwapper'
+  );
+  const multiCallOptimizedAsyncSwapper = await multiCallOptimizedAsyncSwapperFactory.deploy(masterAdmin, tradeFactory.address);
+
+  return {
+    tradeFactory,
+    otcPool,
+    multiCallOptimizedAsyncSwapper,
+  };
+};
