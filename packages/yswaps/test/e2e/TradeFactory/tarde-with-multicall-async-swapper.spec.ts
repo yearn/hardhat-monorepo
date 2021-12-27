@@ -9,7 +9,7 @@ import { IERC20, TradeFactory } from '@typechained';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { mergeTransactions } from '@scripts/libraries/multicall';
 
-contract('MultiCallSwapper', () => {
+contract('MultiCallOptimizedSwapper', () => {
   let masterAdmin: SignerWithAddress;
   let mechanic: SignerWithAddress;
   let strategy: SignerWithAddress;
@@ -50,7 +50,7 @@ contract('MultiCallSwapper', () => {
 
     ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
-    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
+    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallOptimizedSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
