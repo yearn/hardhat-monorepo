@@ -27,7 +27,6 @@ contract('MultiCallSwapper', () => {
   let mechanicsRegistry: Contract;
   let tradeFactory: TradeFactory;
 
-  let multiCallAsyncSwapper: Contract;
   let multiCallOptimizedAsyncSwapper: Contract;
 
   let snapshotId: string;
@@ -51,7 +50,7 @@ contract('MultiCallSwapper', () => {
 
     ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
-    ({ tradeFactory, multiCallAsyncSwapper, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
+    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
@@ -63,7 +62,6 @@ contract('MultiCallSwapper', () => {
     ));
 
     await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
-    await tradeFactory.connect(swapperAdder).addSwappers([multiCallAsyncSwapper.address]);
     await tradeFactory.connect(swapperAdder).addSwappers([multiCallOptimizedAsyncSwapper.address]);
 
     tokenIn = await erc20.deploy({
@@ -84,7 +82,6 @@ contract('MultiCallSwapper', () => {
     await tokenIn.connect(strategy).approve(tradeFactory.address, amountIn);
 
     // allows amount out just for extra complexity
-    await tokenOut.connect(hodler).approve(multiCallAsyncSwapper.address, 2);
     await tokenOut.connect(hodler).approve(multiCallOptimizedAsyncSwapper.address, 2);
 
     snapshotId = await evm.snapshot.take();
@@ -97,20 +94,12 @@ contract('MultiCallSwapper', () => {
   describe('async trade executed', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      const optimized = true;
-
       await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
       const transactions: PopulatedTransaction[] = [];
       // swapper has tokenIn, it sends it all to the holder
       transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));
       // swapper grabs allowance (2) of tokenOut from holder to itself
-      transactions.push(
-        await tokenOut.populateTransaction.transferFrom(
-          hodler.address,
-          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
-          2
-        )
-      );
+      transactions.push(await tokenOut.populateTransaction.transferFrom(hodler.address, multiCallOptimizedAsyncSwapper.address, 2));
       // swapper sends tokenOut (2) to strategy as the trade output
       transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 2));
 
@@ -120,20 +109,15 @@ contract('MultiCallSwapper', () => {
         .connect(mechanic)
         ['execute(uint256,address,uint256,bytes)'](
           1,
-          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
+          multiCallOptimizedAsyncSwapper.address,
           minAmountOut,
-          mergeTransactions([await tokenIn.populateTransaction.transfer(hodler.address, amountIn.add(1))], optimized)
+          mergeTransactions([await tokenIn.populateTransaction.transfer(hodler.address, amountIn.add(1))])
         );
       await expect(tx).to.be.revertedWith('MultiCallRevert()');
 
       await tradeFactory
         .connect(mechanic)
-        ['execute(uint256,address,uint256,bytes)'](
-          1,
-          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
-          minAmountOut,
-          mergeTransactions(transactions, optimized)
-        );
+        ['execute(uint256,address,uint256,bytes)'](1, multiCallOptimizedAsyncSwapper.address, minAmountOut, mergeTransactions(transactions));
     });
     then('tokens in gets taken from strategy', async () => {
       expect(await tokenIn.balanceOf(strategy.address)).to.equal(0);
