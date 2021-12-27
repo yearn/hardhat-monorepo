@@ -53,7 +53,6 @@ export class ThreePoolCrvMulticall implements IMulticall {
     const tx = {
       to: zrxContract,
       data: zrxData,
-      value: 0,
     };
 
     await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
@@ -85,13 +84,12 @@ export class ThreePoolCrvMulticall implements IMulticall {
     transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
 
     // 4) Swap usdc for yvBOOST
-    // TODO: Figure out how to do a populate tx of a sendTX
-    //transactions.push(await strategy.populateTransaction.sendTransaction(tx));
+    transactions.push(tx);
 
     // 5) Withdraw from yvBOOST
     transactions.push(await yvBoostVault.populateTransaction.withdraw(constants.MaxUint256, await strategy.getAddress(), BigNumber.from('0')));
 
-    const data: string = mergeTransactions(transactions, true);
+    const data: string = mergeTransactions(transactions);
     console.log('mergedTxs:', data);
 
     return {
