@@ -1,4 +1,4 @@
-import { BigNumber, constants, Contract, utils } from 'ethers';
+import { BigNumber, constants, Contract, PopulatedTransaction, utils } from 'ethers';
 import { ethers } from 'hardhat';
 import moment from 'moment';
 import { erc20, evm } from '@test-utils';
@@ -28,6 +28,7 @@ contract('MultiCallSwapper', () => {
   let tradeFactory: TradeFactory;
 
   let multiCallAsyncSwapper: Contract;
+  let multiCallOptimizedAsyncSwapper: Contract;
 
   let snapshotId: string;
 
@@ -50,7 +51,7 @@ contract('MultiCallSwapper', () => {
 
     ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
-    ({ tradeFactory, multiCallAsyncSwapper } = await fixtures.multiCallSwapperFixture(
+    ({ tradeFactory, multiCallAsyncSwapper, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
@@ -63,6 +64,7 @@ contract('MultiCallSwapper', () => {
 
     await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
     await tradeFactory.connect(swapperAdder).addSwappers([multiCallAsyncSwapper.address]);
+    await tradeFactory.connect(swapperAdder).addSwappers([multiCallOptimizedAsyncSwapper.address]);
 
     tokenIn = await erc20.deploy({
       name: 'TA',
@@ -83,6 +85,7 @@ contract('MultiCallSwapper', () => {
 
     // allows amount out just for extra complexity
     await tokenOut.connect(hodler).approve(multiCallAsyncSwapper.address, 2);
+    await tokenOut.connect(hodler).approve(multiCallOptimizedAsyncSwapper.address, 2);
 
     snapshotId = await evm.snapshot.take();
   });
@@ -94,23 +97,43 @@ contract('MultiCallSwapper', () => {
   describe('async trade executed', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
-      const transactions = [];
+      const optimized = true;
 
+      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
+      const transactions: PopulatedTransaction[] = [];
       // swapper has tokenIn, it sends it all to the holder
       transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));
       // swapper grabs allowance (2) of tokenOut from holder to itself
-      transactions.push(await tokenOut.populateTransaction.transferFrom(hodler.address, multiCallAsyncSwapper.address, 2));
+      transactions.push(
+        await tokenOut.populateTransaction.transferFrom(
+          hodler.address,
+          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
+          2
+        )
+      );
       // swapper sends tokenOut (2) to strategy as the trade output
       transactions.push(await tokenOut.populateTransaction.transfer(strategy.address, 2));
 
-      const transactionsData = mergeTransactions(transactions);
-
       minAmountOut = BigNumber.from(1);
+
+      const tx = tradeFactory
+        .connect(mechanic)
+        ['execute(uint256,address,uint256,bytes)'](
+          1,
+          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
+          minAmountOut,
+          mergeTransactions([await tokenIn.populateTransaction.transfer(hodler.address, amountIn.add(1))], optimized)
+        );
+      await expect(tx).to.be.revertedWith('MultiCallRevert()');
 
       await tradeFactory
         .connect(mechanic)
-        ['execute(uint256,address,uint256,bytes)'](1, multiCallAsyncSwapper.address, minAmountOut, transactionsData);
+        ['execute(uint256,address,uint256,bytes)'](
+          1,
+          optimized ? multiCallOptimizedAsyncSwapper.address : multiCallAsyncSwapper.address,
+          minAmountOut,
+          mergeTransactions(transactions, optimized)
+        );
     });
     then('tokens in gets taken from strategy', async () => {
       expect(await tokenIn.balanceOf(strategy.address)).to.equal(0);

@@ -3,6 +3,8 @@ import sleep from 'sleep-promise';
 import moment from 'moment';
 import { BigNumber, utils } from 'ethers';
 import { TradeFactory } from '@typechained';
+import { BigNumber, Signer, utils } from 'ethers';
+import { TradeFactory, TradeFactoryExecutor, TradeFactoryExecutor__factory, TradeFactory__factory } from '@typechained';
 import * as gasprice from './libraries/gasprice';
 import { Account } from 'web3-core';
 import {
@@ -16,6 +18,7 @@ import {
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
+import { impersonate } from './utils';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
@@ -30,15 +33,32 @@ type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTrans
 async function main() {
   const chainId = await getChainId();
   console.log('[Setup] Chain ID:', chainId);
+
   const [signer] = await ethers.getSigners();
   const multicalls = [new ThreePoolCrvMulticall()];
+
   console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
     ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
     signer // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  const tradeFactory = await ethers.getContract<TradeFactory>('TradeFactory');
+  // env setup for testing. Should not be necessary
+  const strategy: Signer = await impersonate('0xa48c616144FD4429b216A86388CAb0Eed990cE87');
+  const ymech: Signer = await impersonate('0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6');
+
+  let tf: TradeFactoryExecutor = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
+  await tf.grantRole('0x49e347583a7b9e7f325e8963ee1f94127eba81e401796874b5a22f7c8f9d45f7', await strategy.getAddress());
+
+  tf = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', strategy);
+  await tf.create(
+    '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490',
+    '0xc5bDdf9843308380375a611c18B50Fb9341f502A',
+    utils.parseEther('100'),
+    moment().add('30', 'minutes').unix()
+  );
+
+  let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
@@ -56,11 +76,12 @@ async function main() {
   } as PendingTrade);
 
   for (const pendingTrade of pendingTrades) {
-    if (pendingTrade._deadline.lt(moment().unix())) {
-      console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-      await tradeFactory.expire(pendingTrade._id);
-      continue;
-    }
+    // TODO: Uncomment. This removes expired trades
+    // if (pendingTrade._deadline.lt(moment().unix())) {
+    //   console.log(`Expiring trade ${pendingTrade._id.toString()}`);
+    //   await tradeFactory.expire(pendingTrade._id);
+    //   continue;
+    // }
 
     let bestSetup: TradeSetup;
 

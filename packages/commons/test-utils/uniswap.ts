@@ -14,8 +14,8 @@ export const getUniswapV2Router02 = () => uniswapV2Router02;
 
 export const deadline: BigNumber = ethers.BigNumber.from('2').pow('256').sub('2');
 
-// import("/home/alejo/Projects/yearn/monorepo/node_modules/@ethersproject/contracts/lib/index").Contract not assignable to type
-// import("/home/alejo/Projects/yearn/monorepo/node_modules/ethers/node_modules/@ethersproject/contracts/lib/index").
+// import("/home/alice/Projects/yearn/monorepo/node_modules/@ethersproject/contracts/lib/index").Contract not assignable to type
+// import("/home/alice/Projects/yearn/monorepo/node_modules/ethers/node_modules/@ethersproject/contracts/lib/index").
 
 export const deploy = async ({ owner }: { owner: Signer }) => {
   WETH = await deployContract(owner, WETHContract);
