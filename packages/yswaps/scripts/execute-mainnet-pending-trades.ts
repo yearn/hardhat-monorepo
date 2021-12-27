@@ -1,8 +1,6 @@
 import { ethers, getChainId } from 'hardhat';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { BigNumber, utils } from 'ethers';
-import { TradeFactory } from '@typechained';
 import { BigNumber, Signer, utils } from 'ethers';
 import { TradeFactory, TradeFactoryExecutor, TradeFactoryExecutor__factory, TradeFactory__factory } from '@typechained';
 import * as gasprice from './libraries/gasprice';
