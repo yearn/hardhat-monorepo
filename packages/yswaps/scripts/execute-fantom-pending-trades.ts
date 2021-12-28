@@ -2,10 +2,11 @@ import { ethers, getChainId } from 'hardhat';
 import sleep from 'sleep-promise';
 import uniswap from '@libraries/uniswap-v2';
 import moment from 'moment';
+import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import { SPOOKYSWAP_FACTORY, SPOOKYSWAP_ROUTER, WETH, WFTM } from '@deploy/fantom-swappers/spookyswap';
 import { SPIRITSWAP_FACTORY, SPIRITSWAP_ROUTER } from '@deploy/fantom-swappers/spiritswap';
 import { BigNumber, utils } from 'ethers';
-import { TradeFactory } from '@typechained';
+import { IERC20Metadata, TradeFactory } from '@typechained';
 import zrx from './libraries/zrx';
 import { PendingTrade, TradeSetup } from './types';
 
@@ -29,6 +30,11 @@ async function main() {
   }
 
   for (const pendingTrade of pendingTrades) {
+    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
+    const tokenOut = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenOut);
+    const decimalsOut = await tokenOut.decimals();
+    const symbolOut = await tokenOut.symbol();
+
     if (pendingTrade._deadline.lt(moment().unix())) {
       console.log(`Expiring trade ${pendingTrade._id.toString()}`);
       await tradeFactory.expire(pendingTrade._id);
@@ -47,11 +53,12 @@ async function main() {
 
     tradesSetup.push({
       swapper: (await ethers.getContract('AsyncSpookyswap')).address,
+      swapperName: 'AsyncSpookyswap',
       data: spookyData,
       minAmountOut: spookyMinAmountOut,
     });
 
-    console.log('spooky:', spookyMinAmountOut, spookyData);
+    console.log('spooky:', utils.formatUnits(spookyMinAmountOut!, decimalsOut), symbolOut);
 
     const { data: spiritData, minAmountOut: spiritMinAmountOut } = await uniswap.getBestPathEncoded({
       tokenIn: pendingTrade._tokenIn,
@@ -65,11 +72,12 @@ async function main() {
 
     tradesSetup.push({
       swapper: (await ethers.getContract('AsyncSpiritswap')).address,
+      swapperName: 'AsyncSpiritswap',
       data: spiritData,
       minAmountOut: spiritMinAmountOut,
     });
 
-    console.log('spirit:', spiritMinAmountOut, spiritData);
+    console.log('spirit:', utils.formatUnits(spiritMinAmountOut!, decimalsOut!), symbolOut);
 
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
       chainId: Number(chainId),
@@ -81,11 +89,12 @@ async function main() {
 
     tradesSetup.push({
       swapper: (await ethers.getContract('ZRX')).address,
+      swapperName: 'ZRX',
       data: zrxData,
       minAmountOut: zrxMinAmountOut,
     });
 
-    console.log('zrx:', zrxMinAmountOut, zrxData);
+    console.log('zrx:', utils.formatUnits(zrxMinAmountOut!, decimalsOut), symbolOut);
 
     let bestSetup: TradeSetup = tradesSetup[0];
 
@@ -105,7 +114,15 @@ async function main() {
       }
     );
 
-    console.log('Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper, 'with tx', tx.hash);
+    console.log(
+      'Converting',
+      utils.formatUnits(pendingTrade._amountIn, await tokenIn.decimals()).toString(),
+      await tokenIn.symbol(),
+      'to',
+      utils.formatUnits(bestSetup.minAmountOut!, decimalsOut).toString(),
+      symbolOut
+    );
+    console.log('Pending trade', pendingTrade._id.toString(), 'executed via', bestSetup.swapperName, 'with tx', tx.hash);
     await sleep(DELAY);
   }
 }

@@ -11,6 +11,7 @@ export type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNum
 
 export type TradeSetup = {
   swapper: string;
+  swapperName: string;
   data: string;
   minAmountOut: BigNumber | undefined;
 };

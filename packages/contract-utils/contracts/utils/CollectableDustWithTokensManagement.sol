@@ -3,7 +3,7 @@ pragma solidity >=0.8.4 <0.9.0;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import '@yearn/contract-utils/contracts/interfaces/utils/ICollectableDust.sol';
+import '../interfaces/utils/ICollectableDust.sol';
 
 import '../libraries/CommonErrors.sol';
 
