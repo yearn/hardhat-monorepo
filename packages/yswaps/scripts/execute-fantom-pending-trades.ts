@@ -110,7 +110,7 @@ async function main() {
       bestSetup.minAmountOut!,
       bestSetup.data,
       {
-        gasLimit: 8_000_000,
+        gasLimit: 8_000_000, // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
       }
     );
 

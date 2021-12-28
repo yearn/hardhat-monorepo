@@ -107,7 +107,7 @@ async function main() {
       bestSetup.data,
       {
         ...gasParams,
-        gasLimit: BigNumber.from('100000'),
+        gasLimit: BigNumber.from('100000'), // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
       }
     );
     const signedTx = await web3ReporterSigner.signTransaction({
