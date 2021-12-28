@@ -36,22 +36,22 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     address: '0xDf262B43bea0ACd0dD5832cf2422e0c9b2C539dc',
   },
   {
-    name: '',
+    name: 'Curve Tricrypto',
     added: true,
     address: '0xcF3b91D83cD5FE15269E6461098fDa7d69138570',
   },
   {
-    name: '',
+    name: 'Curve Geist',
     added: true,
     address: '0x7ff6fe5bDa1b26fa46880dF8AF844326DAd50d13',
   },
   {
-    name: '',
+    name: 'FRAX GenLender',
     added: true,
     address: '0xfF8bb7261E4D51678cB403092Ae219bbEC52aa51',
   },
   {
-    name: '',
+    name: 'USDT GenLender',
     added: true,
     address: '0x83a5Af7540E919dE74cf2D6d5F40e47f11D3E8d1',
   },
