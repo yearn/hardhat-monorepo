@@ -45,7 +45,7 @@ async function main() {
   const strategy: Signer = await impersonate('0xa48c616144FD4429b216A86388CAb0Eed990cE87');
   const ymech: Signer = await impersonate('0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6');
 
-  let tf: TradeFactoryExecutor = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
+  let tradeFactory: TradeFactoryExecutor = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
   await tf.grantRole('0x49e347583a7b9e7f325e8963ee1f94127eba81e401796874b5a22f7c8f9d45f7', await strategy.getAddress());
 
   tf = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', strategy);
