@@ -22,6 +22,7 @@ export class Router {
 
     tradesSetup.push({
       swapper: (await ethers.getContract('AsyncUniswapV2')).address,
+      swapperName: 'AsyncUniswapV2',
       data: uniswapV2Data,
       minAmountOut: uniswapV2MinAmountOut,
     });
@@ -38,6 +39,7 @@ export class Router {
 
     tradesSetup.push({
       swapper: (await ethers.getContract('ZRX')).address,
+      swapperName: 'ZRX',
       data: zrxData,
       minAmountOut: zrxMinAmountOut,
     });

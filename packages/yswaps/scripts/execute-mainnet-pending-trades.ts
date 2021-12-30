@@ -41,20 +41,7 @@ async function main() {
     signer // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  // env setup for testing. Should not be necessary
-  const strategy: Signer = await impersonate('0xa48c616144FD4429b216A86388CAb0Eed990cE87');
   const ymech: Signer = await impersonate('0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6');
-
-  let tradeFactory: TradeFactoryExecutor = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
-  await tf.grantRole('0x49e347583a7b9e7f325e8963ee1f94127eba81e401796874b5a22f7c8f9d45f7', await strategy.getAddress());
-
-  tf = TradeFactoryExecutor__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', strategy);
-  await tf.create(
-    '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490',
-    '0xc5bDdf9843308380375a611c18B50Fb9341f502A',
-    utils.parseEther('100'),
-    moment().add('30', 'minutes').unix()
-  );
 
   let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
@@ -63,15 +50,6 @@ async function main() {
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
-
-  pendingTrades.push({
-    _id: BigNumber.from('100'),
-    _strategy: '0x0',
-    _tokenIn: '0x0',
-    _tokenOut: '0x0',
-    _amountIn: BigNumber.from('200'),
-    _deadline: BigNumber.from('200'),
-  } as PendingTrade);
 
   for (const pendingTrade of pendingTrades) {
     // TODO: Uncomment. This removes expired trades
@@ -91,15 +69,22 @@ async function main() {
       bestSetup = await new Router().route(pendingTrade);
     }
 
-    const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    const gasParams = {
-      maxFeePerGas: MAX_GAS_PRICE,
-      maxPriorityFeePerGas:
-        currentGas.maxPriorityFeePerGas > MAX_PRIORITY_FEE_GAS_PRICE
-          ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
-          : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
-    };
+    // TODO: This fails. Perhaps it's because we are inside a fork?
+    // const currentGas = gasprice.get(gasprice.Confidence.Highest);
+    // const gasParams = {
+    //   maxFeePerGas: MAX_GAS_PRICE,
+    //   maxPriorityFeePerGas:
+    //     currentGas.maxPriorityFeePerGas > MAX_PRIORITY_FEE_GAS_PRICE
+    //       ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
+    //       : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
+    // };
 
+    // Hardcoded for now
+    const gasParams = {
+      maxFeePerGas: utils.parseUnits('300', 'gwei'),
+      maxPriorityFeePerGas: utils.parseUnits('2.5', 'gwei')
+    }
+    
     const populatedTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
       bestSetup.swapper,
