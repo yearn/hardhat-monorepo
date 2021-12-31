@@ -775,10 +775,10 @@
     "@ethersproject/properties" "^5.5.0"
     "@ethersproject/strings" "^5.5.0"
 
-"@flashbots/ethers-provider-bundle@0.4.2":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@flashbots/ethers-provider-bundle/-/ethers-provider-bundle-0.4.2.tgz#9b3734982eaad66a03641d0a3b0ea46981c716f8"
-  integrity sha512-LgM30hD+hzovk5fV/WsLZ9pdcisVyYqLVRshRS9skhOYv9XDGIojKbW3rOKqwzREeTm8N2q9GGJO8b5aAYMmNQ==
+"@flashbots/ethers-provider-bundle@0.4.3":
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/@flashbots/ethers-provider-bundle/-/ethers-provider-bundle-0.4.3.tgz#d8d23684eb02829181672176b110bc262195ec48"
+  integrity sha512-vH5XhdNjFDG3+m2rHa4TBf7ljv+LDdtWldZCEmwmCggZN70cb2J1x7DlNROT/tE4keTMUjydMs4CfAOOyKc6UQ==
   dependencies:
     ts-node "^9.1.0"
     typescript "^4.1.2"
@@ -2423,7 +2423,7 @@
   version "0.1.0"
   dependencies:
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-c65b376c-9792-4032-bc59-34c582e93501-1640972903802/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-14ffac32-d07b-43cc-9d0a-0bc8290d7a61-1640983917850/node_modules/@yearn/contract-utils"
 
 "@yearn/strategies-keep3r@file:packages/strategies-keep3r":
   version "0.1.0"
@@ -2431,7 +2431,7 @@
     "@gnosis.pm/safe-core-sdk" "0.3.1"
     "@gnosis.pm/safe-service-client" "0.1.1"
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-87289437-7d3c-4ad0-bc55-033f2a48ecd0-1640972903804/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-7ee2ac73-a4c1-4a60-8979-a41863b4d7a7-1640983917852/node_modules/@yearn/contract-utils"
     deasync "0.1.23"
     inquirer "8.2.0"
     prompt-confirm "2.0.4"
@@ -2444,7 +2444,7 @@
     "@bancor/sdk" "0.2.10"
     "@openzeppelin/contracts" "4.3.2"
     "@uniswap/v2-periphery" "1.1.0-beta.0"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-4caf496c-5f01-4c1d-b768-7aa280a5abd5-1640972903833/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-4b27c90c-56db-4878-aaed-8ea5e0a082e1-1640983917882/node_modules/@yearn/contract-utils"
     qs "6.10.1"
 
 JSONStream@^1.0.4:

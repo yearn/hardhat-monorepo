@@ -12,7 +12,7 @@
     "@commitlint/cli": "15.0.0",
     "@commitlint/config-conventional": "15.0.0",
     "@defi-wonderland/smock": "2.0.7",
-    "@flashbots/ethers-provider-bundle": "0.4.2",
+    "@flashbots/ethers-provider-bundle": "0.4.3",
     "@lbertenasco/bonded-stealth-tx": "0.3.1",
     "@lbertenasco/y-oracle": "0.1.5",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.11",

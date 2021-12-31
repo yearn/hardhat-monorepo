@@ -36,10 +36,7 @@ export class ThreePoolCrvMulticall implements IMulticall {
     console.log('Got USDC', usdcBalance.toString());
 
     // Trade USDC for yvBOOST in zrx
-    const {
-      data: zrxData,
-      allowanceTarget: zrxAllowanceTarget,
-    } = await zrx.quote({
+    const { data: zrxData, allowanceTarget: zrxAllowanceTarget } = await zrx.quote({
       chainId: Number(1),
       sellToken: usdc.address,
       buyToken: this.yvBoost,
@@ -85,7 +82,7 @@ export class ThreePoolCrvMulticall implements IMulticall {
 
     return {
       swapper: this.multicallSwapper,
-      swapperName: "Multicall-Swapper",
+      swapperName: 'Multicall-Swapper',
       data: data,
       minAmountOut: yveCrvBalance,
     };
