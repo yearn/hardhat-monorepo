@@ -2,7 +2,7 @@ import { run, ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
 import * as accounts from '../../../utils/accounts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { v2FtmHarvestStrategies } from '../../../utils/v2-ftm-strategies';
 
 const { Confirm } = require('enquirer');
@@ -34,7 +34,7 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const harvestV2DetachedJob = await ethers.getContractAt('HarvestV2DetachedJob', contracts.harvestV2DetachedJob.ftm, signer);
+          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.ftm, signer);
 
           const jobStrategies = await harvestV2DetachedJob.callStatic.strategies();
 
@@ -72,11 +72,13 @@ function promptAndSubmit(): Promise<void | Error> {
 
           await harvestV2DetachedJob.callStatic.addStrategies(
             strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
+            // strategiesToAdd.map(() => 0), // address _requiredAmount,
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
             strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
           );
           await harvestV2DetachedJob.addStrategies(
             strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
+            // strategiesToAdd.map(() => 0), // address _requiredAmount,
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
             strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
           );
