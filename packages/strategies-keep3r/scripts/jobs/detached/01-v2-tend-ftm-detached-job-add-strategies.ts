@@ -2,7 +2,7 @@ import { run, ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
 import * as accounts from '../../../utils/accounts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { v2FtmTendStrategies } from '../../../utils/v2-ftm-strategies';
 
 const { Confirm } = require('enquirer');
