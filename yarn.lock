@@ -1575,10 +1575,10 @@
   resolved "https://registry.yarnpkg.com/hardhat-deploy-ethers/-/hardhat-deploy-ethers-0.3.0-beta.11.tgz#7f9122301853b01cb85b5ac85ba84dd764c98b07"
   integrity sha512-HnniBGBYsFRQDXBy3bQ27i86pQQnHkN0Mxdwiu869jZURY2gDQ4OEZxcXItnWQqBjYiEaavVyw/Xle7qwKOBAg==
 
-"@nomiclabs/hardhat-etherscan@2.1.7":
-  version "2.1.7"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-etherscan/-/hardhat-etherscan-2.1.7.tgz#f76ce0da1b503d3e506bffbd044967b1a9443675"
-  integrity sha512-9nt9EXubnkd2aTMnQIqKtp80bQFhun88krfB31FN2wB0T54b8YuK0riG2d+EKq/D3t1Kb00oA7oFSFpHLIbLDQ==
+"@nomiclabs/hardhat-etherscan@2.1.8":
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-etherscan/-/hardhat-etherscan-2.1.8.tgz#e206275e96962cd15e5ba9148b44388bc922d8c2"
+  integrity sha512-0+rj0SsZotVOcTLyDOxnOc3Gulo8upo0rsw/h+gBPcmtj91YqYJNhdARHoBxOhhE8z+5IUQPx+Dii04lXT14PA==
   dependencies:
     "@ethersproject/abi" "^5.1.2"
     "@ethersproject/address" "^5.0.2"
@@ -2423,7 +2423,7 @@
   version "0.1.0"
   dependencies:
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-b6a2bf0b-4dd3-42df-97bc-38856dea4f80-1637584331787/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-stealth-txs-0.1.0-c65b376c-9792-4032-bc59-34c582e93501-1640972903802/node_modules/@yearn/contract-utils"
 
 "@yearn/strategies-keep3r@file:packages/strategies-keep3r":
   version "0.1.0"
@@ -2431,7 +2431,7 @@
     "@gnosis.pm/safe-core-sdk" "0.3.1"
     "@gnosis.pm/safe-service-client" "0.1.1"
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-01522fff-d006-4925-9c8e-4a3e7d2a4590-1637584331793/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-strategies-keep3r-0.1.0-87289437-7d3c-4ad0-bc55-033f2a48ecd0-1640972903804/node_modules/@yearn/contract-utils"
     deasync "0.1.23"
     inquirer "8.2.0"
     prompt-confirm "2.0.4"
@@ -2444,7 +2444,7 @@
     "@bancor/sdk" "0.2.10"
     "@openzeppelin/contracts" "4.3.2"
     "@uniswap/v2-periphery" "1.1.0-beta.0"
-    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-f63ea6fc-22c3-420a-9feb-92d3af3471fc-1637584337193/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../../Library/Caches/Yarn/v6/npm-@yearn-yswaps-0.1.0-4caf496c-5f01-4c1d-b768-7aa280a5abd5-1640972903833/node_modules/@yearn/contract-utils"
     qs "6.10.1"
 
 JSONStream@^1.0.4:

@@ -11,6 +11,7 @@
 
 ### Swappers
 
+- ZRX: [0x75DfD3c064Ce21D253F66a277202FE455EaaDB01](https://ftmscan.com/address/0x75DfD3c064Ce21D253F66a277202FE455EaaDB01)
 - OneInchAggregatorSwapper: [0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc](https://etherscan.io/address/0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc)
 - AsyncSushiswapSwapper: [0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60](https://etherscan.io/address/0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60)
 
