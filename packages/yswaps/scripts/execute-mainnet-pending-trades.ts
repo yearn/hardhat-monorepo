@@ -39,7 +39,6 @@ async function main() {
   console.log('[Setup] Chain ID:', chainId);
 
   const [signer] = await ethers.getSigners();
-  console.log('[Setup] Executing with address', signer.address);
   const web3 = new Web3(getNodeUrl(chainId === '1' ? 'mainnet' : 'goerli'));
   web3ReporterSigner = web3.eth.accounts.privateKeyToAccount(
     await kms.decrypt((chainId === '1' ? process.env.MAINNET_1_PRIVATE_KEY : process.env.GOERLI_1_PRIVATE_KEY) as string)
@@ -53,7 +52,8 @@ async function main() {
     signer // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  const ymech: Signer = await impersonate('0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6');
+  const ymech: Signer = await impersonate('0xb82193725471dc7bfaab1a3ab93c7b42963f3265');
+  console.log('[Setup] Executing with address', await ymech.getAddress());
 
   let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
