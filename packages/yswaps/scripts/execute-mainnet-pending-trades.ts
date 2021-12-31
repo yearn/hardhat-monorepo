@@ -1,4 +1,4 @@
-import { ethers, getChainId } from 'hardhat';
+import { ethers, getChainId, network } from 'hardhat';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { BigNumber, Signer, utils } from 'ethers';
@@ -45,17 +45,23 @@ async function main() {
   );
   const multicalls = [new ThreePoolCrvMulticall()];
 
-  wsProvider = new ethers.providers.WebSocketProvider('wss://eth-mainnet.alchemyapi.io/v2/so5nW0P5_fel3fRHnpZxyyvdCVky2Nvz', 'mainnet');
-  console.log('[Setup] Creating flashbots provider ...');
-  flashbotsProvider = await FlashbotsBundleProvider.create(
-    wsProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-    signer // ethers.js signer wallet, only for signing request payloads, not transactions
-  );
+  // wsProvider = new ethers.providers.WebSocketProvider('wss://eth-mainnet.alchemyapi.io/v2/so5nW0P5_fel3fRHnpZxyyvdCVky2Nvz', 'mainnet');
+  // console.log('[Setup] Creating flashbots provider ...');
+  // flashbotsProvider = await FlashbotsBundleProvider.create(
+  //   wsProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+  //   signer // ethers.js signer wallet, only for signing request payloads, not transactions
+  // );
 
   const ymech: Signer = await impersonate('0xb82193725471dc7bfaab1a3ab93c7b42963f3265');
   console.log('[Setup] Executing with address', await ymech.getAddress());
 
   let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
+
+  // set current signer as TRADES_SETTLER for the test
+  if (!(await tradeFactory.hasRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address))) {
+    await tradeFactory.grantRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address);
+  }
+
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
@@ -68,7 +74,7 @@ async function main() {
     const decimalsIn = await tokenIn.decimals();
     const symbolIn = await tokenIn.symbol();
 
-    console.log('[Execution] Executing trade with id', pendingTrade._id, 'of', utils.formatUnits(pendingTrade._amountIn), symbolIn);
+    console.log('[Execution] Executing trade with id', pendingTrade._id.toNumber(), 'of', utils.formatUnits(pendingTrade._amountIn), symbolIn);
 
     // TODO: Uncomment. This removes expired trades
     // if (pendingTrade._deadline.lt(moment().unix())) {
@@ -83,7 +89,17 @@ async function main() {
     const multicall = multicalls.find((mc) => mc.match(pendingTrade));
     if (multicall) {
       // continue;
+      const snapshotId = (await network.provider.request({
+        method: 'evm_snapshot',
+        params: [],
+      })) as string;
+
       bestSetup = await multicall.asyncSwap(pendingTrade);
+
+      await network.provider.request({
+        method: 'evm_revert',
+        params: [snapshotId],
+      });
     } else {
       // continue;
       bestSetup = await new Router().route(pendingTrade);
@@ -128,6 +144,9 @@ async function main() {
       gas: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
+
+    return; // TODO REMOVE AND UNCOMMENT flashbots init code above
+
     console.log('[Execution] Sending transaction in block', await wsProvider.getBlockNumber());
     const asd = await protect.sendTransaction(signedTx.rawTransaction!);
     console.log('asd', asd);

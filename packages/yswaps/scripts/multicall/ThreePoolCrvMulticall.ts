@@ -26,22 +26,28 @@ export class ThreePoolCrvMulticall implements IMulticall {
 
   async asyncSwap(trade: PendingTrade): Promise<TradeSetup> {
     const strategySigner: Signer = await impersonate(this.strategy);
-    const crv3Pool: ICurveFi = ICurveFi__factory.connect(this.crv3Pool, strategySigner);
-    const usdc: IERC20 = IERC20__factory.connect(this.usdc, strategySigner);
-    const yvBoostToken: IERC20 = IERC20__factory.connect(this.yvBoost, strategySigner);
+    const multicallSwapperSigner: Signer = await impersonate(this.multicallSwapper);
+    const crv3Pool: ICurveFi = ICurveFi__factory.connect(this.crv3Pool, multicallSwapperSigner);
+    const threeCrv: IERC20 = IERC20__factory.connect(this.threeCrv, strategySigner);
+    const usdc: IERC20 = IERC20__factory.connect(this.usdc, multicallSwapperSigner);
+    const yvBoostToken: IERC20 = IERC20__factory.connect(this.yvBoost, multicallSwapperSigner);
 
+    console.log('threeCrv.transfer to swapper');
+    await threeCrv.transfer(this.multicallSwapper, trade._amountIn);
     // Withdraw usdc from crv3Pool
+    console.log('removeliq');
+    const usdcBalancePre: BigNumber = await usdc.balanceOf(this.multicallSwapper);
     await crv3Pool.remove_liquidity_one_coin(trade._amountIn, 1, 0);
-    const usdcBalance: BigNumber = await usdc.balanceOf(this.strategy);
+    const usdcBalance: BigNumber = (await usdc.balanceOf(this.multicallSwapper)).sub(usdcBalancePre);
     console.log('Got USDC', usdcBalance.toString());
 
     // Trade USDC for yvBOOST in zrx
     const { data: zrxData, allowanceTarget: zrxAllowanceTarget } = await zrx.quote({
       chainId: Number(1),
-      sellToken: usdc.address,
+      sellToken: this.usdc,
       buyToken: this.yvBoost,
       sellAmount: usdcBalance,
-      slippagePercentage: 3 / 100,
+      slippagePercentage: 10 / 100,
     });
 
     const tx = {
@@ -50,16 +56,16 @@ export class ThreePoolCrvMulticall implements IMulticall {
     };
 
     await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
-    await strategySigner.sendTransaction(tx);
+    await multicallSwapperSigner.sendTransaction(tx);
 
-    const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(this.strategy);
+    const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(this.multicallSwapper);
     console.log('yvBOOST balance: ', yvBoostBalance.toString());
 
-    const yvBoostVault: IVault = IVault__factory.connect(this.yvBoost, strategySigner);
-    await yvBoostVault.withdraw(constants.MaxUint256, this.strategy, BigNumber.from('0'));
+    const yvBoostVault: IVault = IVault__factory.connect(this.yvBoost, multicallSwapperSigner);
+    await yvBoostVault.withdraw(constants.MaxUint256, this.multicallSwapper, BigNumber.from('0'));
 
-    const yveCrvToken: IERC20 = IERC20__factory.connect(this.yveCrv, strategySigner);
-    const yveCrvBalance: BigNumber = await yveCrvToken.balanceOf(this.strategy);
+    const yveCrvToken: IERC20 = IERC20__factory.connect(this.yveCrv, multicallSwapperSigner);
+    const yveCrvBalance: BigNumber = await yveCrvToken.balanceOf(this.multicallSwapper);
     console.log('Got yveCrv', yveCrvBalance.toString());
 
     // Create txs for multichain swapper
@@ -71,10 +77,10 @@ export class ThreePoolCrvMulticall implements IMulticall {
     // 2) Approve usdc in zrx
     transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
 
-    // 3) Swap usdc for yvBOOST
+    // // 3) Swap usdc for yvBOOST
     transactions.push(tx);
 
-    // 4) Withdraw from yvBOOST
+    // // 4) Withdraw from yvBOOST
     transactions.push(await yvBoostVault.populateTransaction.withdraw(constants.MaxUint256, this.strategy, BigNumber.from('0')));
 
     const data: string = mergeTransactions(transactions);
