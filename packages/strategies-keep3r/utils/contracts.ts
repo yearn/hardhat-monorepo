@@ -1,11 +1,11 @@
-export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'ftm';
+export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'fantom';
 
 export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   1: 'mainnet',
   4: 'rinkeby',
   5: 'goerli',
   137: 'polygon',
-  250: 'ftm',
+  250: 'fantom',
 };
 
 export type ContractChainAddress = {
@@ -42,13 +42,13 @@ export const crvStrategyKeep3rStealthJob2: ContractChainAddress = {
 export const mechanicsRegistry: ContractChainAddress = {
   mainnet: '0xE8d5A85758FE98F7Dce251CAd552691D49b499Bb',
   polygon: '0x7A99923aA2efa71178BB11294349EC1F6b23a814',
-  ftm: '0x7f462B92F92114A2D57A03e5Ae2DB5DA28b77d73',
+  fantom: '0x7f462B92F92114A2D57A03e5Ae2DB5DA28b77d73',
 };
 
 export const v2Keeper: ContractChainAddress = {
   mainnet: '0x736D7e3c5a6CB2CE3B764300140ABF476F6CFCCF',
   polygon: '',
-  ftm: '0xe72d641f09a48cce6997377d13b2Ac7029c642b2',
+  fantom: '0xe72d641f09a48cce6997377d13b2Ac7029c642b2',
 };
 
 export const curveClaimableTokensHelper: ContractChainAddress = {
@@ -62,13 +62,13 @@ export const blockProtection: ContractChainAddress = {
 export const vaultsRegistry: ContractChainAddress = {
   mainnet: '0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804',
   polygon: '',
-  ftm: '0x727fe1759430df13655ddb0731dE0D0FDE929b04',
+  fantom: '0x727fe1759430df13655ddb0731dE0D0FDE929b04',
 };
 
 export const vaultsRegistryHelper: ContractChainAddress = {
   mainnet: '',
   polygon: '',
-  ftm: '0x8CC45f739104b3Bdb98BFfFaF2423cC0f817ccc1',
+  fantom: '0x8CC45f739104b3Bdb98BFfFaF2423cC0f817ccc1',
 };
 
 export const tendV2Keep3rJob: ContractChainAddress = {
@@ -85,25 +85,25 @@ export const stealthSafeGuard: ContractChainAddress = {
 
 export const multicall2: ContractChainAddress = {
   mainnet: '',
-  ftm: '0x6cAfA5f64476769aAEc7c0Ae8D8E14c2a77272a2',
+  fantom: '0x6cAfA5f64476769aAEc7c0Ae8D8E14c2a77272a2',
 };
 
 export const yOracle = {
   mainnet: '0x0000000000000000000000000000000000000000',
-  ftm: '0x0000000000000000000000000000000000000000',
+  fantom: '0x0000000000000000000000000000000000000000',
 };
 
 export const baseFeeOracle = {
   mainnet: '0xf8d0ec04e94296773ce20efbeea82e76220cd549',
-  ftm: '',
+  fantom: '',
 };
 
 export const tendV2DetachedJob = {
   mainnet: '',
-  ftm: '0xaB4b34e69Ae8599361709B0EC4A6dA539eFd7Fb8',
+  fantom: '0xaB4b34e69Ae8599361709B0EC4A6dA539eFd7Fb8',
 };
 
 export const harvestV2DetachedJob = {
   mainnet: '',
-  ftm: '0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8',
+  fantom: '0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8',
 };
