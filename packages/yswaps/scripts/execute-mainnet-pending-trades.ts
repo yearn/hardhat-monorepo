@@ -45,7 +45,7 @@ async function main() {
   );
   const multicalls = [new ThreePoolCrvMulticall()];
 
-  // wsProvider = new ethers.providers.WebSocketProvider('wss://eth-mainnet.alchemyapi.io/v2/so5nW0P5_fel3fRHnpZxyyvdCVky2Nvz', 'mainnet');
+  wsProvider = new ethers.providers.WebSocketProvider('wss://eth-mainnet.alchemyapi.io/v2/so5nW0P5_fel3fRHnpZxyyvdCVky2Nvz', 'mainnet');
   // console.log('[Setup] Creating flashbots provider ...');
   // flashbotsProvider = await FlashbotsBundleProvider.create(
   //   wsProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
@@ -58,9 +58,9 @@ async function main() {
   let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
 
   // set current signer as TRADES_SETTLER for the test
-  if (!(await tradeFactory.hasRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address))) {
-    await tradeFactory.grantRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address);
-  }
+  // if (!(await tradeFactory.hasRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address))) {
+  //   await tradeFactory.grantRole(await tradeFactory.TRADES_SETTLER(), web3ReporterSigner.address);
+  // }
 
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
@@ -74,7 +74,13 @@ async function main() {
     const decimalsIn = await tokenIn.decimals();
     const symbolIn = await tokenIn.symbol();
 
-    console.log('[Execution] Executing trade with id', pendingTrade._id.toNumber(), 'of', utils.formatUnits(pendingTrade._amountIn), symbolIn);
+    console.log(
+      '[Execution] Executing trade with id',
+      pendingTrade._id.toNumber(),
+      'of',
+      utils.formatUnits(pendingTrade._amountIn, decimalsIn),
+      symbolIn
+    );
 
     // TODO: Uncomment. This removes expired trades
     // if (pendingTrade._deadline.lt(moment().unix())) {
@@ -135,7 +141,7 @@ async function main() {
       bestSetup.data,
       {
         ...gasParams,
-        gasLimit: BigNumber.from('2000000'), // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
+        gasLimit: BigNumber.from('3000000'), // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
       }
     );
     const signedTx = await web3ReporterSigner.signTransaction({
@@ -144,8 +150,6 @@ async function main() {
       gas: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
-
-    return; // TODO REMOVE AND UNCOMMENT flashbots init code above
 
     console.log('[Execution] Sending transaction in block', await wsProvider.getBlockNumber());
     const asd = await protect.sendTransaction(signedTx.rawTransaction!);
