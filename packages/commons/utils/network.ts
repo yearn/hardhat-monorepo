@@ -4,14 +4,14 @@ import kms from '../tools/kms';
 // const DEFAULT_ACCOUNT = '0x0000000000000000000000000000000000000000000000000000000000000bad';
 const MAX_ACCOUNTS = 10;
 
-export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'ftm';
+export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'fantom';
 
 export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   1: 'mainnet',
   4: 'rinkeby',
   5: 'goerli',
   137: 'polygon',
-  250: 'ftm',
+  250: 'fantom',
 };
 
 export function getNodeUrl(networkName: string): string {
