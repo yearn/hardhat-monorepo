@@ -36,7 +36,7 @@
     "test:integration": "yarn test ./test/integration/*.spec.ts",
     "test:unit": "yarn test test/unit/*.spec.ts",
     "watcher:start:goerli": "npx hardhat run ./scripts/watcher/yearn.ts --network goerli",
-    "watcher:start:mainnet": "npx hardhat run ./scripts/watcher/yearn.ts --network mainnet"
+    "watcher:start:mainnet": "pm2 start \"npx hardhat run ./scripts/watcher/yearn.ts --network mainnet\" --exp-backoff-restart-delay=1000"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.3.2",
