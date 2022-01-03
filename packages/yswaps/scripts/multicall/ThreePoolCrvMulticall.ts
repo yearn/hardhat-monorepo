@@ -38,7 +38,12 @@ export class ThreePoolCrvMulticall implements IMulticall {
     console.log('removeliq');
     const usdcBalancePre: BigNumber = await usdc.balanceOf(this.multicallSwapper);
     await crv3Pool.remove_liquidity_one_coin(trade._amountIn, 1, 0);
-    const usdcBalance: BigNumber = (await usdc.balanceOf(this.multicallSwapper)).sub(usdcBalancePre);
+    const usdcBalanceTotal: BigNumber = await usdc.balanceOf(this.multicallSwapper);
+    let usdcBalance: BigNumber = usdcBalanceTotal.sub(usdcBalancePre);
+    if (usdcBalanceTotal.eq(usdcBalance)) {
+      // we need to leave at least 1 wei as dust for gas optimizations
+      usdcBalance = usdcBalance.sub(1);
+    }
     console.log('Got USDC', usdcBalance.toString());
 
     // Trade USDC for yvBOOST in zrx
@@ -55,7 +60,9 @@ export class ThreePoolCrvMulticall implements IMulticall {
       data: zrxData,
     };
 
-    await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
+    const approveUsdc = (await usdc.allowance(this.multicallSwapper, zrxAllowanceTarget)) < usdcBalance;
+    if (approveUsdc) await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
+
     await multicallSwapperSigner.sendTransaction(tx);
 
     const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(this.multicallSwapper);
@@ -74,8 +81,8 @@ export class ThreePoolCrvMulticall implements IMulticall {
     // 1) Withdraw usdc from 3pool
     transactions.push(await crv3Pool.populateTransaction.remove_liquidity_one_coin(trade._amountIn, 1, 0));
 
-    // 2) Approve usdc in zrx
-    transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
+    // 2) Approve usdc in zrx (if neccesary)
+    if (approveUsdc) transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
 
     // // 3) Swap usdc for yvBOOST
     transactions.push(tx);
