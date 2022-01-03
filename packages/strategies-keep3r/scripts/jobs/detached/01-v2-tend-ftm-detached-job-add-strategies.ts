@@ -34,7 +34,7 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const tendV2DetachedJob = await ethers.getContractAt('TendV2DetachedJob', contracts.tendV2DetachedJob.ftm, signer);
+          const tendV2DetachedJob = await ethers.getContractAt('TendV2DetachedJob', contracts.tendV2DetachedJob.fantom, signer);
 
           const jobStrategies = await tendV2DetachedJob.callStatic.strategies();
 

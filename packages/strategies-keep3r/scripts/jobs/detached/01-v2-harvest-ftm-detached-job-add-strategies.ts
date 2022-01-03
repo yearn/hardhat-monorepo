@@ -34,7 +34,7 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.ftm, signer);
+          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom, signer);
 
           const jobStrategies = await harvestV2DetachedJob.callStatic.strategies();
 

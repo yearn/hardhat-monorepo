@@ -9,7 +9,7 @@ async function main() {
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
     const [owner] = await ethers.getSigners();
-    const networkName = 'ftm';
+    const networkName = 'fantom';
     console.log('using address:', owner.address, 'on', networkName);
     try {
       const harvestV2DetachedJob = await ethers.getContractAt('HarvestV2DetachedJob', contracts.harvestV2DetachedJob[networkName]);
