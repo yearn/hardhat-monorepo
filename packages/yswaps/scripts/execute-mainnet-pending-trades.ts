@@ -1,7 +1,6 @@
 import { ethers, network } from 'hardhat';
-import sleep from 'sleep-promise';
 import moment from 'moment';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
 import { IERC20Metadata, TradeFactory } from '@typechained';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
@@ -18,11 +17,13 @@ import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
 import { impersonate } from './utils';
 import kms from '../../commons/tools/kms';
+
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
+const RETRIES = 20;
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
 const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 2.5;
 const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
@@ -45,8 +46,6 @@ async function main() {
   await evm.reset({
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
-
-  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const web3ReporterSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
   const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
@@ -123,7 +122,7 @@ async function main() {
     await tradeFactory['execute(uint256,address,uint256,bytes)'](pendingTrade._id, bestSetup.swapper, bestSetup.minAmountOut!, bestSetup.data);
     console.log('[Execution] Simulation in fork succeeded !');
 
-    const populatedTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
+    const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
       bestSetup.swapper,
       bestSetup.minAmountOut!,
@@ -134,55 +133,88 @@ async function main() {
       }
     );
 
-    const signedTx = await web3ReporterSigner.signTransaction({
-      ...gasParams,
-      to: populatedTx.to!,
-      gasLimit: populatedTx.gasLimit!.toNumber(),
-      data: populatedTx.data!,
+    await generateAndSendBundle({
+      pendingTrade,
+      bestSetup,
+      web3ReporterSigner,
+      executeTx,
+      gasParams,
     });
-
-    console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
-    const protectTx = await protect.sendTransaction(signedTx);
-    console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
-
-    const bundle: FlashbotBundle = [
-      {
-        signedTransaction: signedTx,
-      },
-    ];
-    console.log('[Execution] Signed with hash:', protectTx.hash);
-    if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
-
-    await sleep(DELAY);
   }
 }
 
-async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
-  let submitted = false;
+async function generateAndSendBundle(params: {
+  pendingTrade: PendingTrade;
+  bestSetup: TradeSetup;
+  web3ReporterSigner: Wallet;
+  executeTx: PopulatedTransaction;
+  gasParams: {
+    maxFeePerGas: BigNumber;
+    maxPriorityFeePerGas: BigNumber;
+  };
+  retryNumber?: number;
+}): Promise<boolean> {
+  const blockProtection = await ethers.getContractAt('BlockProtection', '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.web3ReporterSigner);
+  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 2;
+
+  const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
+    params.executeTx.to, // address _to,
+    params.executeTx.data, // bytes memory _data,
+    targetBlockNumber // uint256 _blockNumber
+  );
+
+  const signedTx = await params.web3ReporterSigner.signTransaction({
+    ...params.gasParams,
+    to: populatedTx.to!,
+    gasLimit: populatedTx.gasLimit!.toNumber(),
+    data: populatedTx.data!,
+  });
+
+  console.log('[Execution] Sending transaction in block', targetBlockNumber);
+  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
+  // const protectTx = await protect.sendTransaction(signedTx);
+  // console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
+
+  const bundle: FlashbotBundle = [
+    {
+      signedTransaction: signedTx,
+    },
+  ];
+  console.log('[Execution] Signed with hash:', signedTx);
+  if (await submitBundleForBlock(bundle, targetBlockNumber)) {
+    console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
+    return true;
+  }
+  if (!params.retryNumber) params.retryNumber = 0;
+  params.retryNumber++;
+  if (params.retryNumber! >= RETRIES) {
+    return false;
+  } else {
+    return await generateAndSendBundle(params);
+  }
+}
+
+async function submitBundleForBlock(bundle: FlashbotBundle, targetBlockNumber: number): Promise<boolean> {
+  let included = false;
   let rejected = false;
-  const blockNumber = await httpProvider.getBlockNumber();
-  let targetBlock = blockNumber + 1;
-  while (!(submitted || rejected)) {
-    if (!(await simulateBundle(bundle, targetBlock))) {
+  while (!(included || rejected)) {
+    if (!(await simulateBundle(bundle, targetBlockNumber))) {
       rejected = true;
       continue;
     }
-    const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlock);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 1);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 2);
+    const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlockNumber);
     const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
     if (resolution == FlashbotsBundleResolution.BundleIncluded) {
       console.log('[Flashbot] BundleIncluded, sucess!');
-      submitted = true;
+      included = true;
     } else if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
       console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
     } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
       console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
       rejected = true;
     }
-    targetBlock += 1;
   }
-  return submitted;
+  return included;
 }
 
 async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Promise<boolean> {
