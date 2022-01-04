@@ -1,4 +1,4 @@
-import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
+import { BigNumber, constants, ethers, PopulatedTransaction, Signer, utils } from 'ethers';
 import { PendingTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
@@ -31,11 +31,14 @@ export class ThreePoolCrvMulticall implements IMulticall {
     const threeCrv: IERC20 = IERC20__factory.connect(this.threeCrv, strategySigner);
     const usdc: IERC20 = IERC20__factory.connect(this.usdc, multicallSwapperSigner);
     const yvBoostToken: IERC20 = IERC20__factory.connect(this.yvBoost, multicallSwapperSigner);
+    const yvBoostVault: IVault = IVault__factory.connect(this.yvBoost, multicallSwapperSigner);
+    const yveCrvToken: IERC20 = IERC20__factory.connect(this.yveCrv, multicallSwapperSigner);
 
-    console.log('threeCrv.transfer to swapper');
+    console.log('[ThreePoolCrvMulticall] 3crv transfer to swapper');
     await threeCrv.transfer(this.multicallSwapper, trade._amountIn);
+
     // Withdraw usdc from crv3Pool
-    console.log('removeliq');
+    console.log('[ThreePoolCrvMulticall] Remove liqudity from curve pool');
     const usdcBalancePre: BigNumber = await usdc.balanceOf(this.multicallSwapper);
     await crv3Pool.remove_liquidity_one_coin(trade._amountIn, 1, 0);
     const usdcBalanceTotal: BigNumber = await usdc.balanceOf(this.multicallSwapper);
@@ -44,7 +47,11 @@ export class ThreePoolCrvMulticall implements IMulticall {
       // we need to leave at least 1 wei as dust for gas optimizations
       usdcBalance = usdcBalance.sub(1);
     }
-    console.log('Got USDC', usdcBalance.toString());
+    console.log(
+      '[ThreePoolCrvMulticall] Total USDC after removing liquidity form curve pool',
+      utils.formatUnits(usdcBalance, 6),
+      `(raw: ${usdcBalance.toString()})`
+    );
 
     // Trade USDC for yvBOOST in zrx
     const { data: zrxData, allowanceTarget: zrxAllowanceTarget } = await zrx.quote({
@@ -55,25 +62,30 @@ export class ThreePoolCrvMulticall implements IMulticall {
       slippagePercentage: 10 / 100,
     });
 
+    console.log('[ThreePoolCrvMulticall] Got quote from ZRX');
+
     const tx = {
       to: this.zrxContract,
       data: zrxData,
     };
 
     const approveUsdc = (await usdc.allowance(this.multicallSwapper, zrxAllowanceTarget)) < usdcBalance;
-    if (approveUsdc) await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
+    if (approveUsdc) {
+      console.log('[ThreePoolCrvMulticall] Approving usdc');
+      await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
+    }
 
+    console.log('[ThreePoolCrvMulticall] Executing ZRX swap');
     await multicallSwapperSigner.sendTransaction(tx);
 
     const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(this.multicallSwapper);
-    console.log('yvBOOST balance: ', yvBoostBalance.toString());
+    console.log('[ThreePoolCrvMulticall] yvBOOST after swap: ', utils.formatEther(yvBoostBalance), `(raw: ${yvBoostBalance.toString()})`);
 
-    const yvBoostVault: IVault = IVault__factory.connect(this.yvBoost, multicallSwapperSigner);
-    await yvBoostVault.withdraw(constants.MaxUint256, this.multicallSwapper, BigNumber.from('0'));
+    console.log('[ThreePoolCrvMulticall] Withdrawing yvBOOST');
+    await yvBoostVault.withdraw(constants.MaxUint256, this.multicallSwapper, 0);
 
-    const yveCrvToken: IERC20 = IERC20__factory.connect(this.yveCrv, multicallSwapperSigner);
     const yveCrvBalance: BigNumber = await yveCrvToken.balanceOf(this.multicallSwapper);
-    console.log('Got yveCrv', yveCrvBalance.toString());
+    console.log('[ThreePoolCrvMulticall] yveCRV after withdraw', utils.formatEther(yveCrvBalance), `(raw: ${yveCrvBalance.toString()})`);
 
     // Create txs for multichain swapper
     const transactions: PopulatedTransaction[] = [];
@@ -91,11 +103,11 @@ export class ThreePoolCrvMulticall implements IMulticall {
     transactions.push(await yvBoostVault.populateTransaction.withdraw(constants.MaxUint256, this.strategy, BigNumber.from('0')));
 
     const data: string = mergeTransactions(transactions);
-    console.log('mergedTxs:', data);
+    console.log('[ThreePoolCrvMulticall] Data after merging transactions:', data);
 
     return {
       swapper: this.multicallSwapper,
-      swapperName: 'Multicall-Swapper',
+      swapperName: 'MultiCallOptimizedSwapper',
       data: data,
       minAmountOut: yveCrvBalance,
     };

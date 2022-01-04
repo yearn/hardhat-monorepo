@@ -2,7 +2,7 @@ import { BigNumber, constants, Contract, PopulatedTransaction, utils } from 'eth
 import { ethers } from 'hardhat';
 import moment from 'moment';
 import { erc20, evm } from '@test-utils';
-import * as fixtures from '../../fixtures';
+import * as fixtures from '../../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import { IERC20, TradeFactory } from '@typechained';
@@ -91,7 +91,7 @@ contract('MultiCallOptimizedSwapper', () => {
     await evm.snapshot.revert(snapshotId);
   });
 
-  describe('async trade executed', () => {
+  describe('swap', () => {
     let minAmountOut: BigNumber;
     given(async () => {
       await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
