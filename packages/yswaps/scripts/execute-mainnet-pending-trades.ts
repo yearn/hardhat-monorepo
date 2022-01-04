@@ -49,7 +49,7 @@ async function main() {
   const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const web3ReporterSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
-  const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
+  const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
