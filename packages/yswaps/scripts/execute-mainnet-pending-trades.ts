@@ -1,3 +1,4 @@
+import sleep from 'sleep-promise';
 import { ethers, network } from 'hardhat';
 import moment from 'moment';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
@@ -140,6 +141,8 @@ async function main() {
       executeTx,
       gasParams,
     });
+
+    await sleep(DELAY);
   }
 }
 
