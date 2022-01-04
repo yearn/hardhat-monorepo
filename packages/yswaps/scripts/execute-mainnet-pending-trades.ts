@@ -1,12 +1,10 @@
-import { ethers, deployments, network } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { BigNumber, Signer, utils } from 'ethers';
-import { IERC20Metadata, TradeFactory, TradeFactory__factory } from '@typechained';
+import { BigNumber, utils } from 'ethers';
+import { IERC20Metadata, TradeFactory } from '@typechained';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
-import Web3 from 'web3';
-import { Account } from 'web3-core';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -50,16 +48,17 @@ async function main() {
 
   const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
-  const web3ReporterSigner = new Web3().eth.accounts.privateKeyToAccount(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
+  const web3ReporterSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
+  const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
-  // console.log('[Setup] Creating flashbots provider ...');
-  // flashbotsProvider = await FlashbotsBundleProvider.create(
-  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-  //   signer // ethers.js signer wallet, only for signing request payloads, not transactions
-  // );
+  console.log('[Setup] Creating flashbots provider ...');
+  flashbotsProvider = await FlashbotsBundleProvider.create(
+    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
+  );
 
   const ymech = await impersonate(web3ReporterSigner.address);
   console.log('[Setup] Executing with address', web3ReporterSigner.address);
@@ -138,21 +137,21 @@ async function main() {
     const signedTx = await web3ReporterSigner.signTransaction({
       ...gasParams,
       to: populatedTx.to!,
-      gas: populatedTx.gasLimit!.toNumber(),
+      gasLimit: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
 
     console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
-    const protectTx = await protect.sendTransaction(signedTx.rawTransaction!);
+    const protectTx = await protect.sendTransaction(signedTx);
     console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
 
-    // const bundle: FlashbotBundle = [
-    //   {
-    //     signedTransaction: signedTx.rawTransaction!,
-    //   },
-    // ];
-    // console.log('[Execution] Signed with hash:', signedTx.transactionHash!);
-    // if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+    const bundle: FlashbotBundle = [
+      {
+        signedTransaction: signedTx,
+      },
+    ];
+    console.log('[Execution] Signed with hash:', protectTx.hash);
+    if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
 
     await sleep(DELAY);
   }

@@ -96,10 +96,10 @@ export class ThreePoolCrvMulticall implements IMulticall {
     // 2) Approve usdc in zrx (if neccesary)
     if (approveUsdc) transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
 
-    // // 3) Swap usdc for yvBOOST
+    // 3) Swap usdc for yvBOOST
     transactions.push(tx);
 
-    // // 4) Withdraw from yvBOOST
+    // 4) Withdraw from yvBOOST
     transactions.push(await yvBoostVault.populateTransaction.withdraw(constants.MaxUint256, this.strategy, BigNumber.from('0')));
 
     const data: string = mergeTransactions(transactions);
