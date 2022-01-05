@@ -1,7 +1,7 @@
 import moment from 'moment';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Contract, ContractFactory } from '@ethersproject/contracts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { deployMockContract, MockContract } from '@ethereum-waffle/mock-contract';
 import { MockProvider } from '@ethereum-waffle/provider';
 import { BigNumber, BigNumberish, utils, Wallet } from 'ethers';
