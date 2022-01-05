@@ -23,15 +23,7 @@ const encrypted = !!process.env.ENCRYPTED_CREDENTIALS && process.env.ENCRYPTED_C
 
 const getNetworks = (networksName: string[]): NetworksUserConfig => {
   if (!!process.env.TEST || process.argv[process.argv.length - 1] == 'compile') return {};
-  const networks: NetworksUserConfig = {
-    hardhat: {
-      chainId: 1,
-      forking: {
-        enabled: process.env.FORK ? true : false,
-        url: process.env.ETH_NODE_URI_MAINNET!,
-      },
-    },
-  };
+  const networks: NetworksUserConfig = {};
   networksName.forEach((network: string) => {
     networks[network] = {
       url: getNodeUrl(network),

@@ -1,10 +1,10 @@
-import { ethers, getChainId } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { BigNumber, Signer, utils } from 'ethers';
-import { TradeFactory, TradeFactoryExecutor, TradeFactoryExecutor__factory, TradeFactory__factory } from '@typechained';
+import { BigNumber, utils } from 'ethers';
+import { IERC20Metadata, IERC20__factory, TradeFactory } from '@typechained';
+import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
-import { Account } from 'web3-core';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -17,33 +17,54 @@ import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
 import { impersonate } from './utils';
+import kms from '../../commons/tools/kms';
+import { getNodeUrl } from '@utils/network';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import * as evm from '@test-utils/evm';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
-const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
-const MAX_PRIORITY_FEE_GAS_PRICE = 15;
+const MAX_GAS_PRICE = utils.parseUnits('200', 'gwei');
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 2.5;
+const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
 
 // Flashbot
-let web3ReporterSigner: Account;
 let flashbotsProvider: FlashbotsBundleProvider;
-
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
+// Provider
+let httpProvider: JsonRpcProvider;
+
+// Multicall swappers
+const multicalls = [new ThreePoolCrvMulticall()];
+
 async function main() {
-  const chainId = await getChainId();
-  console.log('[Setup] Chain ID:', chainId);
+  await gasprice.start();
 
-  const [signer] = await ethers.getSigners();
-  const multicalls = [new ThreePoolCrvMulticall()];
+  console.log('[Setup] Forking mainnet');
 
-  console.log('[Setup] Creating flashbots provider ...');
-  flashbotsProvider = await FlashbotsBundleProvider.create(
-    ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-    signer // ethers.js signer wallet, only for signing request payloads, not transactions
-  );
+  // We set this so hardhat-deploys uses the correct deployment addresses.
+  process.env.HARDHAT_DEPLOY_FORK = 'mainnet';
+  await evm.reset({
+    jsonRpcUrl: getNodeUrl('mainnet'),
+  });
 
-  const ymech: Signer = await impersonate('0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6');
+  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
-  let tradeFactory: TradeFactory = TradeFactory__factory.connect('0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d', ymech);
+  const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
+  await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
+  console.log('[Setup] Executing with address', ymech.address);
+  // const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
+
+  // We create a provider thats connected to a real network, hardhat provider will be connected to fork
+  httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
+
+  // console.log('[Setup] Creating flashbots provider ...');
+  // flashbotsProvider = await FlashbotsBundleProvider.create(
+  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+  //   flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
+  // );
+
+  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
@@ -52,39 +73,63 @@ async function main() {
   }
 
   for (const pendingTrade of pendingTrades) {
-    // TODO: Uncomment. This removes expired trades
-    // if (pendingTrade._deadline.lt(moment().unix())) {
-    //   console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-    //   await tradeFactory.expire(pendingTrade._id);
-    //   continue;
-    // }
+    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
+    const decimalsIn = await tokenIn.decimals();
+    const symbolIn = await tokenIn.symbol();
+
+    console.log(
+      '[Execution] Executing trade with id',
+      pendingTrade._id.toNumber(),
+      'of',
+      utils.formatUnits(pendingTrade._amountIn, decimalsIn),
+      symbolIn
+    );
 
     let bestSetup: TradeSetup;
 
     // Check if we need to run over a multicall swapper
     const multicall = multicalls.find((mc) => mc.match(pendingTrade));
     if (multicall) {
+      console.log('[Multicall] Taking snapshot of fork');
+
+      const snapshotId = (await network.provider.request({
+        method: 'evm_snapshot',
+        params: [],
+      })) as string;
+
+      console.log('[Multicall] Getting data');
+
       bestSetup = await multicall.asyncSwap(pendingTrade);
+
+      console.log('[Multicall] Reverting to snapshot');
+      await network.provider.request({
+        method: 'evm_revert',
+        params: [snapshotId],
+      });
     } else {
       bestSetup = await new Router().route(pendingTrade);
     }
 
-    // TODO: This fails. Perhaps it's because we are inside a fork?
-    // const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    // const gasParams = {
-    //   maxFeePerGas: MAX_GAS_PRICE,
-    //   maxPriorityFeePerGas:
-    //     currentGas.maxPriorityFeePerGas > MAX_PRIORITY_FEE_GAS_PRICE
-    //       ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
-    //       : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
-    // };
-
-    // Hardcoded for now
+    const currentGas = gasprice.get(gasprice.Confidence.Highest);
     const gasParams = {
-      maxFeePerGas: utils.parseUnits('300', 'gwei'),
-      maxPriorityFeePerGas: utils.parseUnits('2.5', 'gwei')
-    }
-    
+      maxFeePerGas: MAX_GAS_PRICE,
+      maxPriorityFeePerGas:
+        currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
+          ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
+          : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
+    };
+
+    // Execute in our fork
+    console.log('[Execution] Executing trade in fork');
+    const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
+      pendingTrade._id,
+      bestSetup.swapper,
+      bestSetup.minAmountOut!,
+      bestSetup.data
+    );
+    const confirmedTx = await simulatedTx.wait();
+    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+
     const populatedTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
       bestSetup.swapper,
@@ -92,21 +137,30 @@ async function main() {
       bestSetup.data,
       {
         ...gasParams,
-        gasLimit: BigNumber.from('100000'), // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
+        gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(10)), // We add a safety net of 10% more of gass
       }
     );
-    const signedTx = await web3ReporterSigner.signTransaction({
+
+    const signedTx = await ymech.signTransaction({
       ...gasParams,
+      type: 2,
       to: populatedTx.to!,
-      gas: populatedTx.gasLimit!.toNumber(),
+      gasLimit: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
-    const bundle: FlashbotBundle = [
-      {
-        signedTransaction: signedTx.rawTransaction!,
-      },
-    ];
-    if (await submitBundle(bundle)) console.log('Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+
+    console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
+    const protectTx = await protect.sendTransaction(signedTx);
+    console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
+
+    // const bundle: FlashbotBundle = [
+    //   {
+    //     signedTransaction: signedTx,
+    //   },
+    // ];
+    // console.log('[Execution] Signed with hash:', protectTx.hash);
+    // if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+
     await sleep(DELAY);
   }
 }
@@ -114,7 +168,7 @@ async function main() {
 async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
   let submitted = false;
   let rejected = false;
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const blockNumber = await httpProvider.getBlockNumber();
   let targetBlock = blockNumber + 1;
   while (!(submitted || rejected)) {
     if (!(await simulateBundle(bundle, targetBlock))) {
