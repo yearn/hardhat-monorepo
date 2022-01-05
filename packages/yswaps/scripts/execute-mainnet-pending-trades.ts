@@ -1,13 +1,10 @@
-import { ethers, getChainId } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import sleep from 'sleep-promise';
-import uniswap from '@libraries/uniswap-v2';
 import moment from 'moment';
-import { BigNumber, utils, Wallet } from 'ethers';
-import { TradeFactory } from '@typechained';
-import zrx from './libraries/zrx';
+import { BigNumber, utils } from 'ethers';
+import { IERC20Metadata, IERC20__factory, TradeFactory } from '@typechained';
+import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
-import { Account } from 'web3-core';
-import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER, WETH } from '@deploy/mainnet-swappers/uniswap_v2';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -16,114 +13,122 @@ import {
   FlashbotsTransaction,
   FlashbotsTransactionResponse,
 } from '@flashbots/ethers-provider-bundle';
+import { PendingTrade, TradeSetup } from './types';
+import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
+import { Router } from './Router';
+import { impersonate } from './utils';
+import kms from '../../commons/tools/kms';
+import { getNodeUrl } from '@utils/network';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import * as evm from '@test-utils/evm';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
-const SLIPPAGE_PERCENTAGE = 3;
-const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
-const MAX_PRIORITY_FEE_GAS_PRICE = 15;
+const MAX_GAS_PRICE = utils.parseUnits('200', 'gwei');
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 2.5;
+const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
 
 // Flashbot
-let web3ReporterSigner: Account;
 let flashbotsProvider: FlashbotsBundleProvider;
-
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
-type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNumber] & {
-  _id: BigNumber;
-  _strategy: string;
-  _tokenIn: string;
-  _tokenOut: string;
-  _amountIn: BigNumber;
-  _deadline: BigNumber;
-};
+// Provider
+let httpProvider: JsonRpcProvider;
 
-type TradeSetup = {
-  swapper: string;
-  data: string;
-  minAmountOut: BigNumber | undefined;
-};
+// Multicall swappers
+const multicalls = [new ThreePoolCrvMulticall()];
 
 async function main() {
-  const chainId = await getChainId();
-  console.log('[Setup] Chain ID:', chainId);
-  const [signer] = await ethers.getSigners();
-  console.log('[Setup] Creating flashbots provider ...');
-  flashbotsProvider = await FlashbotsBundleProvider.create(
-    ethers.provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-    signer // ethers.js signer wallet, only for signing request payloads, not transactions
-  );
+  await gasprice.start();
 
-  const tradeFactory = await ethers.getContract<TradeFactory>('TradeFactory');
+  console.log('[Setup] Forking mainnet');
+
+  // We set this so hardhat-deploys uses the correct deployment addresses.
+  process.env.HARDHAT_DEPLOY_FORK = 'mainnet';
+  await evm.reset({
+    jsonRpcUrl: getNodeUrl('mainnet'),
+  });
+
+  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
+
+  const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
+  await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
+  console.log('[Setup] Executing with address', ymech.address);
+  // const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
+
+  // We create a provider thats connected to a real network, hardhat provider will be connected to fork
+  httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
+
+  // console.log('[Setup] Creating flashbots provider ...');
+  // flashbotsProvider = await FlashbotsBundleProvider.create(
+  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+  //   flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
+  // );
+
+  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
-  const tradesSetup: TradeSetup[] = [];
 
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
 
   for (const pendingTrade of pendingTrades) {
-    if (pendingTrade._deadline.lt(moment().unix())) {
-      console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-      await tradeFactory.expire(pendingTrade._id);
-      continue;
-    }
+    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
+    const decimalsIn = await tokenIn.decimals();
+    const symbolIn = await tokenIn.symbol();
 
-    // Check if it's not simple swap (go though multicall)
-    // TODO
+    console.log(
+      '[Execution] Executing trade with id',
+      pendingTrade._id.toNumber(),
+      'of',
+      utils.formatUnits(pendingTrade._amountIn, decimalsIn),
+      symbolIn
+    );
 
-    // If it's simple: check best outcome with below options
+    let bestSetup: TradeSetup;
 
-    const { data: uniswapV2Data, minAmountOut: uniswapV2MinAmountOut } = await uniswap.getBestPathEncoded({
-      tokenIn: pendingTrade._tokenIn,
-      tokenOut: pendingTrade._tokenOut,
-      amountIn: pendingTrade._amountIn,
-      uniswapV2Router: UNISWAP_V2_ROUTER,
-      uniswapV2Factory: UNISWAP_V2_FACTORY,
-      hopTokensToTest: [WETH],
-      slippage: SLIPPAGE_PERCENTAGE,
-    });
+    // Check if we need to run over a multicall swapper
+    const multicall = multicalls.find((mc) => mc.match(pendingTrade));
+    if (multicall) {
+      console.log('[Multicall] Taking snapshot of fork');
 
-    tradesSetup.push({
-      swapper: (await ethers.getContract('AsyncUniswapV2')).address,
-      data: uniswapV2Data,
-      minAmountOut: uniswapV2MinAmountOut,
-    });
+      const snapshotId = (await network.provider.request({
+        method: 'evm_snapshot',
+        params: [],
+      })) as string;
 
-    console.log('uniswap v2:', uniswapV2MinAmountOut, uniswapV2Data);
+      console.log('[Multicall] Getting data');
 
-    const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: Number(chainId),
-      sellToken: pendingTrade._tokenIn,
-      buyToken: pendingTrade._tokenOut,
-      sellAmount: pendingTrade._amountIn,
-      slippagePercentage: SLIPPAGE_PERCENTAGE / 100,
-    });
+      bestSetup = await multicall.asyncSwap(pendingTrade);
 
-    tradesSetup.push({
-      swapper: (await ethers.getContract('ZRX')).address,
-      data: zrxData,
-      minAmountOut: zrxMinAmountOut,
-    });
-
-    console.log('zrx:', zrxMinAmountOut, zrxData);
-
-    let bestSetup: TradeSetup = tradesSetup[0];
-
-    for (let i = 1; i < tradesSetup.length; i++) {
-      if (tradesSetup[i].minAmountOut!.gt(bestSetup.minAmountOut!)) {
-        bestSetup = tradesSetup[i];
-      }
+      console.log('[Multicall] Reverting to snapshot');
+      await network.provider.request({
+        method: 'evm_revert',
+        params: [snapshotId],
+      });
+    } else {
+      bestSetup = await new Router().route(pendingTrade);
     }
 
     const currentGas = gasprice.get(gasprice.Confidence.Highest);
     const gasParams = {
       maxFeePerGas: MAX_GAS_PRICE,
       maxPriorityFeePerGas:
-        currentGas.maxPriorityFeePerGas > MAX_PRIORITY_FEE_GAS_PRICE
-          ? utils.parseUnits(`${MAX_PRIORITY_FEE_GAS_PRICE}`, 'gwei')
-          : utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei'),
+        currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
+          ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
+          : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
     };
+
+    // Execute in our fork
+    console.log('[Execution] Executing trade in fork');
+    const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
+      pendingTrade._id,
+      bestSetup.swapper,
+      bestSetup.minAmountOut!,
+      bestSetup.data
+    );
+    const confirmedTx = await simulatedTx.wait();
+    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
     const populatedTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
@@ -132,21 +137,30 @@ async function main() {
       bestSetup.data,
       {
         ...gasParams,
-        gasLimit: BigNumber.from('100000'),
+        gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(10)), // We add a safety net of 10% more of gass
       }
     );
-    const signedTx = await web3ReporterSigner.signTransaction({
+
+    const signedTx = await ymech.signTransaction({
       ...gasParams,
+      type: 2,
       to: populatedTx.to!,
-      gas: populatedTx.gasLimit!.toNumber(),
+      gasLimit: populatedTx.gasLimit!.toNumber(),
       data: populatedTx.data!,
     });
-    const bundle: FlashbotBundle = [
-      {
-        signedTransaction: signedTx.rawTransaction!,
-      },
-    ];
-    if (await submitBundle(bundle)) console.log('Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+
+    console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
+    const protectTx = await protect.sendTransaction(signedTx);
+    console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
+
+    // const bundle: FlashbotBundle = [
+    //   {
+    //     signedTransaction: signedTx,
+    //   },
+    // ];
+    // console.log('[Execution] Signed with hash:', protectTx.hash);
+    // if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+
     await sleep(DELAY);
   }
 }
@@ -154,7 +168,7 @@ async function main() {
 async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
   let submitted = false;
   let rejected = false;
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const blockNumber = await httpProvider.getBlockNumber();
   let targetBlock = blockNumber + 1;
   while (!(submitted || rejected)) {
     if (!(await simulateBundle(bundle, targetBlock))) {

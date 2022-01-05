@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import kms from '../tools/kms';
 
-// const DEFAULT_ACCOUNT = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+// const DEFAULT_ACCOUNT = '0x0000000000000000000000000000000000000000000000000000000000000bad';
 const MAX_ACCOUNTS = 10;
 
 export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'goerli' | 'polygon' | 'fantom';
@@ -42,7 +42,7 @@ export function getPrivateKeys(networkName: string): string[] {
   }
   if (privateKeys.length == 0) {
     console.warn(`No private keys for network ${networkName}`);
-    privateKeys.push('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+    privateKeys.push('0x0000000000000000000000000000000000000000000000000000000000000bad');
   }
   return privateKeys;
 }

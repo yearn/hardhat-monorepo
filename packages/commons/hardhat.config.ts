@@ -8,7 +8,7 @@ import { removeConsoleLog } from 'hardhat-preprocessor';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 import 'solidity-coverage';
-import { HardhatUserConfig, MultiSolcUserConfig, NetworksUserConfig, SolcUserConfig, SolidityUserConfig } from 'hardhat/types';
+import { HardhatUserConfig, MultiSolcUserConfig, NetworksUserConfig, SolcUserConfig } from 'hardhat/types';
 import { getAccounts, getNodeUrl } from './utils/network';
 import 'tsconfig-paths/register';
 
@@ -23,14 +23,7 @@ const encrypted = !!process.env.ENCRYPTED_CREDENTIALS && process.env.ENCRYPTED_C
 
 const getNetworks = (networksName: string[]): NetworksUserConfig => {
   if (!!process.env.TEST || process.argv[process.argv.length - 1] == 'compile') return {};
-  const networks: NetworksUserConfig = {
-    // hardhat: {
-    //   forking: {
-    //     enabled: process.env.FORK ? true : false,
-    //     url: getNodeUrl('fantom'),
-    //   },
-    // },
-  };
+  const networks: NetworksUserConfig = {};
   networksName.forEach((network: string) => {
     networks[network] = {
       url: getNodeUrl(network),

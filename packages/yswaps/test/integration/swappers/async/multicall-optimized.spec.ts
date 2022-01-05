@@ -2,14 +2,14 @@ import { BigNumber, constants, Contract, PopulatedTransaction, utils } from 'eth
 import { ethers } from 'hardhat';
 import moment from 'moment';
 import { erc20, evm } from '@test-utils';
-import * as fixtures from '../../fixtures';
+import * as fixtures from '../../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import { IERC20, TradeFactory } from '@typechained';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { mergeTransactions } from '@scripts/libraries/multicall';
 
-contract('MultiCallSwapper', () => {
+contract('MultiCallOptimizedSwapper', () => {
   let masterAdmin: SignerWithAddress;
   let mechanic: SignerWithAddress;
   let strategy: SignerWithAddress;
@@ -50,7 +50,7 @@ contract('MultiCallSwapper', () => {
 
     ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
-    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallSwapperFixture(
+    ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallOptimizedSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
@@ -91,7 +91,7 @@ contract('MultiCallSwapper', () => {
     await evm.snapshot.revert(snapshotId);
   });
 
-  describe('async trade executed', () => {
+  describe('swap', () => {
     let minAmountOut: BigNumber;
     given(async () => {
       await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());

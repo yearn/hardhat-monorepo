@@ -1,8 +1,8 @@
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { ethers } from 'hardhat';
 import { evm } from '@test-utils';
 import { contract, then, when } from '@test-utils/bdd';
 import { OTCPool, OTCPool__factory } from '@typechained';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 contract('OTCPool', () => {
   let governor: SignerWithAddress;

@@ -1,7 +1,6 @@
 import { ethers, hardhatArguments, network } from 'hardhat';
 import _ from 'lodash';
 import { BigNumber, utils, Transaction, constants, Wallet } from 'ethers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import * as contracts from '../../utils/contracts';
 import Web3 from 'web3';
 import { Account } from 'web3-core';
@@ -20,6 +19,7 @@ import {
 } from '@flashbots/ethers-provider-bundle';
 import kms from '../../../commons/tools/kms';
 import { normalizeAddress, getRawTransaction } from '../../../commons/utils/commons';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');

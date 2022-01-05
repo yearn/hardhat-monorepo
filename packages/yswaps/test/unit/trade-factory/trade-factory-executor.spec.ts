@@ -1,5 +1,5 @@
 import { Contract } from '@ethersproject/contracts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { abi as machineryABI } from '@yearn/contract-utils/artifacts/contracts/interfaces/utils/IMachinery.sol/IMachinery.json';
 import { abi as IERC20ABI } from '@artifacts/@openzeppelin/contracts/token/ERC20/IERC20.sol/IERC20.json';
 import { abi as asyncSwapperABI } from '@artifacts/contracts/swappers/async/AsyncSwapper.sol/IAsyncSwapper.json';

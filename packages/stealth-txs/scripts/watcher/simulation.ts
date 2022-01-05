@@ -6,7 +6,7 @@ import _ from 'lodash';
 import StealthVault from '../../artifacts/contracts/StealthVault.sol/StealthVault.json';
 import { BigNumber, Contract, Transaction as EthersTransaction } from 'ethers';
 import { createAlchemyWeb3 } from '@alch/alchemy-web3';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 // Using WebSockets
 const web3 = createAlchemyWeb3('wss://eth-kovan.ws.alchemyapi.io/v2/OAh_8Jbu8aMsuFAj1n8gRzo8PPRfK7VP');

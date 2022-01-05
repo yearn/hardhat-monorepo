@@ -14,6 +14,7 @@
 - ZRX: [0x75DfD3c064Ce21D253F66a277202FE455EaaDB01](https://ftmscan.com/address/0x75DfD3c064Ce21D253F66a277202FE455EaaDB01)
 - OneInchAggregatorSwapper: [0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc](https://etherscan.io/address/0xcDd5030710120e0A21F349a453d6B2d62FC8Dfdc)
 - AsyncSushiswapSwapper: [0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60](https://etherscan.io/address/0x55dcee9332848AFcF660CE6a2116D83Dd7a71B60)
+- MultiCallOptimizedSwapper: [0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2](https://etherscan.io/address/0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2)
 
 ## 👻 Fantom
 
