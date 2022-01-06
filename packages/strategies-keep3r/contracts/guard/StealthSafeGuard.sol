@@ -15,8 +15,11 @@ interface IStealthSafeGuard is IGuard, IGovernableAndManageable {
   error ZeroAddress();
   error InvalidExecutor();
   error NotStealthRelayer();
+  error NotExecutor();
 
   function overrideGuardChecks() external view returns (bool _overrideGuardChecks);
+
+  function stealthRelayerCheck() external view returns (bool _stealthRelayerCheck);
 
   function executors() external view returns (address[] memory _executorsArray);
 
@@ -25,6 +28,8 @@ interface IStealthSafeGuard is IGuard, IGovernableAndManageable {
   function removeExecutor(address _executor) external;
 
   function setOverrideGuardChecks(bool _overrideGuardChecks) external;
+
+  function setStealthRelayerCheck(bool _stealthRelayerCheck) external;
 }
 
 contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealthSafeGuard {
@@ -33,6 +38,7 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
   EnumerableSet.AddressSet internal _executors;
 
   bool public override overrideGuardChecks;
+  bool public override stealthRelayerCheck;
 
   constructor(address _manager, address _stealthRelayer) UtilsReady() Manageable(_manager) OnlyStealthRelayer(_stealthRelayer) {}
 
@@ -54,6 +60,10 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
     overrideGuardChecks = _overrideGuardChecks;
   }
 
+  function setStealthRelayerCheck(bool _stealthRelayerCheck) external override onlyGovernorOrManager {
+    stealthRelayerCheck = _stealthRelayerCheck;
+  }
+
   function checkTransaction(
     address, /*to*/
     uint256, /*value*/
@@ -70,10 +80,16 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
   ) external view override {
     if (overrideGuardChecks) return;
 
-    address _caller = IStealthRelayer(stealthRelayer).caller();
+    if (stealthRelayerCheck) {
+      address _caller = IStealthRelayer(stealthRelayer).caller();
 
-    if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
-      revert NotStealthRelayer();
+      if (msgSender != stealthRelayer || !_executors.contains(_caller)) {
+        revert NotStealthRelayer();
+      }
+    } else {
+      if (!_executors.contains(msgSender)) {
+        revert NotExecutor();
+      }
     }
   }
 

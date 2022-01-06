@@ -51,11 +51,13 @@ export const quote = async (): Promise<void> => {
 };
 
 export const start = async () => {
+  console.log('[Gasprice] Starting');
   await quote();
   quoteInterval = setInterval(quote, INTERVAL);
 };
 
 export const stop = async () => {
+  console.log('[Gasprice] Stopping');
   if (quoteInterval) clearInterval(quoteInterval);
 };
 

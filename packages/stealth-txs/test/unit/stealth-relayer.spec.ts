@@ -1,6 +1,6 @@
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Contract, ContractFactory } from '@ethersproject/contracts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { deployMockContract, MockContract } from '@ethereum-waffle/mock-contract';
 import { utils } from 'ethers';
 import { ethers } from 'hardhat';

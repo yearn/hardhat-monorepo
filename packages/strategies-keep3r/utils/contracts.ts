@@ -83,6 +83,10 @@ export const stealthSafeGuard: ContractChainAddress = {
   rinkeby: '0xC190B246e9fe7026240e464bf28c0ba645CD81c3',
 };
 
+export const stealthSafeGuardKeep3r: ContractChainAddress = {
+  mainnet: '0xFfc5017858Ac656CffA3e4a253eC579678d9bbEa', // keep3r
+};
+
 export const multicall2: ContractChainAddress = {
   mainnet: '',
   fantom: '0x6cAfA5f64476769aAEc7c0Ae8D8E14c2a77272a2',

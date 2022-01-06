@@ -7,7 +7,7 @@ import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import uniswapLibrary from '../../../scripts/libraries/uniswap-v2';
 import { IERC20, TradeFactory } from '@typechained';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 contract('TradeFactory', () => {
   let masterAdmin: SignerWithAddress;

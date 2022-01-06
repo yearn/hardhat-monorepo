@@ -1,8 +1,8 @@
-import sleep from 'sleep-promise';
 import { ethers, network } from 'hardhat';
-import moment from 'moment';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
 import { IERC20Metadata, TradeFactory } from '@typechained';
+import sleep from 'sleep-promise';
+import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
 import {
@@ -18,14 +18,13 @@ import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
 import { impersonate } from './utils';
 import kms from '../../commons/tools/kms';
-
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 
 const DELAY = moment.duration('3', 'minutes').as('milliseconds');
 const RETRIES = 20;
-const MAX_GAS_PRICE = utils.parseUnits('350', 'gwei');
+const MAX_GAS_PRICE = utils.parseUnits('200', 'gwei');
 const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 2.5;
 const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
 
@@ -40,6 +39,8 @@ let httpProvider: JsonRpcProvider;
 const multicalls = [new ThreePoolCrvMulticall()];
 
 async function main() {
+  await gasprice.start();
+
   console.log('[Setup] Forking mainnet');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
@@ -48,20 +49,21 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
-  const web3ReporterSigner = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string));
-  const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
+  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
+
+  const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
+  await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
+  console.log('[Setup] Executing with address', ymech.address);
+  // const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
-  console.log('[Setup] Creating flashbots provider ...');
-  flashbotsProvider = await FlashbotsBundleProvider.create(
-    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-    flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
-  );
-
-  const ymech = await impersonate(web3ReporterSigner.address);
-  console.log('[Setup] Executing with address', web3ReporterSigner.address);
+  // console.log('[Setup] Creating flashbots provider ...');
+  // flashbotsProvider = await FlashbotsBundleProvider.create(
+  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+  //   flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
+  // );
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
@@ -120,8 +122,15 @@ async function main() {
 
     // Execute in our fork
     console.log('[Execution] Executing trade in fork');
-    await tradeFactory['execute(uint256,address,uint256,bytes)'](pendingTrade._id, bestSetup.swapper, bestSetup.minAmountOut!, bestSetup.data);
-    console.log('[Execution] Simulation in fork succeeded !');
+
+    const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
+      pendingTrade._id,
+      bestSetup.swapper,
+      bestSetup.minAmountOut!,
+      bestSetup.data
+    );
+    const confirmedTx = await simulatedTx.wait();
+    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
     const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
@@ -130,14 +139,14 @@ async function main() {
       bestSetup.data,
       {
         ...gasParams,
-        gasLimit: BigNumber.from('2000000'), // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
+        gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(10)), // We add a safety net of 10% more of gass
       }
     );
 
     await generateAndSendBundle({
       pendingTrade,
       bestSetup,
-      web3ReporterSigner,
+      wallet: ymech,
       executeTx,
       gasParams,
     });
@@ -149,7 +158,7 @@ async function main() {
 async function generateAndSendBundle(params: {
   pendingTrade: PendingTrade;
   bestSetup: TradeSetup;
-  web3ReporterSigner: Wallet;
+  wallet: Wallet;
   executeTx: PopulatedTransaction;
   gasParams: {
     maxFeePerGas: BigNumber;
@@ -157,7 +166,7 @@ async function generateAndSendBundle(params: {
   };
   retryNumber?: number;
 }): Promise<boolean> {
-  const blockProtection = await ethers.getContractAt('BlockProtection', '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.web3ReporterSigner);
+  const blockProtection = await ethers.getContractAt('BlockProtection', '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.wallet);
   const targetBlockNumber = (await httpProvider.getBlockNumber()) + 2;
 
   const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
@@ -166,7 +175,7 @@ async function generateAndSendBundle(params: {
     targetBlockNumber // uint256 _blockNumber
   );
 
-  const signedTx = await params.web3ReporterSigner.signTransaction({
+  const signedTx = await params.wallet.signTransaction({
     ...params.gasParams,
     to: populatedTx.to!,
     gasLimit: populatedTx.gasLimit!.toNumber(),

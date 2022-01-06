@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../utils/web3-utils';
 import config from '../../.config.json';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { BigNumber } from 'ethers';
 import * as contracts from '../../utils/contracts';
 import * as yOracleContracts from '@lbertenasco/y-oracle/dist/utils/contracts';

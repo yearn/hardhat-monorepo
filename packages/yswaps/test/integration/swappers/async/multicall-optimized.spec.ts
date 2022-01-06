@@ -6,7 +6,7 @@ import * as fixtures from '../../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import { IERC20, TradeFactory } from '@typechained';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { mergeTransactions } from '@scripts/libraries/multicall';
 
 contract('MultiCallOptimizedSwapper', () => {
