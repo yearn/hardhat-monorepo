@@ -72,17 +72,17 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
   },
   {
     name: 'levscream_dai',
-    added: false,
+    added: true,
     address: '0xdC9D3bB76Df8bE1e9Ca68C7BF32293a86C829D81',
   },
   {
     name: 'levscream_usdc',
-    added: false,
+    added: true,
     address: '0x42639b59cf9db5339C1C5cfB5738D0ba4F828F94',
   },
   {
     name: 'levscream_mim',
-    added: false,
+    added: true,
     address: '0x8A807b5742587024783Df3Ed2F149725C197b5eE',
   },
 ];
