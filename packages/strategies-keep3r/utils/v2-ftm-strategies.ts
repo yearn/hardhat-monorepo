@@ -70,6 +70,21 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     added: true,
     address: '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
   },
+  {
+    name: 'levscream_dai',
+    added: true,
+    address: '0xdC9D3bB76Df8bE1e9Ca68C7BF32293a86C829D81',
+  },
+  {
+    name: 'levscream_usdc',
+    added: true,
+    address: '0x42639b59cf9db5339C1C5cfB5738D0ba4F828F94',
+  },
+  {
+    name: 'levscream_usdc',
+    added: true,
+    address: '0x8A807b5742587024783Df3Ed2F149725C197b5eE',
+  },
 ];
 
 export const v2FtmTendStrategies: v2FtmStrategy[] = [];
