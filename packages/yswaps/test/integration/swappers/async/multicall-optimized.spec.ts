@@ -1,6 +1,5 @@
 import { BigNumber, constants, Contract, PopulatedTransaction, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import moment from 'moment';
 import { erc20, evm } from '@test-utils';
 import * as fixtures from '../../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
@@ -94,7 +93,7 @@ contract('MultiCallOptimizedSwapper', () => {
   describe('swap', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
+      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn);
       const transactions: PopulatedTransaction[] = [];
       // swapper has tokenIn, it sends it all to the holder
       transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));

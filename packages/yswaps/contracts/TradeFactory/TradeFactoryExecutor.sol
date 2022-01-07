@@ -42,10 +42,6 @@ interface ITradeFactoryExecutor {
 
   event SwapperAndTokenEnabled(address indexed _swapper, address _token);
 
-  error OngoingTrade();
-
-  error ExpiredTrade();
-
   error ZeroRate();
 
   function execute(
@@ -117,7 +113,6 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
   ) external override onlyMechanic returns (uint256 _receivedAmount) {
     if (!_pendingTradesIds.contains(_id)) revert InvalidTrade();
     Trade storage _trade = pendingTradesById[_id];
-    if (block.timestamp > _trade._deadline) revert ExpiredTrade();
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     IERC20(_trade._tokenIn).safeTransferFrom(_trade._strategy, _swapper, _trade._amountIn);
     _receivedAmount = IAsyncSwapper(_swapper).swap(_trade._strategy, _trade._tokenIn, _trade._tokenOut, _trade._amountIn, _minAmountOut, _data);
@@ -128,7 +123,6 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
   function expire(uint256 _id) external override onlyMechanic returns (uint256 _freedAmount) {
     if (!_pendingTradesIds.contains(_id)) revert InvalidTrade();
     Trade storage _trade = pendingTradesById[_id];
-    if (block.timestamp < _trade._deadline) revert OngoingTrade();
     _freedAmount = _trade._amountIn;
     // We have to take tokens from strategy, to decrease the allowance
     IERC20(_trade._tokenIn).safeTransferFrom(_trade._strategy, address(this), _trade._amountIn);
@@ -147,7 +141,6 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     for (uint256 i; i < _ids.length; i++) {
       Trade storage _trade = pendingTradesById[_ids[i]];
       if (i > 0 && (_trade._tokenIn != _tokenIn || _trade._tokenOut != _tokenOut)) revert InvalidTrade();
-      if (block.timestamp > _trade._deadline) revert ExpiredTrade();
       if ((strategyPermissions[_trade._strategy] & _OTC_MASK) != _OTC_MASK) revert CommonErrors.NotAuthorized();
       uint256 _consumedOut = (_trade._amountIn * _rateTokenInToOut) / _magnitudeIn;
       IERC20(_trade._tokenIn).safeTransferFrom(_trade._strategy, IOTCPool(otcPool).governor(), _trade._amountIn);
@@ -166,7 +159,6 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     Trade storage _firstTrade = pendingTradesById[_firstTradeId];
     Trade storage _secondTrade = pendingTradesById[_secondTradeId];
     if (_firstTrade._tokenIn != _secondTrade._tokenOut || _firstTrade._tokenOut != _secondTrade._tokenIn) revert InvalidTrade();
-    if (block.timestamp > _firstTrade._deadline || block.timestamp > _secondTrade._deadline) revert ExpiredTrade();
     if (
       (strategyPermissions[_firstTrade._strategy] & _COW_MASK) != _COW_MASK ||
       (strategyPermissions[_secondTrade._strategy] & _COW_MASK) != _COW_MASK

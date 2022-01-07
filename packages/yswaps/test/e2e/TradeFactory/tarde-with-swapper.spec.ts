@@ -1,6 +1,5 @@
 import { BigNumber, constants, Contract, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import moment from 'moment';
 import { erc20, evm, uniswap } from '@test-utils';
 import * as fixtures from '../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
@@ -132,7 +131,7 @@ contract('TradeFactory', () => {
   describe('async trade executed', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn, moment().add('30', 'minutes').unix());
+      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn);
       const bestPath = await uniswapLibrary.getBestPathEncoded({
         tokenIn: tokenIn.address,
         tokenOut: tokenOut.address,
