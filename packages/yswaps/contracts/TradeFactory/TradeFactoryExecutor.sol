@@ -59,7 +59,7 @@ interface ITradeFactoryExecutor {
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
 
-  function expire(uint256 _id) external returns (uint256 _freedAmount);
+  function cancel(uint256 _id) external;
 
   function execute(uint256[] calldata _ids, uint256 _rateTokenInToOut) external;
 
@@ -120,16 +120,10 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     emit AsyncTradeExecuted(_id, _receivedAmount);
   }
 
-  function expire(uint256 _id) external override onlyMechanic returns (uint256 _freedAmount) {
+  function cancel(uint256 _id) external override onlyMechanic {
     if (!_pendingTradesIds.contains(_id)) revert InvalidTrade();
-    Trade storage _trade = pendingTradesById[_id];
-    _freedAmount = _trade._amountIn;
-    // We have to take tokens from strategy, to decrease the allowance
-    IERC20(_trade._tokenIn).safeTransferFrom(_trade._strategy, address(this), _trade._amountIn);
-    // Send tokens back to strategy
-    IERC20(_trade._tokenIn).safeTransfer(_trade._strategy, _trade._amountIn);
     // Remove trade
-    _removePendingTrade(_trade._strategy, _id);
+    _removePendingTrade(pendingTradesById[_id]._strategy, _id);
     emit AsyncTradeExpired(_id);
   }
 
