@@ -18,17 +18,11 @@ interface ISwapperEnabled {
 
   function setTradeFactory(address _tradeFactory) external;
 
-  function createTrade(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn
-  ) external returns (uint256 _id);
+  function createTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
 
-  function executeTrade(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn
-  ) external returns (uint256 _receivedAmount);
+  function cancelTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
+
+  function executeTrade(address _tokenIn, address _tokenOut) external returns (uint256 _receivedAmount);
 
   function executeTrade(
     address _tokenIn,
@@ -59,13 +53,14 @@ abstract contract SwapperEnabled is ISwapperEnabled {
   }
 
   // onlyMultisig or internal use:
-  function _createTrade(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn
-  ) internal returns (uint256 _id) {
-    IERC20(_tokenIn).safeIncreaseAllowance(tradeFactory, _amountIn);
-    return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut, _amountIn);
+  function _createTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
+    IERC20(_tokenIn).approve(tradeFactory, type(uint256).max);
+    return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut);
+  }
+
+  function _cancelTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
+    IERC20(_tokenIn).approve(tradeFactory, 0);
+    return ITradeFactoryPositionsHandler(tradeFactory).cancel(_tokenIn, _tokenOut);
   }
 
   function _executeTrade(
@@ -74,7 +69,6 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _amountIn,
     uint256 _maxSlippage
   ) internal returns (uint256 _receivedAmount) {
-    IERC20(_tokenIn).safeIncreaseAllowance(tradeFactory, _amountIn);
     return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, '');
   }
 
@@ -85,20 +79,6 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _maxSlippage,
     bytes calldata _data
   ) internal returns (uint256 _receivedAmount) {
-    IERC20(_tokenIn).safeIncreaseAllowance(tradeFactory, _amountIn);
     return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
-  }
-
-  // onlyStrategist or multisig:
-  function _cancelPendingTrades(uint256[] calldata _tradesIds) internal {
-    for (uint256 i; i < _tradesIds.length; i++) {
-      (, , address _tokenIn, , uint256 _amountIn) = ITradeFactoryPositionsHandler(tradeFactory).pendingTradesById(_tradesIds[i]);
-      IERC20(_tokenIn).safeDecreaseAllowance(tradeFactory, _amountIn);
-    }
-    ITradeFactoryPositionsHandler(tradeFactory).cancelPendingTrades(_tradesIds);
-  }
-
-  function _tradeFactoryAllowance(address _token) internal view returns (uint256 _allowance) {
-    return IERC20(_token).allowance(address(this), tradeFactory);
   }
 }
