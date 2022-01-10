@@ -14,6 +14,8 @@ interface IAsyncSwapper is ISwapper {
     bytes _data
   );
 
+  event SwappedMultiple(bytes _data);
+
   error InvalidAmountOut();
 
   function swap(
