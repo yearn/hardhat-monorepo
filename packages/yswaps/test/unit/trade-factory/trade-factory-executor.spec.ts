@@ -241,10 +241,10 @@ contract('TradeFactoryExecutor', () => {
       }));
     });
     // TODO: Only mechanic
-    when('trade can be expired', () => {
-      let expireTx: TransactionResponse;
+    when('trade can be canceled', () => {
+      let cancelTx: TransactionResponse;
       given(async () => {
-        expireTx = await executor.expire(tradeId);
+        cancelTx = await executor.cancel(tradeId);
       });
       then('reduces allowance from strategy to trade factory', async () => {
         expect(await token.allowance(strategy.address, executor.address)).to.be.equal(0);
@@ -261,7 +261,7 @@ contract('TradeFactoryExecutor', () => {
         expect(await executor['pendingTradesIds()']()).to.be.empty;
       });
       then('emits event', async () => {
-        await expect(expireTx).to.emit(executor, 'AsyncTradeExpired').withArgs(tradeId);
+        await expect(cancelTx).to.emit(executor, 'AsyncTradeExpired').withArgs(tradeId);
       });
     });
   });

@@ -14,6 +14,8 @@ interface IAsyncSwapper is ISwapper {
     bytes _data
   );
 
+  event SwappedMultiple(bytes _data);
+
   error InvalidAmountOut();
 
   function swap(
@@ -24,6 +26,8 @@ interface IAsyncSwapper is ISwapper {
     uint256 _minAmountOut,
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
+
+  function swapMultiple(bytes calldata _data) external returns (bool _success);
 }
 
 abstract contract AsyncSwapper is IAsyncSwapper, Swapper {
@@ -65,5 +69,9 @@ abstract contract AsyncSwapper is IAsyncSwapper, Swapper {
     _receivedAmount = _executeSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _data);
     if (IERC20(_tokenOut).balanceOf(_receiver) - _preExecutionBalance < _minAmountOut) revert InvalidAmountOut();
     emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
+  }
+
+  function swapMultiple(bytes calldata _data) external virtual override returns (bool _success) {
+    // optional implementation
   }
 }

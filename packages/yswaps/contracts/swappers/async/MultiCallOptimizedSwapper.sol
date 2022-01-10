@@ -58,6 +58,26 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
     emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
   }
 
+  function swapMultiple(bytes calldata _data) external override(AsyncSwapper, IAsyncSwapper) onlyTradeFactory returns (bool _success) {
+    uint8 multicallOptimization = _getMultiCallOptimization(_data);
+
+    if (multicallOptimization == uint8(MulticallOptimization.CallOnly)) {
+      _success = _multiSendCallOnly(_data); // OptimizedCall;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlySameTo)) {
+      _success = _multiSendCallOnlySameTo(_data); // OptimizedCallSameTo;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlyNoValue)) {
+      _success = _multiSendCallOnlyNoValue(_data); // OptimizedCallNoValue;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlySameToNoValue)) {
+      _success = _multiSendCallOnlySameToNoValue(_data); // OptimizedCallSameToNoValue;
+    } else {
+      revert CallOnlyOptimizationRequired();
+    }
+
+    if (!_success) revert MultiCallRevert();
+
+    emit SwappedMultiple(_data);
+  }
+
   function _executeSwap(
     address _receiver,
     address _tokenIn,
