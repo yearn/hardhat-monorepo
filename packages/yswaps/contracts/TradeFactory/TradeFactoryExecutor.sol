@@ -52,6 +52,8 @@ interface ITradeFactoryExecutor {
 
   error ZeroRate();
 
+  error InvalidAmountOut();
+
   function execute(
     address _tokenIn,
     address _tokenOut,
@@ -145,18 +147,21 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     bytes calldata _data // i.e. transaction[] for MulticallSwapper
   ) external onlyMechanic returns (bool _error) {
     // todo check what returns (or no return) saves more gas
+
+    uint256[] memory _preTokenOutBalance = new uint256[](_trades.length);
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     for (uint256 i; i < _trades.length; i++) {
       if (!_tokenOutsByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
       uint256 _amountIn = _trades[i]._amountIn != 0 ? _trades[i]._amountIn : IERC20(_trades[i]._tokenIn).balanceOf(_trades[i]._strategy);
       IERC20(_trades[i]._tokenIn).safeTransferFrom(_trades[i]._strategy, _swapper, _amountIn);
-      // save preBalance
+      _preTokenOutBalance[i] = IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy);
     }
 
     IAsyncSwapper(_swapper).swapMultiple(_data);
 
     for (uint256 i; i < _trades.length; i++) {
-      // TODO check that _trades[i]._minAmountOut is valid (currentBalance-preBalance)
+      if (_trades[i]._minAmountOut < IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy) - _preTokenOutBalance[i])
+        revert InvalidAmountOut();
     }
 
     // emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
