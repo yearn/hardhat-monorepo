@@ -22,6 +22,7 @@ abstract contract SwapperEnabled is ISwapperEnabled {
 
   // onlyMultisig:
   function _setTradeFactory(address _tradeFactory) internal {
+    // strategy should handle canceling all previous trades and creating all new ones
     tradeFactory = _tradeFactory;
     emit TradeFactorySet(_tradeFactory);
   }

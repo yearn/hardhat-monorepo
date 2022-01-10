@@ -19,6 +19,8 @@ interface ITradeFactoryPositionsHandler {
 
   error InvalidTrade();
 
+  error AllowanceShouldBeZero();
+
   function tradeDetails() external view returns (TradeDetail[] memory _tradeDetailsList);
 
   function create(address _tokenIn, address _tokenOut) external returns (bool _success);
@@ -49,7 +51,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
 
   // strategy -> tokenIn -> amount (is this needed?) [useful for multi in to out]
   // might be needed if tokenIn is also want? or startegy has more balance on tokenIn than what it's supposed to swap [i.e. rebalancer]
-  mapping(address => mapping(address => uint256)) internal _strategyTokenInAmount;
+  // mapping(address => mapping(address => uint256)) internal _strategyTokenInAmount;
 
   constructor(address _strategyAdder, address _tradesModifier) {
     if (_strategyAdder == address(0) || _tradesModifier == address(0)) revert CommonErrors.ZeroAddress();
@@ -93,7 +95,6 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     _strategies.add(msg.sender);
     _tokensInByStrategy[msg.sender].add(_tokenIn);
     if (!_tokenOutsByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
-    // TODO check for infinite allowance?
     emit TradeCreated(msg.sender, _tokenIn, _tokenOut);
     return true;
   }
@@ -101,6 +102,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
   function cancel(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) returns (bool _success) {
     _cancel(msg.sender, _tokenIn, _tokenOut);
     // TODO check for 0 allowance?
+    if (IERC20(_tokenIn).allowance(msg.sender, address(this)) != 0) revert AllowanceShouldBeZero();
     return true;
   }
 

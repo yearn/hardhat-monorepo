@@ -150,12 +150,13 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
       if (!_tokenOutsByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
       uint256 _amountIn = _trades[i]._amountIn != 0 ? _trades[i]._amountIn : IERC20(_trades[i]._tokenIn).balanceOf(_trades[i]._strategy);
       IERC20(_trades[i]._tokenIn).safeTransferFrom(_trades[i]._strategy, _swapper, _amountIn);
+      // save preBalance
     }
 
     IAsyncSwapper(_swapper).swapMultiple(_data);
 
     for (uint256 i; i < _trades.length; i++) {
-      // TODO check that _trades[i]._minAmountOut is valid
+      // TODO check that _trades[i]._minAmountOut is valid (currentBalance-preBalance)
     }
 
     // emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
