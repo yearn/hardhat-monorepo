@@ -35,11 +35,12 @@ async function main() {
     const decimalsOut = await tokenOut.decimals();
     const symbolOut = await tokenOut.symbol();
 
-    if (pendingTrade._deadline.lt(moment().unix())) {
-      console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-      await tradeFactory.expire(pendingTrade._id);
-      continue;
-    }
+    // TODO change to cancel trade
+    // if (pendingTrade._deadline.lt(moment().unix())) {
+    //   console.log(`Expiring trade ${pendingTrade._id.toString()}`);
+    //   await tradeFactory.expire(pendingTrade._id);
+    //   continue;
+    // }
 
     const { data: spookyData, minAmountOut: spookyMinAmountOut } = await uniswap.getBestPathEncoded({
       tokenIn: pendingTrade._tokenIn,

@@ -8,7 +8,6 @@ import { abi as swapperABI } from '@artifacts/contracts/swappers/Swapper.sol/ISw
 import { FakeContract, MockContract, MockContractFactory, smock } from '@defi-wonderland/smock';
 import { BigNumber, constants, utils, Wallet } from 'ethers';
 import Web3 from 'web3';
-import moment from 'moment';
 import { ISwapper, TradeFactoryPositionsHandlerMock, TradeFactoryPositionsHandlerMock__factory } from '@typechained';
 
 contract('TradeFactoryPositionsHandler', () => {
@@ -87,7 +86,6 @@ contract('TradeFactoryPositionsHandler', () => {
           tokenIn: wallet.generateRandomAddress(),
           tokenOut: wallet.generateRandomAddress(),
           amountIn: utils.parseEther('100'),
-          deadline: moment().add('30', 'minutes').unix(),
         });
         tradeId = tx.id;
       });
@@ -110,7 +108,6 @@ contract('TradeFactoryPositionsHandler', () => {
           tokenIn: wallet.generateRandomAddress(),
           tokenOut: wallet.generateRandomAddress(),
           amountIn: utils.parseEther('100'),
-          deadline: moment().add('30', 'minutes').unix(),
         });
         tradeId = tx.id;
       });
@@ -125,36 +122,30 @@ contract('TradeFactoryPositionsHandler', () => {
     const tokenIn = wallet.generateRandomAddress();
     const tokenOut = wallet.generateRandomAddress();
     const amountIn = utils.parseEther('100');
-    const deadline = moment().add('30', 'minutes').unix();
     given(async () => {
       swapper = await smock.fake<ISwapper>(swapperABI);
       await positionsHandler.connect(swapperAdder).addSwappers([swapper.address]);
     });
     when('strategy is not registered', () => {
       then('tx is reverted with reason', async () => {
-        await expect(positionsHandler.connect(deployer).create(tokenIn, tokenOut, amountIn, deadline)).to.be.revertedWith(
+        await expect(positionsHandler.connect(deployer).create(tokenIn, tokenOut, amountIn)).to.be.revertedWith(
           `AccessControl: account ${deployer.address.toLowerCase()} is missing role ${STRATEGY_ROLE.toLowerCase()}`
         );
       });
     });
     when('token in is zero address', () => {
       then('tx is reverted with reason', async () => {
-        await expect(positionsHandler.create(constants.AddressZero, tokenOut, amountIn, deadline)).to.be.revertedWith('ZeroAddress()');
+        await expect(positionsHandler.create(constants.AddressZero, tokenOut, amountIn)).to.be.revertedWith('ZeroAddress()');
       });
     });
     when('token out is zero address', () => {
       then('tx is reverted with reason', async () => {
-        await expect(positionsHandler.create(tokenIn, constants.AddressZero, amountIn, deadline)).to.be.revertedWith('ZeroAddress()');
+        await expect(positionsHandler.create(tokenIn, constants.AddressZero, amountIn)).to.be.revertedWith('ZeroAddress()');
       });
     });
     when('amount in is zero', () => {
       then('tx is reverted with reason', async () => {
-        await expect(positionsHandler.create(tokenIn, tokenOut, constants.Zero, deadline)).to.be.revertedWith('ZeroAmount()');
-      });
-    });
-    when('deadline is equal or less than current timestamp', () => {
-      then('tx is reverted with reason', async () => {
-        await expect(positionsHandler.create(tokenIn, tokenOut, amountIn, constants.AddressZero)).to.be.revertedWith('InvalidDeadline()');
+        await expect(positionsHandler.create(tokenIn, tokenOut, constants.Zero)).to.be.revertedWith('ZeroAmount()');
       });
     });
     when('all data is correct', () => {
@@ -165,7 +156,6 @@ contract('TradeFactoryPositionsHandler', () => {
           tokenIn,
           tokenOut,
           amountIn,
-          deadline,
         }));
       });
       then('trade gets added to pending trades', async () => {
@@ -175,7 +165,6 @@ contract('TradeFactoryPositionsHandler', () => {
         expect(pendingTrade._tokenIn).to.equal(tokenIn);
         expect(pendingTrade._tokenOut).to.equal(tokenOut);
         expect(pendingTrade._amountIn).to.equal(amountIn);
-        expect(pendingTrade._deadline).to.equal(deadline);
       });
       then('trade id gets added to pending trades by strategy', async () => {
         expect(await positionsHandler['pendingTradesIds(address)'](strategy.address)).to.eql([tradeId]);
@@ -184,24 +173,17 @@ contract('TradeFactoryPositionsHandler', () => {
         expect(await positionsHandler['pendingTradesIds()']()).to.eql([tradeId]);
       });
       then('trade counter gets increased', async () => {
-        expect(await positionsHandler.callStatic.create(tokenIn, tokenOut, amountIn, deadline)).to.be.equal(tradeId.add(1));
+        expect(await positionsHandler.callStatic.create(tokenIn, tokenOut, amountIn)).to.be.equal(tradeId.add(1));
       });
       then('emits event', async () => {
-        await expect(createTx)
-          .to.emit(positionsHandler, 'TradeCreated')
-          .withArgs(tradeId, strategy.address, tokenIn, tokenOut, amountIn, deadline);
+        await expect(createTx).to.emit(positionsHandler, 'TradeCreated').withArgs(tradeId, strategy.address, tokenIn, tokenOut, amountIn);
       });
     });
   });
 
   describe('cancelPendingTrades', () => {
     given(async () => {
-      await positionsHandler.create(
-        wallet.generateRandomAddress(),
-        wallet.generateRandomAddress(),
-        utils.parseEther('100'),
-        moment().add('30', 'minutes').unix()
-      );
+      await positionsHandler.create(wallet.generateRandomAddress(), wallet.generateRandomAddress(), utils.parseEther('100'));
     });
     // TODO: only strategy
     when('pending trade does not exist', () => {
@@ -249,13 +231,11 @@ contract('TradeFactoryPositionsHandler', () => {
     const amountIn2 = utils.parseEther('0.23958');
     const amountIn3 = utils.parseEther('12.74958');
     const maxSlippage = 1000;
-    const deadline = moment().add('30', 'minutes').unix();
     given(async () => {
       await create({
         tokenIn,
         tokenOut,
         amountIn: amountIn1,
-        deadline,
       });
     });
     when('anchor trade does not exist', () => {
@@ -274,7 +254,7 @@ contract('TradeFactoryPositionsHandler', () => {
         await positionsHandler.connect(strategyAdder).grantRole(STRATEGY_ROLE, randomStrategy.address);
         await positionsHandler
           .connect(randomStrategy)
-          .create(wallet.generateRandomAddress(), wallet.generateRandomAddress(), utils.parseEther('100'), moment().add('30', 'minutes').unix());
+          .create(wallet.generateRandomAddress(), wallet.generateRandomAddress(), utils.parseEther('100'));
       });
       then('tx is reverted with reason', async () => {
         await expect(positionsHandler.connect(tradesModifier).mergePendingTrades(1, [2])).to.be.revertedWith('InvalidTrade()');
@@ -287,13 +267,11 @@ contract('TradeFactoryPositionsHandler', () => {
           tokenIn,
           tokenOut,
           amountIn: amountIn2,
-          deadline,
         });
         await create({
           tokenIn,
           tokenOut,
           amountIn: amountIn3,
-          deadline,
         });
         mergeTx = await positionsHandler.connect(tradesModifier).mergePendingTrades(1, [2, 3]);
       });
@@ -323,7 +301,6 @@ contract('TradeFactoryPositionsHandler', () => {
           tokenIn: wallet.generateRandomAddress(),
           tokenOut: wallet.generateRandomAddress(),
           amountIn: utils.parseEther('100'),
-          deadline: moment().add('30', 'minutes').unix(),
         }));
         await positionsHandler.removePendingTrade(strategy.address, tradeId);
       });
@@ -343,14 +320,12 @@ contract('TradeFactoryPositionsHandler', () => {
     tokenIn,
     tokenOut,
     amountIn,
-    deadline,
   }: {
     tokenIn: string;
     tokenOut: string;
     amountIn: BigNumber;
-    deadline: number;
   }): Promise<{ tx: TransactionResponse; id: BigNumber }> {
-    const tx = await positionsHandler.connect(strategy).create(tokenIn, tokenOut, amountIn, deadline);
+    const tx = await positionsHandler.connect(strategy).create(tokenIn, tokenOut, amountIn);
     const txReceipt = await tx.wait();
     const parsedEvent = positionsHandler.interface.parseLog(txReceipt.logs[0]);
     return { tx, id: parsedEvent.args._id };

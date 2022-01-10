@@ -1,7 +1,6 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { constants, Contract, utils } from 'ethers';
 import { ethers } from 'hardhat';
-import moment from 'moment';
 import { erc20, evm } from '@test-utils';
 import * as fixtures from '../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
@@ -88,11 +87,11 @@ contract('TradeFactory', () => {
 
     await tokenIn.connect(hodler).transfer(strategy.address, firstTradeAmountIn);
     await tokenIn.connect(strategy).approve(tradeFactory.address, firstTradeAmountIn);
-    await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, firstTradeAmountIn, moment().add('30', 'minutes').unix());
+    await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, firstTradeAmountIn);
 
     await tokenIn.connect(hodler).transfer(strategy2.address, secondTradeAmountIn);
     await tokenIn.connect(strategy2).approve(tradeFactory.address, secondTradeAmountIn);
-    await tradeFactory.connect(strategy2).create(tokenIn.address, tokenOut.address, secondTradeAmountIn, moment().add('30', 'minutes').unix());
+    await tradeFactory.connect(strategy2).create(tokenIn.address, tokenOut.address, secondTradeAmountIn);
 
     await tokenOut.connect(hodler).transfer(otcPoolGovernor.address, offeredByOTC);
     await tokenOut.connect(otcPoolGovernor).approve(otcPool.address, offeredByOTC);

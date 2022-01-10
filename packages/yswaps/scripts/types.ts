@@ -6,7 +6,6 @@ export type PendingTrade = [BigNumber, string, string, string, BigNumber, BigNum
   _tokenIn: string;
   _tokenOut: string;
   _amountIn: BigNumber;
-  _deadline: BigNumber;
 };
 
 export type TradeSetup = {

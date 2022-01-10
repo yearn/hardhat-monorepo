@@ -22,7 +22,6 @@ import {
   TradeFactoryExecutorMock,
   TradeFactoryExecutorMock__factory,
 } from '@typechained';
-import moment from 'moment';
 import { TokenContract } from '@test-utils/erc20';
 
 chai.use(smock.matchers);
@@ -163,7 +162,6 @@ contract('TradeFactoryExecutor', () => {
   describe('execute async', () => {
     let tradeId: BigNumber;
     const amountIn = utils.parseEther('100');
-    const deadline = moment().add('30', 'minutes').unix();
     const tokenOut = wallet.generateRandomAddress();
     const minAmountOut = BigNumber.from('1000');
     const data = contracts.encodeParameters([], []);
@@ -172,7 +170,6 @@ contract('TradeFactoryExecutor', () => {
         tokenIn: token.address,
         tokenOut,
         amountIn,
-        deadline,
       }));
     });
     // TODO: Only mechanic
@@ -181,16 +178,6 @@ contract('TradeFactoryExecutor', () => {
         await expect(
           executor['execute(uint256,address,uint256,bytes)'](tradeId.add(1), asyncSwapper.address, minAmountOut, data)
         ).to.be.revertedWith('InvalidTrade()');
-      });
-    });
-    when('trade has expired', () => {
-      given(async () => {
-        await evm.advanceToTimeAndBlock(deadline + 1);
-      });
-      then('tx is reverted with reason', async () => {
-        await expect(executor['execute(uint256,address,uint256,bytes)'](tradeId, asyncSwapper.address, minAmountOut, data)).to.be.revertedWith(
-          'ExpiredTrade()'
-        );
       });
     });
     when('executing a trade where swapper has been removed', () => {
@@ -251,24 +238,12 @@ contract('TradeFactoryExecutor', () => {
         tokenIn: token.address,
         tokenOut: wallet.generateRandomAddress(),
         amountIn,
-        deadline: moment().add('30', 'minutes').unix(),
       }));
     });
     // TODO: Only mechanic
-    when('expiring a trade thats not pending', () => {
-      then('tx is reverted with reason', async () => {
-        await expect(executor.expire(tradeId.add(1))).to.be.revertedWith('InvalidTrade()');
-      });
-    });
-    when('trade has not expired', () => {
-      then('tx is reverted with reason', async () => {
-        await expect(executor.expire(tradeId)).to.be.revertedWith('OngoingTrade()');
-      });
-    });
     when('trade can be expired', () => {
       let expireTx: TransactionResponse;
       given(async () => {
-        await evm.advanceToTimeAndBlock(moment().add('100', 'hours').unix());
         expireTx = await executor.expire(tradeId);
       });
       then('reduces allowance from strategy to trade factory', async () => {
@@ -312,24 +287,22 @@ contract('TradeFactoryExecutor', () => {
         amountIn: utils.parseEther('100'),
         tokenIn: token.address,
         tokenOut: tokenOut.address,
-        deadline: moment().add('30', 'minutes').unix(),
       };
       secondTrade = {
         amountIn: utils.parseEther('100'),
         tokenIn: tokenOut.address,
         tokenOut: token.address,
-        deadline: moment().add('30', 'minutes').unix(),
       };
       // ID: 1
       await token.connect(strategy).approve(executor.address, firstTrade.amountIn);
-      await executor.connect(strategy).create(firstTrade.tokenIn, firstTrade.tokenOut, firstTrade.amountIn, firstTrade.deadline);
+      await executor.connect(strategy).create(firstTrade.tokenIn, firstTrade.tokenOut, firstTrade.amountIn);
       // ID: 2
       await tokenOut.connect(otherStrat).approve(executor.address, secondTrade.amountIn);
-      await executor.connect(otherStrat).create(secondTrade.tokenIn, secondTrade.tokenOut, secondTrade.amountIn, secondTrade.deadline);
+      await executor.connect(otherStrat).create(secondTrade.tokenIn, secondTrade.tokenOut, secondTrade.amountIn);
     });
     when('trades have different token in than token out', () => {
       given(async () => {
-        await executor.connect(otherStrat).create(wallet.generateRandomAddress(), firstTrade.tokenOut, firstTrade.amountIn, firstTrade.deadline);
+        await executor.connect(otherStrat).create(wallet.generateRandomAddress(), firstTrade.tokenOut, firstTrade.amountIn);
       });
       then('tx is reverted with reason', async () => {
         await expect(executor.connect(tradeSettler)['execute(uint256,uint256,uint256,uint256)'](3, 2, 0, 0)).to.be.revertedWith(
@@ -339,37 +312,11 @@ contract('TradeFactoryExecutor', () => {
     });
     when('trades have different token out than token in', () => {
       given(async () => {
-        await executor.connect(otherStrat).create(firstTrade.tokenIn, wallet.generateRandomAddress(), firstTrade.amountIn, firstTrade.deadline);
+        await executor.connect(otherStrat).create(firstTrade.tokenIn, wallet.generateRandomAddress(), firstTrade.amountIn);
       });
       then('tx is reverted with reason', async () => {
         await expect(executor.connect(tradeSettler)['execute(uint256,uint256,uint256,uint256)'](3, 2, 0, 0)).to.be.revertedWith(
           'InvalidTrade()'
-        );
-      });
-    });
-    when('first trade has expired', () => {
-      given(async () => {
-        await executor
-          .connect(otherStrat)
-          .create(firstTrade.tokenIn, firstTrade.tokenOut, firstTrade.amountIn, moment().add('1', 'minutes').unix());
-        await evm.advanceToTimeAndBlock(moment().add('2', 'minutes').unix());
-      });
-      then('tx is reverted with reason', async () => {
-        await expect(executor.connect(tradeSettler)['execute(uint256,uint256,uint256,uint256)'](3, 2, 0, 0)).to.be.revertedWith(
-          'ExpiredTrade()'
-        );
-      });
-    });
-    when('against trade has expired', () => {
-      given(async () => {
-        await executor
-          .connect(otherStrat)
-          .create(secondTrade.tokenIn, secondTrade.tokenOut, secondTrade.amountIn, moment().add('1', 'minutes').unix());
-        await evm.advanceToTimeAndBlock(moment().add('2', 'minutes').unix());
-      });
-      then('tx is reverted with reason', async () => {
-        await expect(executor.connect(tradeSettler)['execute(uint256,uint256,uint256,uint256)'](1, 3, 0, 0)).to.be.revertedWith(
-          'ExpiredTrade()'
         );
       });
     });
@@ -397,7 +344,6 @@ contract('TradeFactoryExecutor', () => {
 
   describe('execute otc', () => {
     const amountIn = utils.parseEther('100');
-    const deadline = moment().add('30', 'minutes').unix();
     const tokenOut = wallet.generateRandomAddress();
     const governor = wallet.generateRandomAddress();
     given(async () => {
@@ -407,7 +353,6 @@ contract('TradeFactoryExecutor', () => {
         tokenIn: token.address,
         tokenOut,
         amountIn,
-        deadline,
       });
     });
     // TODO: Only mechanic
@@ -428,7 +373,6 @@ contract('TradeFactoryExecutor', () => {
           tokenIn: tokenIn.address,
           tokenOut,
           amountIn,
-          deadline,
         });
       });
       then('tx is reverted with reason', async () => {
@@ -441,19 +385,10 @@ contract('TradeFactoryExecutor', () => {
           tokenIn: token.address,
           tokenOut: (await smock.fake<IERC20>(IERC20ABI)).address,
           amountIn,
-          deadline,
         });
       });
       then('tx is reverted with reason', async () => {
         await expect(executor['execute(uint256[],uint256)']([1, 2], 1)).to.be.revertedWith('InvalidTrade()');
-      });
-    });
-    when('a trade has expired', () => {
-      given(async () => {
-        await evm.advanceToTimeAndBlock(deadline + 1);
-      });
-      then('tx is reverted with reason', async () => {
-        await expect(executor['execute(uint256[],uint256)']([1], 1)).to.be.revertedWith('ExpiredTrade()');
       });
     });
     when('trade strategy did not have OTC enabled', () => {
@@ -489,7 +424,6 @@ contract('TradeFactoryExecutor', () => {
           tokenIn: token.address,
           tokenOut,
           amountIn,
-          deadline,
         });
         executeTx = await executor['execute(uint256[],uint256)']([1, 2], rate);
       });
@@ -518,15 +452,13 @@ contract('TradeFactoryExecutor', () => {
     tokenIn,
     tokenOut,
     amountIn,
-    deadline,
   }: {
     tokenIn: string;
     tokenOut: string;
     amountIn: BigNumber;
-    deadline: number;
   }): Promise<{ tx: TransactionResponse; id: BigNumber }> {
     await token.connect(strategy).increaseAllowance(executor.address, amountIn);
-    const tx = await executor.connect(strategy).create(tokenIn, tokenOut, amountIn, deadline);
+    const tx = await executor.connect(strategy).create(tokenIn, tokenOut, amountIn);
     const txReceipt = await tx.wait();
     const parsedEvent = executor.interface.parseLog(txReceipt.logs[0]);
     return { tx, id: parsedEvent.args._id };

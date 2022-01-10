@@ -21,8 +21,7 @@ interface ISwapperEnabled {
   function createTrade(
     address _tokenIn,
     address _tokenOut,
-    uint256 _amountIn,
-    uint256 _deadline
+    uint256 _amountIn
   ) external returns (uint256 _id);
 
   function executeTrade(
@@ -63,11 +62,10 @@ abstract contract SwapperEnabled is ISwapperEnabled {
   function _createTrade(
     address _tokenIn,
     address _tokenOut,
-    uint256 _amountIn,
-    uint256 _deadline
+    uint256 _amountIn
   ) internal returns (uint256 _id) {
     IERC20(_tokenIn).safeIncreaseAllowance(tradeFactory, _amountIn);
-    return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut, _amountIn, _deadline);
+    return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut, _amountIn);
   }
 
   function _executeTrade(
@@ -94,7 +92,7 @@ abstract contract SwapperEnabled is ISwapperEnabled {
   // onlyStrategist or multisig:
   function _cancelPendingTrades(uint256[] calldata _tradesIds) internal {
     for (uint256 i; i < _tradesIds.length; i++) {
-      (, , address _tokenIn, , uint256 _amountIn, ) = ITradeFactoryPositionsHandler(tradeFactory).pendingTradesById(_tradesIds[i]);
+      (, , address _tokenIn, , uint256 _amountIn) = ITradeFactoryPositionsHandler(tradeFactory).pendingTradesById(_tradesIds[i]);
       IERC20(_tokenIn).safeDecreaseAllowance(tradeFactory, _amountIn);
     }
     ITradeFactoryPositionsHandler(tradeFactory).cancelPendingTrades(_tradesIds);

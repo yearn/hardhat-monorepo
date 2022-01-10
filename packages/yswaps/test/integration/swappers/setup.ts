@@ -69,9 +69,7 @@ const integrationSwapperSetup = async ({
 
 export const async = async (setup: SetupParams): Promise<SetupResponse> => {
   const response = await integrationSwapperSetup(setup);
-  await response.tradeFactory
-    .connect(setup.strategy)
-    .create(setup.fromTokenAddress, setup.toTokenAddress, setup.amountIn, moment().add('30', 'minutes').unix());
+  await response.tradeFactory.connect(setup.strategy).create(setup.fromTokenAddress, setup.toTokenAddress, setup.amountIn);
   return response;
 };
 
