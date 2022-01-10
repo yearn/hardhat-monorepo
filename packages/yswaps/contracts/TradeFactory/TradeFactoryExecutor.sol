@@ -11,8 +11,6 @@ import '@yearn/contract-utils/contracts/utils/Machinery.sol';
 import '../swappers/async/AsyncSwapper.sol';
 import '../swappers/sync/SyncSwapper.sol';
 
-import '../OTCPool.sol';
-
 import './TradeFactoryPositionsHandler.sol';
 
 interface ITradeFactoryExecutor {
@@ -167,56 +165,4 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     // emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
     return false;
   }
-
-  // TODO FIX
-  // function execute(uint256[] calldata _ids, uint256 _rateTokenInToOut) external override onlyMechanic {
-  //   if (_rateTokenInToOut == 0) revert ZeroRate();
-  //   address _tokenIn = pendingTradesById[_ids[0]]._tokenIn;
-  //   address _tokenOut = pendingTradesById[_ids[0]]._tokenOut;
-  //   uint256 _magnitudeIn = 10**IERC20Metadata(_tokenIn).decimals();
-  //   for (uint256 i; i < _ids.length; i++) {
-  //     Trade storage _trade = pendingTradesById[_ids[i]];
-  //     if (i > 0 && (_trade._tokenIn != _tokenIn || _trade._tokenOut != _tokenOut)) revert InvalidTrade();
-  //     if ((strategyPermissions[_trade._strategy] & _OTC_MASK) != _OTC_MASK) revert CommonErrors.NotAuthorized();
-  //     uint256 _consumedOut = (_trade._amountIn * _rateTokenInToOut) / _magnitudeIn;
-  //     IERC20(_trade._tokenIn).safeTransferFrom(_trade._strategy, IOTCPool(otcPool).governor(), _trade._amountIn);
-  //     IOTCPool(otcPool).take(_trade._tokenOut, _consumedOut, _trade._strategy);
-  //     _removePendingTrade(_trade._strategy, _trade._id);
-  //   }
-  //   emit AsyncOTCTradesExecuted(_ids, _rateTokenInToOut);
-  // }
-
-  // TODO FIX
-
-  // function execute(
-  //   uint256 _firstTradeId,
-  //   uint256 _secondTradeId,
-  //   uint256 _consumedFirstTrade,
-  //   uint256 _consumedSecondTrade
-  // ) external override onlyRole(TRADES_SETTLER) {
-  //   Trade storage _firstTrade = pendingTradesById[_firstTradeId];
-  //   Trade storage _secondTrade = pendingTradesById[_secondTradeId];
-  //   if (_firstTrade._tokenIn != _secondTrade._tokenOut || _firstTrade._tokenOut != _secondTrade._tokenIn) revert InvalidTrade();
-  //   if (
-  //     (strategyPermissions[_firstTrade._strategy] & _COW_MASK) != _COW_MASK ||
-  //     (strategyPermissions[_secondTrade._strategy] & _COW_MASK) != _COW_MASK
-  //   ) revert CommonErrors.NotAuthorized();
-
-  //   IERC20(_firstTrade._tokenIn).safeTransferFrom(_firstTrade._strategy, _secondTrade._strategy, _consumedFirstTrade);
-  //   IERC20(_secondTrade._tokenIn).safeTransferFrom(_secondTrade._strategy, _firstTrade._strategy, _consumedSecondTrade);
-
-  //   if (_consumedFirstTrade != _firstTrade._amountIn) {
-  //     _firstTrade._amountIn -= _consumedFirstTrade;
-  //   } else {
-  //     _removePendingTrade(_firstTrade._strategy, _firstTradeId);
-  //   }
-
-  //   if (_consumedSecondTrade != _secondTrade._amountIn) {
-  //     _secondTrade._amountIn -= _consumedSecondTrade;
-  //   } else {
-  //     _removePendingTrade(_secondTrade._strategy, _secondTradeId);
-  //   }
-
-  //   emit AsyncTradesMatched(_firstTradeId, _secondTradeId, _consumedFirstTrade, _consumedSecondTrade);
-  // }
 }
