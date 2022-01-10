@@ -4,6 +4,8 @@ pragma solidity >=0.8.4 <0.9.0;
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import './TradeFactorySwapperHandler.sol';
 
+import {ISwapperEnabled} from '../utils/ISwapperEnabled.sol';
+
 interface ITradeFactoryPositionsHandler {
   struct TradeDetail {
     address _strategy;
@@ -44,6 +46,10 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
 
   // strategy -> tokenIn -> tokenOut[]
   mapping(address => mapping(address => EnumerableSet.AddressSet)) internal _tokenOutsByStrategyAndTokenIn;
+
+  // strategy -> tokenIn -> amount (is this needed?) [useful for multi in to out]
+  // might be needed if tokenIn is also want? or startegy has more balance on tokenIn than what it's supposed to swap [i.e. rebalancer]
+  mapping(address => mapping(address => uint256)) internal _strategyTokenInAmount;
 
   constructor(address _strategyAdder, address _tradesModifier) {
     if (_strategyAdder == address(0) || _tradesModifier == address(0)) revert CommonErrors.ZeroAddress();
@@ -103,9 +109,9 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     address _tokenIn,
     address _tokenOut
   ) external override onlyRole(STRATEGY) returns (bool _success) {
-    _cancel(_strategy, _tokenIn, _tokenOut);
-    // TODO check for 0 allowance? (hard to forfeir allowance as tradeFactory)
-    return true;
+    // is a callback onlyTradeFactory on swapper enabled better?
+    // cancelByAdmin -> strategy.cancelTradeCallback() -> tradeFactory.cancel()
+    return ISwapperEnabled(_strategy).cancelTradeCallback(_tokenIn, _tokenOut);
   }
 
   function _cancel(

@@ -131,6 +131,37 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
   }
 
+  struct Trade {
+    address _strategy;
+    address _tokenIn;
+    address _tokenOut;
+    uint256 _amountIn;
+    uint256 _minAmountOut;
+  }
+
+  function executeMultiple(
+    Trade[] calldata _trades,
+    address _swapper,
+    bytes calldata _data // i.e. transaction[] for MulticallSwapper
+  ) external onlyMechanic returns (bool _error) {
+    // todo check what returns (or no return) saves more gas
+    if (!_swappers.contains(_swapper)) revert InvalidSwapper();
+    for (uint256 i; i < _trades.length; i++) {
+      if (!_tokenOutsByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
+      uint256 _amountIn = _trades[i]._amountIn != 0 ? _trades[i]._amountIn : IERC20(_trades[i]._tokenIn).balanceOf(_trades[i]._strategy);
+      IERC20(_trades[i]._tokenIn).safeTransferFrom(_trades[i]._strategy, _swapper, _amountIn);
+    }
+
+    IAsyncSwapper(_swapper).swapMultiple(_data);
+
+    for (uint256 i; i < _trades.length; i++) {
+      // TODO check that _trades[i]._minAmountOut is valid
+    }
+
+    // emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
+    return false;
+  }
+
   // TODO FIX
   // function execute(uint256[] calldata _ids, uint256 _rateTokenInToOut) external override onlyMechanic {
   //   if (_rateTokenInToOut == 0) revert ZeroRate();

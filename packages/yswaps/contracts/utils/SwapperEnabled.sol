@@ -4,35 +4,9 @@ pragma solidity >=0.8.4 <0.9.0;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
-import '../TradeFactory/TradeFactory.sol';
-
-interface ISwapperEnabled {
-  event TradeFactorySet(address indexed _tradeFactory);
-  event SwapperSet(string indexed _swapper);
-
-  function tradeFactory() external returns (address _tradeFactory);
-
-  function swapper() external returns (string memory _swapper);
-
-  function setSwapper(string calldata _swapper, bool _migrateSwaps) external;
-
-  function setTradeFactory(address _tradeFactory) external;
-
-  function createTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
-
-  function cancelTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
-
-  function executeTrade(address _tokenIn, address _tokenOut) external returns (uint256 _receivedAmount);
-
-  function executeTrade(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    bytes calldata _data
-  ) external returns (uint256 _receivedAmount);
-
-  function cancelPendingTrades(uint256[] calldata _pendingTrades) external;
-}
+import './ISwapperEnabled.sol';
+import {ITradeFactoryExecutor} from '../TradeFactory/TradeFactoryExecutor.sol';
+import {ITradeFactoryPositionsHandler} from '../TradeFactory/TradeFactoryPositionsHandler.sol';
 
 /*
  * SwapperEnabled Abstract
@@ -56,6 +30,12 @@ abstract contract SwapperEnabled is ISwapperEnabled {
   function _createTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
     IERC20(_tokenIn).approve(tradeFactory, type(uint256).max);
     return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut);
+  }
+
+  function cancelTradeCallback(address _tokenIn, address _tokenOut) external override returns (bool _success) {
+    if (msg.sender != tradeFactory) revert NotTradeFactory();
+    IERC20(_tokenIn).approve(tradeFactory, 0);
+    return ITradeFactoryPositionsHandler(tradeFactory).cancel(_tokenIn, _tokenOut);
   }
 
   function _cancelTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
