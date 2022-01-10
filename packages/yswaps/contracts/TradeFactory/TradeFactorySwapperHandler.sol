@@ -11,30 +11,21 @@ import './TradeFactoryAccessManager.sol';
 interface ITradeFactorySwapperHandler {
   event SyncStrategySwapperSet(address indexed _strategy, address _swapper);
   event AsyncStrategySwapperSet(address indexed _strategy, address _swapper);
-  event StrategyPermissionsSet(address indexed _strategy, bytes1 _permissions);
-  event OTCPoolSet(address _otcPool);
   event SwappersAdded(address[] _swappers);
   event SwappersRemoved(address[] _swapper);
 
   error NotAsyncSwapper();
   error NotSyncSwapper();
   error InvalidSwapper();
-  error InvalidPermissions();
   error SwapperInUse();
 
   function strategySyncSwapper(address _strategy) external view returns (address _swapper);
-
-  function strategyPermissions(address _strategy) external view returns (bytes1 _permissions);
 
   function swappers() external view returns (address[] memory _swappersList);
 
   function isSwapper(address _swapper) external view returns (bool _isSwapper);
 
   function swapperStrategies(address _swapper) external view returns (address[] memory _strategies);
-
-  function setStrategyPermissions(address _strategy, bytes1 _permissions) external;
-
-  function setOTCPool(address _otcPool) external;
 
   function setStrategySyncSwapper(address _strategy, address _swapper) external;
 
@@ -49,21 +40,12 @@ abstract contract TradeFactorySwapperHandler is ITradeFactorySwapperHandler, Tra
   bytes32 public constant SWAPPER_ADDER = keccak256('SWAPPER_ADDER');
   bytes32 public constant SWAPPER_SETTER = keccak256('SWAPPER_SETTER');
 
-  bytes1 internal constant _OTC_MASK = 0x01;
-  bytes1 internal constant _COW_MASK = 0x02;
-
-  // OTC Handler
-  address public otcPool;
   // swappers list
   EnumerableSet.AddressSet internal _swappers;
   // swapper -> strategy list (useful to know if we can safely deprecate a swapper)
   mapping(address => EnumerableSet.AddressSet) internal _swapperStrategies;
   // strategy -> sync swapper
   mapping(address => address) public override strategySyncSwapper;
-  // strategy -> permissions
-  // permissions[_OTC_PERMISSION_INDEX] => OTC
-  // permissions[_COW_PERMISSION_INDEX] => COW
-  mapping(address => bytes1) public override strategyPermissions;
 
   constructor(address _swapperAdder, address _swapperSetter) {
     if (_swapperAdder == address(0) || _swapperSetter == address(0)) revert CommonErrors.ZeroAddress();
@@ -83,18 +65,6 @@ abstract contract TradeFactorySwapperHandler is ITradeFactorySwapperHandler, Tra
 
   function swapperStrategies(address _swapper) external view override returns (address[] memory _strategies) {
     _strategies = _swapperStrategies[_swapper].values();
-  }
-
-  function setStrategyPermissions(address _strategy, bytes1 _permissions) external override onlyRole(SWAPPER_SETTER) {
-    if (_strategy == address(0)) revert CommonErrors.ZeroAddress();
-    strategyPermissions[_strategy] = _permissions;
-    emit StrategyPermissionsSet(_strategy, _permissions);
-  }
-
-  function setOTCPool(address _otcPool) external override onlyRole(MASTER_ADMIN) {
-    if (_otcPool == address(0)) revert CommonErrors.ZeroAddress();
-    otcPool = _otcPool;
-    emit OTCPoolSet(_otcPool);
   }
 
   function setStrategySyncSwapper(address _strategy, address _swapper) external override onlyRole(SWAPPER_SETTER) {
