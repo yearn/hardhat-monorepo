@@ -83,7 +83,7 @@ contract OneInchAggregatorSwapper is IOneInchAggregatorSwapper, AsyncSwapper {
     address _tokenOut,
     uint256 _amountIn,
     bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     (IAggregationExecutor _caller, IOneInchExchange.SwapDescription memory _swapDescription, bytes memory _tradeData) = abi.decode(
       _data[4:],
       (IAggregationExecutor, IOneInchExchange.SwapDescription, bytes)
@@ -97,6 +97,6 @@ contract OneInchAggregatorSwapper is IOneInchAggregatorSwapper, AsyncSwapper {
     ) revert CommonErrors.IncorrectSwapInformation();
     IERC20(_tokenIn).approve(AGGREGATION_ROUTER_V3, 0);
     IERC20(_tokenIn).approve(AGGREGATION_ROUTER_V3, _amountIn);
-    (_receivedAmount, ) = IOneInchExchange(AGGREGATION_ROUTER_V3).swap(_caller, _swapDescription, _tradeData);
+    IOneInchExchange(AGGREGATION_ROUTER_V3).swap(_caller, _swapDescription, _tradeData);
   }
 }

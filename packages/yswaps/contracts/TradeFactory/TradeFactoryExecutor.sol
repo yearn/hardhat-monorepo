@@ -93,7 +93,9 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     if (_amountIn == 0) revert CommonErrors.ZeroAmount();
     if (_maxSlippage == 0) revert CommonErrors.ZeroSlippage();
     IERC20(_tokenIn).safeTransferFrom(msg.sender, _swapper, _amountIn);
-    _receivedAmount = ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(msg.sender);
+    ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    _receivedAmount = IERC20(_tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
     emit SyncTradeExecuted(msg.sender, _swapper, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data, _receivedAmount);
   }
 
@@ -111,10 +113,10 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     if (_amountIn == 0) _amountIn = IERC20(_tokenIn).balanceOf(_strategy);
     IERC20(_tokenIn).safeTransferFrom(_strategy, _swapper, _amountIn);
-    uint256 _preExecutionBalanceOut = IERC20(_tokenOut).balanceOf(_strategy);
-    _receivedAmount = IAsyncSwapper(_swapper).swap(_strategy, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
-    uint256 _receivedAmountOut = IERC20(_tokenOut).balanceOf(_strategy);
-    if (_receivedAmountOut - _preExecutionBalanceOut < _minAmountOut) revert InvalidAmountOut();
+    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(_strategy);
+    IAsyncSwapper(_swapper).swap(_strategy, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
+    _receivedAmount = IERC20(_tokenOut).balanceOf(_strategy) - _preSwapBalanceOut;
+    if (_receivedAmount < _minAmountOut) revert InvalidAmountOut();
     emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
   }
 

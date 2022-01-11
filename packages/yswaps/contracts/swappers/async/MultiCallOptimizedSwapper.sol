@@ -31,7 +31,7 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
     uint256 _amountIn,
     uint256 _minAmountOut,
     bytes calldata _data
-  ) external onlyTradeFactory returns (uint256 _receivedAmount) {
+  ) external onlyTradeFactory {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
 
     uint8 multicallOptimization = _getMultiCallOptimization(_data);
@@ -51,7 +51,7 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
 
     if (!_success) revert MultiCallRevert();
 
-    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
+    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
   }
 
   function swapMultiple(bytes calldata _data) external override onlyTradeFactory {
@@ -76,15 +76,14 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
     emit SwappedMultiple(_data);
   }
 
+  // TODO: SHOULD BE USED
   function _executeSwap(
     address _receiver,
     address _tokenIn,
     address _tokenOut,
     uint256 _amountIn,
     bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
-    // unused
-  }
+  ) internal override {}
 
   function _getMultiCallOptimization(bytes memory _data) internal pure returns (uint8 multicallOptimization) {
     assembly {
