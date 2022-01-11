@@ -33,7 +33,6 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
     bytes calldata _data
   ) external onlyTradeFactory returns (uint256 _receivedAmount) {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
-    uint256 _preExecutionBalance = IERC20(_tokenOut).balanceOf(_receiver);
 
     uint8 multicallOptimization = _getMultiCallOptimization(_data);
 
@@ -52,9 +51,6 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
 
     if (!_success) revert MultiCallRevert();
 
-    _receivedAmount = IERC20(_tokenOut).balanceOf(_receiver) - _preExecutionBalance;
-
-    if (_receivedAmount < _minAmountOut) revert InvalidAmountOut();
     emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
   }
 

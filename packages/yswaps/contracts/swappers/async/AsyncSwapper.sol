@@ -16,8 +16,6 @@ interface IAsyncSwapper is ISwapper {
 
   event SwappedMultiple(bytes _data);
 
-  error InvalidAmountOut();
-
   function swap(
     address _receiver,
     address _tokenIn,
@@ -63,9 +61,7 @@ abstract contract AsyncSwapper is IAsyncSwapper, Swapper {
     bytes calldata _data
   ) external virtual override onlyTradeFactory returns (uint256 _receivedAmount) {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
-    uint256 _preExecutionBalance = IERC20(_tokenOut).balanceOf(_receiver);
     _receivedAmount = _executeSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _data);
-    if (IERC20(_tokenOut).balanceOf(_receiver) - _preExecutionBalance < _minAmountOut) revert InvalidAmountOut();
     emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
   }
 }
