@@ -50,8 +50,6 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
     }
 
     if (!_success) revert MultiCallRevert();
-
-    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
   }
 
   function swapMultiple(bytes calldata _data) external override onlyTradeFactory {
@@ -72,8 +70,6 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
     }
 
     if (!_success) revert MultiCallRevert();
-
-    emit SwappedMultiple(_data);
   }
 
   // TODO: SHOULD BE USED
