@@ -6,7 +6,6 @@
   - Can add STRATEGY HANDLERS
   - Can add TRADES MODIFIER
   - Can sets mechanics registry
-  - Can set OTC Pool
 
 - SWAPPER ADDER
 
@@ -36,4 +35,3 @@
 
 - yMechanic
   - Execute async trade
-  - Execute async OTC trade against OTC pool

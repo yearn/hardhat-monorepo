@@ -42,10 +42,6 @@ interface ITradeFactoryExecutor {
     uint256 _consumedSecondTrade
   );
 
-  event AsyncOTCTradesExecuted(uint256[] _ids, uint256 _rateTokenInToOut);
-
-  event AsyncTradeExpired(uint256 indexed _id);
-
   event SwapperAndTokenEnabled(address indexed _swapper, address _token);
 
   error ZeroRate();
@@ -69,8 +65,6 @@ interface ITradeFactoryExecutor {
     uint256 _minAmountOut,
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
-
-  // function execute(uint256[] calldata _ids, uint256 _rateTokenInToOut) external;
 
   // function execute(
   //   uint256 _firstTradeId,
