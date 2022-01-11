@@ -4,10 +4,6 @@ pragma solidity >=0.8.4 <0.9.0;
 import '../Swapper.sol';
 
 interface IAsyncSwapper is ISwapper {
-  event Swapped(address _receiver, address _tokenIn, address _tokenOut, uint256 _amountIn, uint256 _minAmountOut, bytes _data);
-
-  event SwappedMultiple(bytes _data);
-
   function swap(
     address _receiver,
     address _tokenIn,
@@ -54,6 +50,5 @@ abstract contract AsyncSwapper is IAsyncSwapper, Swapper {
   ) external virtual override onlyTradeFactory {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
     _executeSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _data);
-    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
   }
 }
