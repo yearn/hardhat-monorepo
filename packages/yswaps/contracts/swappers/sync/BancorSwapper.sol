@@ -67,14 +67,13 @@ contract BancorSwapper is IBancorSwapper, SyncSwapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     IBancorNetwork _bancorNetwork = IBancorNetwork(contractRegistry.addressOf(bancorNetworkName));
     address[] memory _path = _bancorNetwork.conversionPath(_tokenIn, _tokenOut);
     uint256 _minReturn = _bancorNetwork.rateByPath(_path, _amountIn);
     _minReturn = _minReturn - ((_minReturn * _maxSlippage) / SLIPPAGE_PRECISION / 100); // slippage calcs
     IERC20(_tokenIn).approve(address(_bancorNetwork), 0);
     IERC20(_tokenIn).approve(address(_bancorNetwork), _amountIn);
-    _receivedAmount = _bancorNetwork.convert(_path, _amountIn, _minReturn);
-    IERC20(_tokenOut).safeTransfer(_receiver, _receivedAmount);
+    IERC20(_tokenOut).safeTransfer(_receiver, _bancorNetwork.convert(_path, _amountIn, _minReturn));
   }
 }
