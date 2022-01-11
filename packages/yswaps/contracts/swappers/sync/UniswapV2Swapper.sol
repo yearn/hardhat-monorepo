@@ -47,7 +47,7 @@ contract UniswapV2Swapper is IUniswapV2Swapper, SyncSwapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     address[] memory _path;
     uint256 _amountOut;
     if (_data.length > 0) {
@@ -58,7 +58,7 @@ contract UniswapV2Swapper is IUniswapV2Swapper, SyncSwapper {
     }
     IERC20(_path[0]).approve(ROUTER, 0);
     IERC20(_path[0]).approve(ROUTER, _amountIn);
-    _receivedAmount = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
+    IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
       _amountIn,
       _amountOut - ((_amountOut * _maxSlippage) / SLIPPAGE_PRECISION / 100), // slippage calcs
       _path,
