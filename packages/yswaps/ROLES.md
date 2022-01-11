@@ -29,9 +29,5 @@
 
   - Can merge async trades
 
-- TRADES SETTLER
-
-  - Can execute async trades against each other
-
 - yMechanic
   - Execute async trade

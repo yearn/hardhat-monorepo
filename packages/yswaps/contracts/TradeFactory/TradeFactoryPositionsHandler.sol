@@ -53,13 +53,11 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
   // might be needed if tokenIn is also want? or startegy has more balance on tokenIn than what it's supposed to swap [i.e. rebalancer]
   // mapping(address => mapping(address => uint256)) internal _strategyTokenInAmount;
 
-  constructor(address _strategyAdder, address _tradesModifier) {
-    if (_strategyAdder == address(0) || _tradesModifier == address(0)) revert CommonErrors.ZeroAddress();
+  constructor(address _strategyAdder) {
+    if (_strategyAdder == address(0)) revert CommonErrors.ZeroAddress();
     _setRoleAdmin(STRATEGY, STRATEGY_ADDER);
     _setRoleAdmin(STRATEGY_ADDER, MASTER_ADMIN);
     _setupRole(STRATEGY_ADDER, _strategyAdder);
-    _setRoleAdmin(TRADES_MODIFIER, MASTER_ADMIN);
-    _setupRole(TRADES_MODIFIER, _tradesModifier);
   }
 
   function tradeDetails() external view override returns (TradeDetail[] memory _tradeDetailsList) {

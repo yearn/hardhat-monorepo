@@ -11,6 +11,7 @@ import { TradeFactory, TradeFactory__factory } from '@typechained';
 import { deployContract } from 'ethereum-waffle';
 import { Contract, utils } from 'ethers';
 import { ethers } from 'hardhat';
+
 interface MechanicsRegistryFixture {
   mechanicsRegistry: Contract;
 }
@@ -41,20 +42,10 @@ export const tradeFactoryFixture = async (
   swapperAdder: string,
   swapperSetter: string,
   strategyAdder: string,
-  tradeModifier: string,
-  tradeSettler: string,
   mechanicsRegistry: string
 ): Promise<TradeFactoryFixture> => {
   const tradeFactoryFactory = (await ethers.getContractFactory('contracts/TradeFactory/TradeFactory.sol:TradeFactory')) as TradeFactory__factory;
-  const tradeFactory = await tradeFactoryFactory.deploy(
-    masterAdmin,
-    swapperAdder,
-    swapperSetter,
-    strategyAdder,
-    tradeModifier,
-    tradeSettler,
-    mechanicsRegistry
-  );
+  const tradeFactory = await tradeFactoryFactory.deploy(masterAdmin, swapperAdder, swapperSetter, strategyAdder, mechanicsRegistry);
   return {
     tradeFactory,
   };
@@ -73,19 +64,9 @@ export const uniswapV2SwapperFixture = async (
   swapperAdder: string,
   swapperSetter: string,
   strategyAdder: string,
-  tradeModifier: string,
-  tradeSettler: string,
   mechanicsRegistry: string
 ): Promise<UniswapV2SwapperFixture> => {
-  const { tradeFactory } = await tradeFactoryFixture(
-    masterAdmin,
-    swapperAdder,
-    swapperSetter,
-    strategyAdder,
-    tradeModifier,
-    tradeSettler,
-    mechanicsRegistry
-  );
+  const { tradeFactory } = await tradeFactoryFixture(masterAdmin, swapperAdder, swapperSetter, strategyAdder, mechanicsRegistry);
   const uniswapV2AsyncSwapperFactory = await ethers.getContractFactory('contracts/swappers/async/UniswapV2Swapper.sol:UniswapV2Swapper');
   const uniswapV2SyncSwapperFactory = await ethers.getContractFactory('contracts/swappers/sync/UniswapV2Swapper.sol:UniswapV2Swapper');
   const owner = await wallet.generateRandom();
@@ -121,19 +102,9 @@ export const multiCallOptimizedSwapperFixture = async (
   swapperAdder: string,
   swapperSetter: string,
   strategyAdder: string,
-  tradeModifier: string,
-  tradeSettler: string,
   mechanicsRegistry: string
 ): Promise<MultiCallOptimizedSwapperFixture> => {
-  const { tradeFactory } = await tradeFactoryFixture(
-    masterAdmin,
-    swapperAdder,
-    swapperSetter,
-    strategyAdder,
-    tradeModifier,
-    tradeSettler,
-    mechanicsRegistry
-  );
+  const { tradeFactory } = await tradeFactoryFixture(masterAdmin, swapperAdder, swapperSetter, strategyAdder, mechanicsRegistry);
   const multiCallOptimizedAsyncSwapperFactory = await ethers.getContractFactory(
     'contracts/swappers/async/MultiCallOptimizedSwapper.sol:MultiCallOptimizedSwapper'
   );
