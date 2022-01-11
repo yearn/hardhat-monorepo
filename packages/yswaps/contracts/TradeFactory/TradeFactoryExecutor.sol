@@ -79,12 +79,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
   using EnumerableSet for EnumerableSet.UintSet;
   using EnumerableSet for EnumerableSet.AddressSet;
 
-  bytes32 public constant TRADES_SETTLER = keccak256('TRADES_SETTLER');
-
-  constructor(address _tradesSettler, address _mechanicsRegistry) Machinery(_mechanicsRegistry) {
-    _setRoleAdmin(TRADES_SETTLER, MASTER_ADMIN);
-    _setupRole(TRADES_SETTLER, _tradesSettler);
-  }
+  constructor(address _mechanicsRegistry) Machinery(_mechanicsRegistry) {}
 
   // Machinery
   function setMechanicsRegistry(address __mechanicsRegistry) external virtual override onlyRole(MASTER_ADMIN) {
