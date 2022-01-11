@@ -2,9 +2,9 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import './AsyncSwapper.sol';
+import './MultipleAsyncSwapper.sol';
 
-interface IMultiCallOptimizedSwapper is IAsyncSwapper {
+interface IMultiCallOptimizedSwapper is IMultipleAsyncSwapper {
   error MultiCallRevert();
   error CallOnlyOptimizationRequired();
   enum MulticallOptimization {
@@ -19,10 +19,10 @@ interface IMultiCallOptimizedSwapper is IAsyncSwapper {
   }
 }
 
-contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
+contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncSwapper {
   using SafeERC20 for IERC20;
 
-  constructor(address _governor, address _tradeFactory) AsyncSwapper(_governor, _tradeFactory) {}
+  constructor(address _governor, address _tradeFactory) MultipleAsyncSwapper(_governor, _tradeFactory) {}
 
   function swap(
     address _receiver,
@@ -31,7 +31,7 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
     uint256 _amountIn,
     uint256 _minAmountOut,
     bytes calldata _data
-  ) external override(AsyncSwapper, IAsyncSwapper) onlyTradeFactory returns (uint256 _receivedAmount) {
+  ) external onlyTradeFactory returns (uint256 _receivedAmount) {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
     uint256 _preExecutionBalance = IERC20(_tokenOut).balanceOf(_receiver);
 
@@ -58,8 +58,10 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
     emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
   }
 
-  function swapMultiple(bytes calldata _data) external override(AsyncSwapper, IAsyncSwapper) onlyTradeFactory returns (bool _success) {
+  function swapMultiple(bytes calldata _data) external override onlyTradeFactory {
     uint8 multicallOptimization = _getMultiCallOptimization(_data);
+
+    bool _success;
 
     if (multicallOptimization == uint8(MulticallOptimization.CallOnly)) {
       _success = _multiSendCallOnly(_data); // OptimizedCall;

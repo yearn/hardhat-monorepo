@@ -9,6 +9,7 @@ import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import '@yearn/contract-utils/contracts/utils/Machinery.sol';
 
 import '../swappers/async/AsyncSwapper.sol';
+import '../swappers/async/MultipleAsyncSwapper.sol';
 import '../swappers/sync/SyncSwapper.sol';
 
 import './TradeFactoryPositionsHandler.sol';
@@ -144,7 +145,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
       _preTokenOutBalance[i] = IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy);
     }
 
-    IAsyncSwapper(_swapper).swapMultiple(_data);
+    IMultipleAsyncSwapper(_swapper).swapMultiple(_data);
 
     for (uint256 i; i < _trades.length; i++) {
       if (_trades[i]._minAmountOut < IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy) - _preTokenOutBalance[i])
