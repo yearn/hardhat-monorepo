@@ -66,13 +66,6 @@ interface ITradeFactoryExecutor {
     uint256 _minAmountOut,
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
-
-  // function execute(
-  //   uint256 _firstTradeId,
-  //   uint256 _secondTradeId,
-  //   uint256 _consumedFirstTrade,
-  //   uint256 _consumedSecondTrade
-  // ) external;
 }
 
 abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPositionsHandler, Machinery {
@@ -87,6 +80,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     _setMechanicsRegistry(__mechanicsRegistry);
   }
 
+  // Execute via sync swapper
   function execute(
     address _tokenIn,
     address _tokenOut,
@@ -99,11 +93,13 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     if (_amountIn == 0) revert CommonErrors.ZeroAmount();
     if (_maxSlippage == 0) revert CommonErrors.ZeroSlippage();
     IERC20(_tokenIn).safeTransferFrom(msg.sender, _swapper, _amountIn);
-    _receivedAmount = ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(msg.sender);
+    ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    _receivedAmount = IERC20(_tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
     emit SyncTradeExecuted(msg.sender, _swapper, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data, _receivedAmount);
   }
 
-  // TradeFactoryExecutor
+  // Execute via async swapper
   function execute(
     address _strategy,
     address _tokenIn,
@@ -117,7 +113,10 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     if (_amountIn == 0) _amountIn = IERC20(_tokenIn).balanceOf(_strategy);
     IERC20(_tokenIn).safeTransferFrom(_strategy, _swapper, _amountIn);
-    _receivedAmount = IAsyncSwapper(_swapper).swap(_strategy, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
+    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(_strategy);
+    IAsyncSwapper(_swapper).swap(_strategy, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
+    _receivedAmount = IERC20(_tokenOut).balanceOf(_strategy) - _preSwapBalanceOut;
+    if (_receivedAmount < _minAmountOut) revert InvalidAmountOut();
     emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
   }
 

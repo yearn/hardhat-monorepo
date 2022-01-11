@@ -4,16 +4,6 @@ pragma solidity >=0.8.4 <0.9.0;
 import '../Swapper.sol';
 
 interface ISyncSwapper is ISwapper {
-  event Swapped(
-    address _receiver,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    uint256 _maxSlippage,
-    uint256 _receivedAmount,
-    bytes _data
-  );
-
   // solhint-disable-next-line func-name-mixedcase
   function SLIPPAGE_PRECISION() external view returns (uint256);
 
@@ -24,7 +14,7 @@ interface ISyncSwapper is ISwapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata _data
-  ) external returns (uint256 _receivedAmount);
+  ) external;
 }
 
 abstract contract SyncSwapper is ISyncSwapper, Swapper {
@@ -55,7 +45,7 @@ abstract contract SyncSwapper is ISyncSwapper, Swapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata _data
-  ) internal virtual returns (uint256 _receivedAmount);
+  ) internal virtual;
 
   function swap(
     address _receiver,
@@ -64,9 +54,8 @@ abstract contract SyncSwapper is ISyncSwapper, Swapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata _data
-  ) external virtual override onlyTradeFactory returns (uint256 _receivedAmount) {
+  ) external virtual override onlyTradeFactory {
     _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _maxSlippage);
-    _receivedAmount = _executeSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
-    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _receivedAmount, _data);
+    _executeSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
   }
 }
