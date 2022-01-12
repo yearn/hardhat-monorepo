@@ -22,7 +22,6 @@ interface ITradeFactoryExecutor {
     address _tokenOut,
     uint256 _amountIn,
     uint256 _maxSlippage,
-    bytes _data,
     uint256 _receivedAmount
   );
 
@@ -96,7 +95,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(msg.sender);
     ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
     _receivedAmount = IERC20(_tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
-    emit SyncTradeExecuted(msg.sender, _swapper, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data, _receivedAmount);
+    emit SyncTradeExecuted(msg.sender, _swapper, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _receivedAmount);
   }
 
   // Execute via async swapper
