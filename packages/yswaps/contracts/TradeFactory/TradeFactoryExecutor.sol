@@ -105,14 +105,16 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
       )
     ) revert InvalidTrade();
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
-    if (_tradeExecutionDetails._amount == 0) revert CommonErrors.ZeroAmount();
-    IERC20(_tradeExecutionDetails._tokenIn).safeTransferFrom(_tradeExecutionDetails._strategy, _swapper, _tradeExecutionDetails._amount);
+    uint256 _amount = _tradeExecutionDetails._amount != 0
+      ? _tradeExecutionDetails._amount
+      : IERC20(_tradeExecutionDetails._tokenIn).balanceOf(_tradeExecutionDetails._strategy);
+    IERC20(_tradeExecutionDetails._tokenIn).safeTransferFrom(_tradeExecutionDetails._strategy, _swapper, _amount);
     uint256 _preSwapBalanceOut = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(_tradeExecutionDetails._strategy);
     IAsyncSwapper(_swapper).swap(
       _tradeExecutionDetails._strategy,
       _tradeExecutionDetails._tokenIn,
       _tradeExecutionDetails._tokenOut,
-      _tradeExecutionDetails._amount,
+      _amount,
       _tradeExecutionDetails._minAmountOut,
       _data
     );
