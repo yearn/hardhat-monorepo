@@ -9,9 +9,9 @@ contract TradeFactoryExecutorMock is TradeFactoryPositionsHandlerMock, TradeFact
     address _masterAdmin, 
     address _swapperAdder, 
     address _swapperSetter, 
-    address _strategyAdder, 
+    address _strategyModifier, 
     address _mechanicsRegistry
   ) 
-    TradeFactoryPositionsHandlerMock(_masterAdmin, _swapperAdder, _swapperSetter, _strategyAdder)
+    TradeFactoryPositionsHandlerMock(_masterAdmin, _swapperAdder, _swapperSetter, _strategyModifier)
     TradeFactoryExecutor(_mechanicsRegistry) {}
 }
