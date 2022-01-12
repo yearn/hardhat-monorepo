@@ -85,7 +85,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     if (_tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
     _strategies.add(msg.sender);
     _tokensInByStrategy[msg.sender].add(_tokenIn);
-    _tokensOutByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut);
+    if (!_tokenOutsByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
     emit TradeEnabled(msg.sender, _tokenIn, _tokenOut);
   }
 
