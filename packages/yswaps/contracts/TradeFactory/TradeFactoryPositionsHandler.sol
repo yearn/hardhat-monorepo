@@ -13,9 +13,9 @@ interface ITradeFactoryPositionsHandler {
     address _tokenOut;
   }
 
-  event TradeEnabled(address indexed _strategy, address indexed _tokenIn, address indexed _tokenOut);
+  event TradeEnabled(address _strategy, address _tokenIn, address _tokenOut);
 
-  event TradeDisabled(address indexed _strategy, address indexed _tokenIn, address indexed _tokenOut);
+  event TradeDisabled(address _strategy, address _tokenIn, address _tokenOut);
 
   error InvalidTrade();
 

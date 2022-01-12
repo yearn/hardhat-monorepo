@@ -9,8 +9,8 @@ import '../swappers/Swapper.sol';
 import './TradeFactoryAccessManager.sol';
 
 interface ITradeFactorySwapperHandler {
-  event SyncStrategySwapperSet(address indexed _strategy, address _swapper);
-  event AsyncStrategySwapperSet(address indexed _strategy, address _swapper);
+  event SyncStrategySwapperSet(address _strategy, address _swapper);
+  event AsyncStrategySwapperSet(address _strategy, address _swapper);
   event SwappersAdded(address[] _swappers);
   event SwappersRemoved(address[] _swapper);
 
