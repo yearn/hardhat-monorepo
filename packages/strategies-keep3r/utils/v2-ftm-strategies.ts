@@ -87,4 +87,20 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
   },
 ];
 
-export const v2FtmTendStrategies: v2FtmStrategy[] = [];
+export const v2FtmTendStrategies: v2FtmStrategy[] = [
+  {
+    name: 'ssb_dai',
+    added: false,
+    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
+  },
+  {
+    name: 'ssb_usdc',
+    added: false,
+    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
+  },
+  {
+    name: 'ssb_mim',
+    added: false,
+    address: '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
+  }
+];
