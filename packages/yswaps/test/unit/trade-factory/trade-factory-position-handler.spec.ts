@@ -16,7 +16,7 @@ contract('TradeFactoryPositionsHandler', () => {
   let strategy: SignerWithAddress;
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
-  let strategyAdder: SignerWithAddress;
+  let strategyModifier: SignerWithAddress;
   let positionsHandlerFactory: MockContractFactory<TradeFactoryPositionsHandlerMock__factory>;
   let positionsHandler: MockContract<TradeFactoryPositionsHandlerMock>;
   let asyncSwapper: FakeContract<ISwapper>;
@@ -24,10 +24,10 @@ contract('TradeFactoryPositionsHandler', () => {
 
   const MASTER_ADMIN_ROLE: string = new Web3().utils.soliditySha3('MASTER_ADMIN') as string;
   const STRATEGY_ROLE: string = new Web3().utils.soliditySha3('STRATEGY') as string;
-  const STRATEGY_ADDER_ROLE: string = new Web3().utils.soliditySha3('STRATEGY_ADDER') as string;
+  const STRATEGY_MODIFIER_ROLE: string = new Web3().utils.soliditySha3('STRATEGY_MODIFIER') as string;
 
   before(async () => {
-    [deployer, masterAdmin, swapperAdder, swapperSetter, strategyAdder, strategy] = await ethers.getSigners();
+    [deployer, masterAdmin, swapperAdder, swapperSetter, strategyModifier, strategy] = await ethers.getSigners();
     positionsHandlerFactory = await smock.mock<TradeFactoryPositionsHandlerMock__factory>(
       'contracts/mock/TradeFactory/TradeFactoryPositionsHandler.sol:TradeFactoryPositionsHandlerMock',
       strategy
@@ -36,11 +36,11 @@ contract('TradeFactoryPositionsHandler', () => {
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
-      strategyAdder.address
+      strategyModifier.address
     );
     asyncSwapper = await smock.fake<ISwapper>(swapperABI);
     await positionsHandler.connect(swapperAdder).addSwappers([asyncSwapper.address]);
-    await positionsHandler.connect(strategyAdder).grantRole(STRATEGY_ROLE, strategy.address);
+    await positionsHandler.connect(strategyModifier).grantRole(STRATEGY_ROLE, strategy.address);
     snapshotId = await evm.snapshot.take();
   });
 
@@ -59,10 +59,10 @@ contract('TradeFactoryPositionsHandler', () => {
       then('strategy adder is set');
       then('trades modifier is set');
       then('admin role of strategy is strategy adder', async () => {
-        expect(await positionsHandler.getRoleAdmin(STRATEGY_ROLE)).to.equal(STRATEGY_ADDER_ROLE);
+        expect(await positionsHandler.getRoleAdmin(STRATEGY_ROLE)).to.equal(STRATEGY_MODIFIER_ROLE);
       });
       then('admin role of strategy admin is master admin', async () => {
-        expect(await positionsHandler.getRoleAdmin(STRATEGY_ADDER_ROLE)).to.equal(MASTER_ADMIN_ROLE);
+        expect(await positionsHandler.getRoleAdmin(STRATEGY_MODIFIER_ROLE)).to.equal(MASTER_ADMIN_ROLE);
       });
     });
   });
