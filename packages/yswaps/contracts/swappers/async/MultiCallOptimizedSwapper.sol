@@ -24,16 +24,13 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
 
   constructor(address _governor, address _tradeFactory) MultipleAsyncSwapper(_governor, _tradeFactory) {}
 
-  function swap(
+  function _executeSwap(
     address _receiver,
     address _tokenIn,
     address _tokenOut,
     uint256 _amountIn,
-    uint256 _minAmountOut,
     bytes calldata _data
-  ) external onlyTradeFactory {
-    _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
-
+  ) internal override {
     uint8 multicallOptimization = _getMultiCallOptimization(_data);
 
     bool _success;
@@ -71,15 +68,6 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
 
     if (!_success) revert MultiCallRevert();
   }
-
-  // TODO: SHOULD BE USED
-  function _executeSwap(
-    address _receiver,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    bytes calldata _data
-  ) internal override {}
 
   function _getMultiCallOptimization(bytes memory _data) internal pure returns (uint8 multicallOptimization) {
     assembly {
