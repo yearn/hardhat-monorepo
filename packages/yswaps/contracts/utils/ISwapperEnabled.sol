@@ -5,9 +5,6 @@ pragma solidity >=0.8.4 <0.9.0;
 interface ISwapperEnabled {
   error NotTradeFactory();
 
-  event TradeFactorySet(address indexed _tradeFactory);
-  event SwapperSet(string indexed _swapper);
-
   function tradeFactory() external returns (address _tradeFactory);
 
   function swapper() external returns (string memory _swapper);

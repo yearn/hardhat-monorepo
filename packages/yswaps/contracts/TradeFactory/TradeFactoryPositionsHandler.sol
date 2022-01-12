@@ -13,10 +13,6 @@ interface ITradeFactoryPositionsHandler {
     address _tokenOut;
   }
 
-  event TradeEnabled(address _strategy, address _tokenIn, address _tokenOut);
-
-  event TradeDisabled(address _strategy, address _tokenIn, address _tokenOut);
-
   error InvalidTrade();
 
   error AllowanceShouldBeZero();
@@ -85,8 +81,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     if (_tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
     _strategies.add(msg.sender);
     _tokensInByStrategy[msg.sender].add(_tokenIn);
-    if (!_tokenOutsByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
-    emit TradeEnabled(msg.sender, _tokenIn, _tokenOut);
+    if (!_tokensOutByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
   }
 
   function disable(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) {
@@ -116,6 +111,5 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
         _strategies.remove(_strategy);
       }
     }
-    emit TradeDisabled(_strategy, _tokenIn, _tokenOut);
   }
 }
