@@ -7,7 +7,7 @@ import './TradeFactorySwapperHandler.sol';
 import {ISwapperEnabled} from '../utils/ISwapperEnabled.sol';
 
 interface ITradeFactoryPositionsHandler {
-  struct TradeDetail {
+  struct EnabledTrade {
     address _strategy;
     address _tokenIn;
     address _tokenOut;
@@ -21,7 +21,7 @@ interface ITradeFactoryPositionsHandler {
 
   error AllowanceShouldBeZero();
 
-  function enabledTrades() external view returns (TradeDetail[] memory _enabledTrades);
+  function enabledTrades() external view returns (EnabledTrade[] memory _enabledTrades);
 
   function enable(address _tokenIn, address _tokenOut) external;
 
@@ -55,7 +55,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     _setupRole(STRATEGY_ADDER, _strategyAdder);
   }
 
-  function enabledTrades() external view override returns (TradeDetail[] memory _enabledTrades) {
+  function enabledTrades() external view override returns (EnabledTrade[] memory _enabledTrades) {
     uint256 _totalEnabledTrades;
     for (uint256 i; i < _strategies.values().length; i++) {
       address _strategy = _strategies.at(i);
@@ -65,7 +65,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
         _totalEnabledTrades += _tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].length();
       }
     }
-    _enabledTrades = new TradeDetail[](_totalEnabledTrades);
+    _enabledTrades = new EnabledTrade[](_totalEnabledTrades);
     uint256 _enabledTradesIndex;
     for (uint256 i; i < _strategies.values().length; i++) {
       address _strategy = _strategies.at(i);
@@ -74,7 +74,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
         address _tokenIn = _tokensIn[j];
         address[] memory _tokensOut = _tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].values();
         for (uint256 k; k < _tokensOut.length; k++) {
-          _enabledTrades[_enabledTradesIndex] = TradeDetail(_strategy, _tokenIn, _tokensOut[k]);
+          _enabledTrades[_enabledTradesIndex] = EnabledTrade(_strategy, _tokenIn, _tokensOut[k]);
           _enabledTradesIndex++;
         }
       }

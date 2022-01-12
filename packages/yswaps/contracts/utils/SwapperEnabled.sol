@@ -50,7 +50,11 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _amountIn,
     uint256 _maxSlippage
   ) internal returns (uint256 _receivedAmount) {
-    return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, '');
+    return
+      ITradeFactoryExecutor(tradeFactory).execute(
+        ITradeFactoryExecutor.SyncTradeExecutionDetails(_tokenIn, _tokenOut, _amountIn, _maxSlippage),
+        ''
+      );
   }
 
   function _executeTrade(
@@ -60,6 +64,10 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _maxSlippage,
     bytes calldata _data
   ) internal returns (uint256 _receivedAmount) {
-    return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    return
+      ITradeFactoryExecutor(tradeFactory).execute(
+        ITradeFactoryExecutor.SyncTradeExecutionDetails(_tokenIn, _tokenOut, _amountIn, _maxSlippage),
+        _data
+      );
   }
 }
