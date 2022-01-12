@@ -15,16 +15,11 @@ import '../swappers/sync/SyncSwapper.sol';
 import './TradeFactoryPositionsHandler.sol';
 
 interface ITradeFactoryExecutor {
-  event SyncTradeExecuted(
-    SyncTradeExecutionDetails _tradeExecutionDetails,
-    address indexed _strategy,
-    uint256 _receivedAmount,
-    address indexed _swapper
-  );
+  event SyncTradeExecuted(address indexed _strategy, uint256 _receivedAmount, address indexed _swapper);
 
-  event AsyncTradeExecuted(AsyncTradeExecutionDetails _tradeExecutionDetails, uint256 _receivedAmount, address _swapper);
+  event AsyncTradeExecuted(uint256 _receivedAmount, address _swapper);
 
-  event MultipleAsyncTradeExecuted(AsyncTradeExecutionDetails[] _tradesExecutionDetails, uint256[] _receivedAmount, address _swapper);
+  event MultipleAsyncTradeExecuted(uint256[] _receivedAmount, address _swapper);
 
   error InvalidAmountOut();
 
@@ -95,7 +90,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
       _data
     );
     _receivedAmount = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
-    emit SyncTradeExecuted(_tradeExecutionDetails, msg.sender, _receivedAmount, _swapper);
+    emit SyncTradeExecuted(msg.sender, _receivedAmount, _swapper);
   }
 
   // Execute via async swapper
@@ -123,7 +118,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     );
     _receivedAmount = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(_tradeExecutionDetails._strategy) - _preSwapBalanceOut;
     if (_receivedAmount < _tradeExecutionDetails._minAmountOut) revert InvalidAmountOut();
-    emit AsyncTradeExecuted(_tradeExecutionDetails, _receivedAmount, _swapper);
+    emit AsyncTradeExecuted(_receivedAmount, _swapper);
   }
 
   function execute(
@@ -152,6 +147,6 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
       _balanceOutHolder[i] = IERC20(_tradesExecutionDetails[i]._tokenOut).balanceOf(_tradesExecutionDetails[i]._strategy) - _balanceOutHolder[i];
       if (_tradesExecutionDetails[i]._minAmountOut < _balanceOutHolder[i]) revert InvalidAmountOut();
     }
-    emit MultipleAsyncTradeExecuted(_tradesExecutionDetails, _balanceOutHolder, _swapper);
+    emit MultipleAsyncTradeExecuted(_balanceOutHolder, _swapper);
   }
 }

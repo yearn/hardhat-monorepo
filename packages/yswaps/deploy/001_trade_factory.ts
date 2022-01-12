@@ -39,7 +39,7 @@ export const SWAPPER_SETTER: { [chainId: string]: string } = {
   '250': '0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803',
 };
 
-export const STRATEGY_ADDER: { [chainId: string]: string } = {
+export const STRATEGY_MODIFIER: { [chainId: string]: string } = {
   // Mainnet
   '1': '0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6', // TODO: Change and put the real address
   // Polygon
@@ -56,7 +56,7 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
   const deploy = await hre.deployments.deploy('TradeFactory', {
     contract: 'contracts/TradeFactory/TradeFactory.sol:TradeFactory',
     from: deployer,
-    args: [MASTER_ADMIN[chainId], SWAPPER_ADDER[chainId], SWAPPER_SETTER[chainId], STRATEGY_ADDER[chainId], MECHANICS_REGISTRY[chainId]],
+    args: [MASTER_ADMIN[chainId], SWAPPER_ADDER[chainId], SWAPPER_SETTER[chainId], STRATEGY_MODIFIER[chainId], MECHANICS_REGISTRY[chainId]],
     log: true,
   });
 
@@ -67,7 +67,7 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
         MASTER_ADMIN[chainId],
         SWAPPER_ADDER[chainId],
         SWAPPER_SETTER[chainId],
-        STRATEGY_ADDER[chainId],
+        STRATEGY_MODIFIER[chainId],
         TRADE_MODIFIER[chainId],
         TRADE_SETTLER[chainId],
         MECHANICS_REGISTRY[chainId],

@@ -9,10 +9,10 @@ contract TradeFactoryPositionsHandlerMock is TradeFactorySwapperHandlerMock, Tra
     address _masterAdmin, 
     address _swapperAdder, 
     address _swapperSetter,
-    address _strategyAdder
+    address _strategyModifier
   ) 
   TradeFactoryPositionsHandler(
-    _strategyAdder
+    _strategyModifier
   ) 
   TradeFactorySwapperHandlerMock(
     _masterAdmin, 
