@@ -22,26 +22,25 @@ abstract contract SwapperEnabled is ISwapperEnabled {
 
   // onlyMultisig:
   function _setTradeFactory(address _tradeFactory) internal {
-    // strategy should handle canceling all previous trades and creating all new ones
+    // strategy should handle disabling all previous trades and creating all new ones
     tradeFactory = _tradeFactory;
-    emit TradeFactorySet(_tradeFactory);
   }
 
   // onlyMultisig or internal use:
-  function _createTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
+  function _enableTrade(address _tokenIn, address _tokenOut) internal {
     IERC20(_tokenIn).approve(tradeFactory, type(uint256).max);
-    return ITradeFactoryPositionsHandler(tradeFactory).create(_tokenIn, _tokenOut);
+    return ITradeFactoryPositionsHandler(tradeFactory).enable(_tokenIn, _tokenOut);
   }
 
-  function cancelTradeCallback(address _tokenIn, address _tokenOut) external override returns (bool _success) {
+  function disableTradeCallback(address _tokenIn, address _tokenOut) external override {
     if (msg.sender != tradeFactory) revert NotTradeFactory();
     IERC20(_tokenIn).approve(tradeFactory, 0);
-    return ITradeFactoryPositionsHandler(tradeFactory).cancel(_tokenIn, _tokenOut);
+    ITradeFactoryPositionsHandler(tradeFactory).disable(_tokenIn, _tokenOut);
   }
 
-  function _cancelTrade(address _tokenIn, address _tokenOut) internal returns (bool _success) {
+  function _disableTrade(address _tokenIn, address _tokenOut) internal {
     IERC20(_tokenIn).approve(tradeFactory, 0);
-    return ITradeFactoryPositionsHandler(tradeFactory).cancel(_tokenIn, _tokenOut);
+    ITradeFactoryPositionsHandler(tradeFactory).disable(_tokenIn, _tokenOut);
   }
 
   function _executeTrade(
@@ -50,7 +49,11 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _amountIn,
     uint256 _maxSlippage
   ) internal returns (uint256 _receivedAmount) {
-    return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, '');
+    return
+      ITradeFactoryExecutor(tradeFactory).execute(
+        ITradeFactoryExecutor.SyncTradeExecutionDetails(_tokenIn, _tokenOut, _amountIn, _maxSlippage),
+        ''
+      );
   }
 
   function _executeTrade(
@@ -60,6 +63,10 @@ abstract contract SwapperEnabled is ISwapperEnabled {
     uint256 _maxSlippage,
     bytes calldata _data
   ) internal returns (uint256 _receivedAmount) {
-    return ITradeFactoryExecutor(tradeFactory).execute(_tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
+    return
+      ITradeFactoryExecutor(tradeFactory).execute(
+        ITradeFactoryExecutor.SyncTradeExecutionDetails(_tokenIn, _tokenOut, _amountIn, _maxSlippage),
+        _data
+      );
   }
 }

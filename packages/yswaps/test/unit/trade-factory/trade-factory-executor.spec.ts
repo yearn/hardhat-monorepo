@@ -21,7 +21,7 @@ contract('TradeFactoryExecutor', () => {
   let strategy: SignerWithAddress;
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
-  let strategyAdder: SignerWithAddress;
+  let strategyModifier: SignerWithAddress;
   let mechanic: SignerWithAddress;
   let machinery: FakeContract<Machinery>;
   let asyncSwapper: FakeContract<AsyncSwapper>;
@@ -32,7 +32,7 @@ contract('TradeFactoryExecutor', () => {
   let snapshotId: string;
 
   before(async () => {
-    [masterAdmin, swapperAdder, swapperSetter, strategyAdder, strategy, mechanic] = await ethers.getSigners();
+    [masterAdmin, swapperAdder, swapperSetter, strategyModifier, strategy, mechanic] = await ethers.getSigners();
     executorFactory = await smock.mock<TradeFactoryExecutorMock__factory>(
       'contracts/mock/TradeFactory/TradeFactoryExecutor.sol:TradeFactoryExecutorMock',
       mechanic
@@ -44,7 +44,7 @@ contract('TradeFactoryExecutor', () => {
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
-      strategyAdder.address,
+      strategyModifier.address,
       machinery.address
     );
     token = await erc20.deploy({
@@ -53,7 +53,7 @@ contract('TradeFactoryExecutor', () => {
       initialAccount: strategy.address,
       initialAmount: utils.parseEther('10000'),
     });
-    await executor.connect(strategyAdder).grantRole(await executor.STRATEGY(), strategy.address);
+    await executor.connect(strategyModifier).grantRole(await executor.STRATEGY(), strategy.address);
     await executor.connect(swapperAdder).addSwappers([asyncSwapper.address, syncSwapper.address]);
     machinery.isMechanic.returns(true);
     asyncSwapper.SWAPPER_TYPE.returns(0);
