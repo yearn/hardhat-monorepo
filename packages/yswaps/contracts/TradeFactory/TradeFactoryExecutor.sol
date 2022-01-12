@@ -15,57 +15,45 @@ import '../swappers/sync/SyncSwapper.sol';
 import './TradeFactoryPositionsHandler.sol';
 
 interface ITradeFactoryExecutor {
-  event SyncTradeExecuted(
-    address indexed _strategy,
-    address indexed _swapper,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    uint256 _maxSlippage,
-    bytes _data,
-    uint256 _receivedAmount
-  );
+  event SyncTradeExecuted(address indexed _strategy, uint256 _receivedAmount, address indexed _swapper);
 
-  event AsyncTradeExecuted(
-    address indexed _strategy,
-    address indexed _tokenIn,
-    address indexed _tokenOut,
-    address _swapper,
-    uint256 _amountIn,
-    uint256 _minAmountOut,
-    uint256 _receivedAmount
-  );
+  event AsyncTradeExecuted(uint256 _receivedAmount, address _swapper);
 
-  event AsyncTradesMatched(
-    uint256 indexed _firstTradeId,
-    uint256 indexed _secondTradeId,
-    uint256 _consumedFirstTrade,
-    uint256 _consumedSecondTrade
-  );
-
-  event SwapperAndTokenEnabled(address indexed _swapper, address _token);
-
-  error ZeroRate();
+  event MultipleAsyncTradeExecuted(uint256[] _receivedAmount, address _swapper);
 
   error InvalidAmountOut();
 
+  struct SyncTradeExecutionDetails {
+    address _tokenIn;
+    address _tokenOut;
+    uint256 _amountIn;
+    uint256 _maxSlippage;
+  }
+
+  struct AsyncTradeExecutionDetails {
+    address _strategy;
+    address _tokenIn;
+    address _tokenOut;
+    uint256 _amount;
+    uint256 _minAmountOut;
+  }
+
+  // Sync execution
+  function execute(SyncTradeExecutionDetails calldata _tradeExecutionDetails, bytes calldata _data) external returns (uint256 _receivedAmount);
+
+  // Async execution
   function execute(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    uint256 _maxSlippage,
+    AsyncTradeExecutionDetails calldata _tradeExecutionDetails,
+    address _swapper,
     bytes calldata _data
   ) external returns (uint256 _receivedAmount);
 
+  // Multiple async execution
   function execute(
-    address _strategy,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
+    AsyncTradeExecutionDetails[] calldata _tradesExecutionDetails,
     address _swapper,
-    uint256 _minAmountOut,
     bytes calldata _data
-  ) external returns (uint256 _receivedAmount);
+  ) external;
 }
 
 abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPositionsHandler, Machinery {
@@ -81,77 +69,86 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
   }
 
   // Execute via sync swapper
-  function execute(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    uint256 _maxSlippage,
-    bytes calldata _data
-  ) external override onlyRole(STRATEGY) returns (uint256 _receivedAmount) {
+  function execute(SyncTradeExecutionDetails calldata _tradeExecutionDetails, bytes calldata _data)
+    external
+    override
+    onlyRole(STRATEGY)
+    returns (uint256 _receivedAmount)
+  {
     address _swapper = strategySyncSwapper[msg.sender];
-    if (_tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
-    if (_amountIn == 0) revert CommonErrors.ZeroAmount();
-    if (_maxSlippage == 0) revert CommonErrors.ZeroSlippage();
-    IERC20(_tokenIn).safeTransferFrom(msg.sender, _swapper, _amountIn);
-    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(msg.sender);
-    ISyncSwapper(_swapper).swap(msg.sender, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data);
-    _receivedAmount = IERC20(_tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
-    emit SyncTradeExecuted(msg.sender, _swapper, _tokenIn, _tokenOut, _amountIn, _maxSlippage, _data, _receivedAmount);
+    if (_tradeExecutionDetails._tokenIn == address(0) || _tradeExecutionDetails._tokenOut == address(0)) revert CommonErrors.ZeroAddress();
+    if (_tradeExecutionDetails._amountIn == 0) revert CommonErrors.ZeroAmount();
+    if (_tradeExecutionDetails._maxSlippage == 0) revert CommonErrors.ZeroSlippage();
+    IERC20(_tradeExecutionDetails._tokenIn).safeTransferFrom(msg.sender, _swapper, _tradeExecutionDetails._amountIn);
+    uint256 _preSwapBalanceOut = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(msg.sender);
+    ISyncSwapper(_swapper).swap(
+      msg.sender,
+      _tradeExecutionDetails._tokenIn,
+      _tradeExecutionDetails._tokenOut,
+      _tradeExecutionDetails._amountIn,
+      _tradeExecutionDetails._maxSlippage,
+      _data
+    );
+    _receivedAmount = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(msg.sender) - _preSwapBalanceOut;
+    emit SyncTradeExecuted(msg.sender, _receivedAmount, _swapper);
   }
 
   // Execute via async swapper
   function execute(
-    address _strategy,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
+    AsyncTradeExecutionDetails calldata _tradeExecutionDetails,
     address _swapper,
-    uint256 _minAmountOut,
     bytes calldata _data
   ) external override onlyMechanic returns (uint256 _receivedAmount) {
-    if (!_tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].contains(_tokenOut)) revert InvalidTrade();
+    if (
+      !_tokensOutByStrategyAndTokenIn[_tradeExecutionDetails._strategy][_tradeExecutionDetails._tokenIn].contains(
+        _tradeExecutionDetails._tokenOut
+      )
+    ) revert InvalidTrade();
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
-    if (_amountIn == 0) _amountIn = IERC20(_tokenIn).balanceOf(_strategy);
-    IERC20(_tokenIn).safeTransferFrom(_strategy, _swapper, _amountIn);
-    uint256 _preSwapBalanceOut = IERC20(_tokenOut).balanceOf(_strategy);
-    IAsyncSwapper(_swapper).swap(_strategy, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _data);
-    _receivedAmount = IERC20(_tokenOut).balanceOf(_strategy) - _preSwapBalanceOut;
-    if (_receivedAmount < _minAmountOut) revert InvalidAmountOut();
-    emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
+    uint256 _amount = _tradeExecutionDetails._amount != 0
+      ? _tradeExecutionDetails._amount
+      : IERC20(_tradeExecutionDetails._tokenIn).balanceOf(_tradeExecutionDetails._strategy);
+    IERC20(_tradeExecutionDetails._tokenIn).safeTransferFrom(_tradeExecutionDetails._strategy, _swapper, _amount);
+    uint256 _preSwapBalanceOut = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(_tradeExecutionDetails._strategy);
+    IAsyncSwapper(_swapper).swap(
+      _tradeExecutionDetails._strategy,
+      _tradeExecutionDetails._tokenIn,
+      _tradeExecutionDetails._tokenOut,
+      _amount,
+      _tradeExecutionDetails._minAmountOut,
+      _data
+    );
+    _receivedAmount = IERC20(_tradeExecutionDetails._tokenOut).balanceOf(_tradeExecutionDetails._strategy) - _preSwapBalanceOut;
+    if (_receivedAmount < _tradeExecutionDetails._minAmountOut) revert InvalidAmountOut();
+    emit AsyncTradeExecuted(_receivedAmount, _swapper);
   }
 
-  struct Trade {
-    address _strategy;
-    address _tokenIn;
-    address _tokenOut;
-    uint256 _amountIn;
-    uint256 _minAmountOut;
-  }
-
-  function executeMultiple(
-    Trade[] calldata _trades,
+  function execute(
+    AsyncTradeExecutionDetails[] calldata _tradesExecutionDetails,
     address _swapper,
-    bytes calldata _data // i.e. transaction[] for MulticallSwapper
-  ) external onlyMechanic returns (bool _error) {
-    // todo check what returns (or no return) saves more gas
-
-    uint256[] memory _preTokenOutBalance = new uint256[](_trades.length);
+    bytes calldata _data
+  ) external override onlyMechanic {
+    // Balance out holder will firstly have the pre swap balance out of each strategy
+    uint256[] memory _balanceOutHolder = new uint256[](_tradesExecutionDetails.length);
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
-    for (uint256 i; i < _trades.length; i++) {
-      if (!_tokenOutsByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
-      uint256 _amountIn = _trades[i]._amountIn != 0 ? _trades[i]._amountIn : IERC20(_trades[i]._tokenIn).balanceOf(_trades[i]._strategy);
-      IERC20(_trades[i]._tokenIn).safeTransferFrom(_trades[i]._strategy, _swapper, _amountIn);
-      _preTokenOutBalance[i] = IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy);
+    for (uint256 i; i < _tradesExecutionDetails.length; i++) {
+      if (
+        !_tokensOutByStrategyAndTokenIn[_tradesExecutionDetails[i]._strategy][_tradesExecutionDetails[i]._tokenIn].contains(
+          _tradesExecutionDetails[i]._tokenOut
+        )
+      ) revert InvalidTrade();
+      uint256 _amount = _tradesExecutionDetails[i]._amount != 0
+        ? _tradesExecutionDetails[i]._amount
+        : IERC20(_tradesExecutionDetails[i]._tokenIn).balanceOf(_tradesExecutionDetails[i]._strategy);
+      IERC20(_tradesExecutionDetails[i]._tokenIn).safeTransferFrom(_tradesExecutionDetails[i]._strategy, _swapper, _amount);
+      _balanceOutHolder[i] = IERC20(_tradesExecutionDetails[i]._tokenOut).balanceOf(_tradesExecutionDetails[i]._strategy);
     }
-
     IMultipleAsyncSwapper(_swapper).swapMultiple(_data);
-
-    for (uint256 i; i < _trades.length; i++) {
-      if (_trades[i]._minAmountOut < IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy) - _preTokenOutBalance[i])
-        revert InvalidAmountOut();
+    for (uint256 i; i < _tradesExecutionDetails.length; i++) {
+      // Balance out holder will now store the total received amount of token out per strat
+      _balanceOutHolder[i] = IERC20(_tradesExecutionDetails[i]._tokenOut).balanceOf(_tradesExecutionDetails[i]._strategy) - _balanceOutHolder[i];
+      if (_tradesExecutionDetails[i]._minAmountOut < _balanceOutHolder[i]) revert InvalidAmountOut();
     }
-
-    // emit AsyncTradeExecuted(_strategy, _tokenIn, _tokenOut, _swapper, _amountIn, _minAmountOut, _receivedAmount);
-    return false;
+    emit MultipleAsyncTradeExecuted(_balanceOutHolder, _swapper);
   }
 }

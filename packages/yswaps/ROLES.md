@@ -3,9 +3,7 @@
   - Can add SWAPPER ADDERS
   - Can add SWAPPER SETTERS
   - Can add STRATEGY ADDERS
-  - Can add STRATEGY HANDLERS
-  - Can add TRADES MODIFIER
-  - Can sets mechanics registry
+  - Can set mechanics registry
 
 - SWAPPER ADDER
 
@@ -21,9 +19,10 @@
   - Create async trade
   - Cancel async trade
 
-- STRATEGY ADDER
+- STRATEGY MANAGER
 
-  - Can add strategies
+  - Can add and remove strategies
+  - Can call disable by admin
 
 - TRADES MODIFIER
 

@@ -9,11 +9,6 @@ import '../swappers/Swapper.sol';
 import './TradeFactoryAccessManager.sol';
 
 interface ITradeFactorySwapperHandler {
-  event SyncStrategySwapperSet(address indexed _strategy, address _swapper);
-  event AsyncStrategySwapperSet(address indexed _strategy, address _swapper);
-  event SwappersAdded(address[] _swappers);
-  event SwappersRemoved(address[] _swapper);
-
   error NotAsyncSwapper();
   error NotSyncSwapper();
   error InvalidSwapper();
@@ -79,8 +74,6 @@ abstract contract TradeFactorySwapperHandler is ITradeFactorySwapperHandler, Tra
     strategySyncSwapper[_strategy] = _swapper;
     // add strategy into new swapper
     _swapperStrategies[_swapper].add(_strategy);
-    // emit event
-    emit SyncStrategySwapperSet(_strategy, _swapper);
   }
 
   function addSwappers(address[] memory __swappers) external override onlyRole(SWAPPER_ADDER) {
@@ -88,7 +81,6 @@ abstract contract TradeFactorySwapperHandler is ITradeFactorySwapperHandler, Tra
       if (__swappers[i] == address(0)) revert CommonErrors.ZeroAddress();
       _swappers.add(__swappers[i]);
     }
-    emit SwappersAdded(__swappers);
   }
 
   function removeSwappers(address[] memory __swappers) external override onlyRole(SWAPPER_ADDER) {
@@ -96,6 +88,5 @@ abstract contract TradeFactorySwapperHandler is ITradeFactorySwapperHandler, Tra
       if (_swapperStrategies[__swappers[i]].length() > 0) revert SwapperInUse();
       _swappers.remove(__swappers[i]);
     }
-    emit SwappersRemoved(__swappers);
   }
 }

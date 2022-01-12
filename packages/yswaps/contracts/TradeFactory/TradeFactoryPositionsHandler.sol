@@ -7,39 +7,34 @@ import './TradeFactorySwapperHandler.sol';
 import {ISwapperEnabled} from '../utils/ISwapperEnabled.sol';
 
 interface ITradeFactoryPositionsHandler {
-  struct TradeDetail {
+  struct EnabledTrade {
     address _strategy;
     address _tokenIn;
     address _tokenOut;
   }
 
-  event TradeCreated(address indexed _strategy, address indexed _tokenIn, address indexed _tokenOut);
-
-  event TradeCanceled(address indexed _strategy, address indexed _tokenIn, address indexed _tokenOut);
-
   error InvalidTrade();
 
   error AllowanceShouldBeZero();
 
-  function tradeDetails() external view returns (TradeDetail[] memory _tradeDetailsList);
+  function enabledTrades() external view returns (EnabledTrade[] memory _enabledTrades);
 
-  function create(address _tokenIn, address _tokenOut) external returns (bool _success);
+  function enable(address _tokenIn, address _tokenOut) external;
 
-  function cancel(address _tokenIn, address _tokenOut) external returns (bool _success);
+  function disable(address _tokenIn, address _tokenOut) external;
 
-  function cancelByAdmin(
+  function disableByAdmin(
     address _strategy,
     address _tokenIn,
     address _tokenOut
-  ) external returns (bool _success);
+  ) external;
 }
 
 abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler, TradeFactorySwapperHandler {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   bytes32 public constant STRATEGY = keccak256('STRATEGY');
-  bytes32 public constant STRATEGY_ADDER = keccak256('STRATEGY_ADDER');
-  bytes32 public constant TRADES_MODIFIER = keccak256('TRADES_MODIFIER');
+  bytes32 public constant STRATEGY_MANAGER = keccak256('STRATEGY_MANAGER');
 
   EnumerableSet.AddressSet internal _strategies;
 
@@ -47,86 +42,74 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
   mapping(address => EnumerableSet.AddressSet) internal _tokensInByStrategy;
 
   // strategy -> tokenIn -> tokenOut[]
-  mapping(address => mapping(address => EnumerableSet.AddressSet)) internal _tokenOutsByStrategyAndTokenIn;
+  mapping(address => mapping(address => EnumerableSet.AddressSet)) internal _tokensOutByStrategyAndTokenIn;
 
-  // strategy -> tokenIn -> amount (is this needed?) [useful for multi in to out]
-  // might be needed if tokenIn is also want? or startegy has more balance on tokenIn than what it's supposed to swap [i.e. rebalancer]
-  // mapping(address => mapping(address => uint256)) internal _strategyTokenInAmount;
-
-  constructor(address _strategyAdder) {
-    if (_strategyAdder == address(0)) revert CommonErrors.ZeroAddress();
-    _setRoleAdmin(STRATEGY, STRATEGY_ADDER);
-    _setRoleAdmin(STRATEGY_ADDER, MASTER_ADMIN);
-    _setupRole(STRATEGY_ADDER, _strategyAdder);
+  constructor(address _strategyModifier) {
+    if (_strategyModifier == address(0)) revert CommonErrors.ZeroAddress();
+    _setRoleAdmin(STRATEGY, STRATEGY_MANAGER);
+    _setRoleAdmin(STRATEGY_MANAGER, MASTER_ADMIN);
+    _setupRole(STRATEGY_MANAGER, _strategyModifier);
   }
 
-  function tradeDetails() external view override returns (TradeDetail[] memory _tradeDetailsList) {
-    uint256 _tradeAmount;
+  function enabledTrades() external view override returns (EnabledTrade[] memory _enabledTrades) {
+    uint256 _totalEnabledTrades;
     for (uint256 i; i < _strategies.values().length; i++) {
       address _strategy = _strategies.at(i);
       address[] memory _tokensIn = _tokensInByStrategy[_strategy].values();
       for (uint256 j; j < _tokensIn.length; j++) {
         address _tokenIn = _tokensIn[j];
-        address[] memory _tokensOut = _tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].values();
-        _tradeAmount += _tokensOut.length;
+        _totalEnabledTrades += _tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].length();
       }
     }
-    _tradeDetailsList = new TradeDetail[](_tradeAmount);
-    uint256 _tradeDetailsIndex;
+    _enabledTrades = new EnabledTrade[](_totalEnabledTrades);
+    uint256 _enabledTradesIndex;
     for (uint256 i; i < _strategies.values().length; i++) {
       address _strategy = _strategies.at(i);
       address[] memory _tokensIn = _tokensInByStrategy[_strategy].values();
       for (uint256 j; j < _tokensIn.length; j++) {
         address _tokenIn = _tokensIn[j];
-        address[] memory _tokensOut = _tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].values();
+        address[] memory _tokensOut = _tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].values();
         for (uint256 k; k < _tokensOut.length; k++) {
-          address _tokenOut = _tokensOut[k];
-          _tradeDetailsList[_tradeDetailsIndex] = TradeDetail(_strategy, _tokenIn, _tokenOut);
-          _tradeDetailsIndex++;
+          _enabledTrades[_enabledTradesIndex] = EnabledTrade(_strategy, _tokenIn, _tokensOut[k]);
+          _enabledTradesIndex++;
         }
       }
     }
   }
 
-  function create(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) returns (bool _success) {
+  function enable(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) {
     if (_tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
     _strategies.add(msg.sender);
     _tokensInByStrategy[msg.sender].add(_tokenIn);
-    if (!_tokenOutsByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
-    emit TradeCreated(msg.sender, _tokenIn, _tokenOut);
-    return true;
+    if (!_tokensOutByStrategyAndTokenIn[msg.sender][_tokenIn].add(_tokenOut)) revert InvalidTrade();
   }
 
-  function cancel(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) returns (bool _success) {
-    _cancel(msg.sender, _tokenIn, _tokenOut);
-    // TODO check for 0 allowance?
-    if (IERC20(_tokenIn).allowance(msg.sender, address(this)) != 0) revert AllowanceShouldBeZero();
-    return true;
+  function disable(address _tokenIn, address _tokenOut) external override onlyRole(STRATEGY) {
+    _disable(msg.sender, _tokenIn, _tokenOut);
   }
 
-  function cancelByAdmin(
+  function disableByAdmin(
     address _strategy,
     address _tokenIn,
     address _tokenOut
-  ) external override onlyRole(STRATEGY) returns (bool _success) {
-    // is a callback onlyTradeFactory on swapper enabled better?
-    // cancelByAdmin -> strategy.cancelTradeCallback() -> tradeFactory.cancel()
-    return ISwapperEnabled(_strategy).cancelTradeCallback(_tokenIn, _tokenOut);
+  ) external override onlyRole(STRATEGY_MANAGER) {
+    // strategy.disableTradeCallback() -> tradeFactory.disable()
+    ISwapperEnabled(_strategy).disableTradeCallback(_tokenIn, _tokenOut);
   }
 
-  function _cancel(
+  function _disable(
     address _strategy,
     address _tokenIn,
     address _tokenOut
   ) internal {
     if (_tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
-    if (!_tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].remove(_tokenOut)) revert InvalidTrade();
-    if (_tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].length() == 0) {
+    if (IERC20(_tokenIn).allowance(msg.sender, address(this)) != 0) revert AllowanceShouldBeZero();
+    if (!_tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].remove(_tokenOut)) revert InvalidTrade();
+    if (_tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].length() == 0) {
       _tokensInByStrategy[_strategy].remove(_tokenIn);
       if (_tokensInByStrategy[_strategy].length() == 0) {
         _strategies.remove(_strategy);
       }
     }
-    emit TradeCanceled(_strategy, _tokenIn, _tokenOut);
   }
 }
