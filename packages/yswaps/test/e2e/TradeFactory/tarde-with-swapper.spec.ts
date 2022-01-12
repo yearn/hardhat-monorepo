@@ -15,7 +15,7 @@ contract('TradeFactory', () => {
   let hodler: SignerWithAddress;
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
-  let strategyAdder: SignerWithAddress;
+  let strategyModifier: SignerWithAddress;
   let tradeModifier: SignerWithAddress;
   let tradeSettler: SignerWithAddress;
   let otcPoolGovernor: SignerWithAddress;
@@ -44,7 +44,7 @@ contract('TradeFactory', () => {
       masterAdmin,
       swapperAdder,
       swapperSetter,
-      strategyAdder,
+      strategyModifier,
       tradeModifier,
       tradeSettler,
       mechanic,
@@ -60,14 +60,14 @@ contract('TradeFactory', () => {
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
-      strategyAdder.address,
+      strategyModifier.address,
       tradeModifier.address,
       tradeSettler.address,
       mechanicsRegistry.address,
       otcPoolGovernor.address
     ));
 
-    await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
+    await tradeFactory.connect(strategyModifier).grantRole(await tradeFactory.STRATEGY(), strategy.address);
     await tradeFactory.connect(swapperAdder).addSwappers([uniswapV2AsyncSwapper.address]);
     await tradeFactory.connect(swapperAdder).addSwappers([uniswapV2SyncSwapper.address]);
     await tradeFactory.connect(swapperSetter).setStrategySyncSwapper(strategy.address, uniswapV2SyncSwapper.address);

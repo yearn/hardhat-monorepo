@@ -1,5 +1,5 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { SWAPPER_ADDER, SWAPPER_SETTER, STRATEGY_ADDER } from '@deploy/001_trade_factory';
+import { SWAPPER_ADDER, SWAPPER_SETTER, STRATEGY_MODIFIER } from '@deploy/001_trade_factory';
 import { wallet } from '@test-utils';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20.json';
@@ -40,7 +40,7 @@ const integrationSwapperSetup = async ({
   const namedAccounts = await getNamedAccounts();
 
   const swapperAdder = await wallet.impersonate(SWAPPER_ADDER[chainId]);
-  const strategyAdder = await wallet.impersonate(STRATEGY_ADDER[chainId]);
+  const strategyModifier = await wallet.impersonate(STRATEGY_MODIFIER[chainId]);
   const fromTokenWhale = await wallet.impersonate(fromTokenWhaleAddress);
   const yMech = await wallet.impersonate(namedAccounts.yMech);
 
@@ -59,7 +59,7 @@ const integrationSwapperSetup = async ({
 
   await fromToken.connect(fromTokenWhale).transfer(strategy.address, amountIn);
 
-  await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
+  await tradeFactory.connect(strategyModifier).grantRole(await tradeFactory.STRATEGY(), strategy.address);
   await tradeFactory.connect(swapperAdder).addSwappers([deployedSwapper.address]);
 
   await fromToken.connect(strategy).approve(tradeFactory.address, amountIn);

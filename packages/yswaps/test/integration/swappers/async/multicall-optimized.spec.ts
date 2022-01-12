@@ -15,7 +15,7 @@ contract('MultiCallOptimizedSwapper', () => {
   let hodler: SignerWithAddress;
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
-  let strategyAdder: SignerWithAddress;
+  let strategyModifier: SignerWithAddress;
   let tradeModifier: SignerWithAddress;
   let tradeSettler: SignerWithAddress;
   let otcPoolGovernor: SignerWithAddress;
@@ -37,7 +37,7 @@ contract('MultiCallOptimizedSwapper', () => {
       masterAdmin,
       swapperAdder,
       swapperSetter,
-      strategyAdder,
+      strategyModifier,
       tradeModifier,
       tradeSettler,
       mechanic,
@@ -53,14 +53,14 @@ contract('MultiCallOptimizedSwapper', () => {
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
-      strategyAdder.address,
+      strategyModifier.address,
       tradeModifier.address,
       tradeSettler.address,
       mechanicsRegistry.address,
       otcPoolGovernor.address
     ));
 
-    await tradeFactory.connect(strategyAdder).grantRole(await tradeFactory.STRATEGY(), strategy.address);
+    await tradeFactory.connect(strategyModifier).grantRole(await tradeFactory.STRATEGY(), strategy.address);
     await tradeFactory.connect(swapperAdder).addSwappers([multiCallOptimizedAsyncSwapper.address]);
 
     tokenIn = await erc20.deploy({

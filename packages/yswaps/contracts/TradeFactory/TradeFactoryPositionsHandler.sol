@@ -38,7 +38,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
   using EnumerableSet for EnumerableSet.AddressSet;
 
   bytes32 public constant STRATEGY = keccak256('STRATEGY');
-  bytes32 public constant STRATEGY_ADDER = keccak256('STRATEGY_ADDER');
+  bytes32 public constant STRATEGY_MANAGER = keccak256('STRATEGY_MANAGER');
 
   EnumerableSet.AddressSet internal _strategies;
 
@@ -48,11 +48,11 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
   // strategy -> tokenIn -> tokenOut[]
   mapping(address => mapping(address => EnumerableSet.AddressSet)) internal _tokensOutByStrategyAndTokenIn;
 
-  constructor(address _strategyAdder) {
-    if (_strategyAdder == address(0)) revert CommonErrors.ZeroAddress();
-    _setRoleAdmin(STRATEGY, STRATEGY_ADDER);
-    _setRoleAdmin(STRATEGY_ADDER, MASTER_ADMIN);
-    _setupRole(STRATEGY_ADDER, _strategyAdder);
+  constructor(address _strategyModifier) {
+    if (_strategyModifier == address(0)) revert CommonErrors.ZeroAddress();
+    _setRoleAdmin(STRATEGY, STRATEGY_MANAGER);
+    _setRoleAdmin(STRATEGY_MANAGER, MASTER_ADMIN);
+    _setupRole(STRATEGY_MANAGER, _strategyModifier);
   }
 
   function enabledTrades() external view override returns (EnabledTrade[] memory _enabledTrades) {
@@ -97,7 +97,7 @@ abstract contract TradeFactoryPositionsHandler is ITradeFactoryPositionsHandler,
     address _strategy,
     address _tokenIn,
     address _tokenOut
-  ) external override onlyRole(STRATEGY_ADDER) {
+  ) external override onlyRole(STRATEGY_MANAGER) {
     // strategy.disableTradeCallback() -> tradeFactory.disable()
     ISwapperEnabled(_strategy).disableTradeCallback(_tokenIn, _tokenOut);
   }
