@@ -16,20 +16,9 @@ interface ISwapperEnabled {
 
   function setTradeFactory(address _tradeFactory) external;
 
-  function createTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
+  function enableTrade(address _tokenIn, address _tokenOut) external;
 
-  function cancelTrade(address _tokenIn, address _tokenOut) external returns (bool _success);
+  function disableTrade(address _tokenIn, address _tokenOut) external;
 
-  function cancelTradeCallback(address _tokenIn, address _tokenOut) external returns (bool _success);
-
-  function executeTrade(address _tokenIn, address _tokenOut) external returns (uint256 _receivedAmount);
-
-  function executeTrade(
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    bytes calldata _data
-  ) external returns (uint256 _receivedAmount);
-
-  function cancelPendingTrades(uint256[] calldata _pendingTrades) external;
+  function disableTradeCallback(address _tokenIn, address _tokenOut) external;
 }

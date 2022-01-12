@@ -35,17 +35,6 @@ interface ITradeFactoryExecutor {
     uint256 _receivedAmount
   );
 
-  event AsyncTradesMatched(
-    uint256 indexed _firstTradeId,
-    uint256 indexed _secondTradeId,
-    uint256 _consumedFirstTrade,
-    uint256 _consumedSecondTrade
-  );
-
-  event SwapperAndTokenEnabled(address indexed _swapper, address _token);
-
-  error ZeroRate();
-
   error InvalidAmountOut();
 
   function execute(
@@ -108,7 +97,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     uint256 _minAmountOut,
     bytes calldata _data
   ) external override onlyMechanic returns (uint256 _receivedAmount) {
-    if (!_tokenOutsByStrategyAndTokenIn[_strategy][_tokenIn].contains(_tokenOut)) revert InvalidTrade();
+    if (!_tokensOutByStrategyAndTokenIn[_strategy][_tokenIn].contains(_tokenOut)) revert InvalidTrade();
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     if (_amountIn == 0) _amountIn = IERC20(_tokenIn).balanceOf(_strategy);
     IERC20(_tokenIn).safeTransferFrom(_strategy, _swapper, _amountIn);
@@ -137,7 +126,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     uint256[] memory _preTokenOutBalance = new uint256[](_trades.length);
     if (!_swappers.contains(_swapper)) revert InvalidSwapper();
     for (uint256 i; i < _trades.length; i++) {
-      if (!_tokenOutsByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
+      if (!_tokensOutByStrategyAndTokenIn[_trades[i]._strategy][_trades[i]._tokenIn].contains(_trades[i]._tokenOut)) revert InvalidTrade();
       uint256 _amountIn = _trades[i]._amountIn != 0 ? _trades[i]._amountIn : IERC20(_trades[i]._tokenIn).balanceOf(_trades[i]._strategy);
       IERC20(_trades[i]._tokenIn).safeTransferFrom(_trades[i]._strategy, _swapper, _amountIn);
       _preTokenOutBalance[i] = IERC20(_trades[i]._tokenOut).balanceOf(_trades[i]._strategy);
