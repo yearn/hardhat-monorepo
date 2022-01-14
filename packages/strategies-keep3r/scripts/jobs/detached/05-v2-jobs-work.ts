@@ -21,7 +21,8 @@ function promptAndSubmit(): Promise<void | Error> {
           if (!workable) continue;
           console.log('working:', strategy);
           await tendV2DetachedJob.callStatic.work(strategy);
-          await tendV2DetachedJob.work(strategy);
+          const gasLimit = await tendV2DetachedJob.estimateGas.work(strategy);
+          await tendV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
           console.log('worked');
           return resolve();
         } catch (error) {
@@ -62,7 +63,8 @@ function promptAndSubmit(): Promise<void | Error> {
             if (!workable) continue;
             console.log('working:', strategy);
             await harvestV2DetachedJob.callStatic.work(strategy);
-            await harvestV2DetachedJob.work(strategy);
+            const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
+            await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
             console.log('worked');
             return resolve();
           } catch (error) {
@@ -84,7 +86,8 @@ function promptAndSubmit(): Promise<void | Error> {
           if (!workable) continue;
           console.log('working:', strategy);
           await harvestV2DetachedJob.callStatic.work(strategy);
-          await harvestV2DetachedJob.work(strategy);
+          const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
+          await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
           console.log('worked');
           return resolve();
         } catch (error) {

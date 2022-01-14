@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata, TradeFactory } from '@typechained';
+import { IERC20Metadata } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
@@ -16,17 +16,15 @@ import {
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
-import { impersonate } from './utils';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 
-const DELAY = moment.duration('3', 'minutes').as('milliseconds');
+const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 20;
-const MAX_GAS_PRICE = utils.parseUnits('200', 'gwei');
-const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 2.5;
-const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
+const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
@@ -54,7 +52,6 @@ async function main() {
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
-  // const flashbotsSigner = new ethers.Wallet(await kms.decrypt(process.env.FLASHBOTS_1_PRIVATE_KEY as string));
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
@@ -62,16 +59,18 @@ async function main() {
   // console.log('[Setup] Creating flashbots provider ...');
   // flashbotsProvider = await FlashbotsBundleProvider.create(
   //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-  //   flashbotsSigner // ethers.js signer wallet, only for signing request payloads, not transactions
+  //   ymech // ethers.js signer wallet, only for signing request payloads, not transactions
   // );
 
-  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
+  const tradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
+
+  let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
   for (const pendingTrade of pendingTrades) {
     const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
@@ -138,8 +137,7 @@ async function main() {
       bestSetup.minAmountOut!,
       bestSetup.data,
       {
-        ...gasParams,
-        gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(10)), // We add a safety net of 10% more of gass
+        nonce,
       }
     );
 

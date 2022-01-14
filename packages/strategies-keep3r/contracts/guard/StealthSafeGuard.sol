@@ -25,6 +25,8 @@ interface IStealthSafeGuard is IGuard, IGovernableAndManageable {
 
   function addExecutor(address _executor) external;
 
+  function addExecutors(address[] calldata _executorsList) external;
+
   function removeExecutor(address _executor) external;
 
   function setOverrideGuardChecks(bool _overrideGuardChecks) external;
@@ -44,6 +46,13 @@ contract StealthSafeGuard is UtilsReady, Manageable, OnlyStealthRelayer, IStealt
 
   function executors() external view override returns (address[] memory _executorsArray) {
     return _executors.values();
+  }
+
+  function addExecutors(address[] calldata _executorsList) external override onlyGovernorOrManager {
+    for (uint256 i; i < _executorsList.length; i++) {
+      if (_executorsList[i] == address(0)) revert ZeroAddress();
+      if (!_executors.add(_executorsList[i])) revert InvalidExecutor();
+    }
   }
 
   function addExecutor(address _executor) external override onlyGovernorOrManager {
