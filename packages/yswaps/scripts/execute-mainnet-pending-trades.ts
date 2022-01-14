@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata } from '@typechained';
+import { IERC20Metadata, MultiCallOptimizedSwapper__factory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
@@ -22,9 +22,9 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
-const RETRIES = 20;
+const RETRIES = 5;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
-const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 6;
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
@@ -57,10 +57,10 @@ async function main() {
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
   // console.log('[Setup] Creating flashbots provider ...');
-  // flashbotsProvider = await FlashbotsBundleProvider.create(
-  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-  //   ymech // ethers.js signer wallet, only for signing request payloads, not transactions
-  // );
+  flashbotsProvider = await FlashbotsBundleProvider.create(
+    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    ymech // ethers.js signer wallet, only for signing request payloads, not transactions
+  );
 
   const tradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
@@ -111,7 +111,7 @@ async function main() {
     }
 
     const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    const gasParams = {
+    const gasPriceParams = {
       maxFeePerGas: MAX_GAS_PRICE,
       maxPriorityFeePerGas:
         currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
@@ -135,21 +135,23 @@ async function main() {
       pendingTrade._id,
       bestSetup.swapper,
       bestSetup.minAmountOut!,
-      bestSetup.data,
-      {
-        nonce,
-      }
+      bestSetup.data
     );
 
-    await generateAndSendBundle({
-      pendingTrade,
-      bestSetup,
-      wallet: ymech,
-      executeTx,
-      gasParams,
-    });
-
-    await sleep(DELAY);
+    if (
+      await generateAndSendBundle({
+        pendingTrade,
+        bestSetup,
+        wallet: ymech,
+        executeTx,
+        gasParams: {
+          ...gasPriceParams,
+          gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        },
+        nonce,
+      })
+    )
+      await sleep(DELAY);
   }
 }
 
@@ -161,11 +163,26 @@ async function generateAndSendBundle(params: {
   gasParams: {
     maxFeePerGas: BigNumber;
     maxPriorityFeePerGas: BigNumber;
+    gasLimit: BigNumber;
   };
+  nonce: number;
   retryNumber?: number;
 }): Promise<boolean> {
-  const blockProtection = await ethers.getContractAt('BlockProtection', '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.wallet);
-  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 2;
+  const blockProtectionABI = [
+    {
+      inputs: [
+        { internalType: 'address', name: '_to', type: 'address' },
+        { internalType: 'bytes', name: '_data', type: 'bytes' },
+        { internalType: 'uint256', name: '_blockNumber', type: 'uint256' },
+      ],
+      name: 'callWithBlockProtection',
+      outputs: [{ internalType: 'bytes', name: '_returnData', type: 'bytes' }],
+      stateMutability: 'payable',
+      type: 'function',
+    },
+  ];
+  const blockProtection = await ethers.getContractAt(blockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.wallet);
+  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
 
   const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
     params.executeTx.to, // address _to,
@@ -173,24 +190,27 @@ async function generateAndSendBundle(params: {
     targetBlockNumber // uint256 _blockNumber
   );
 
-  const signedTx = await params.wallet.signTransaction({
+  const signedTx = await params.wallet.connect(httpProvider).signTransaction({
     ...params.gasParams,
+    type: 2,
     to: populatedTx.to!,
-    gasLimit: populatedTx.gasLimit!.toNumber(),
     data: populatedTx.data!,
+    chainId: 1,
+    nonce: params.nonce,
   });
 
+  console.log('[Execution] Fee per gas', utils.formatUnits(params.gasParams.maxFeePerGas, 'gwei'), 'gwei');
+  console.log('[Execution] Fee priority fee gas', utils.formatUnits(params.gasParams.maxPriorityFeePerGas, 'gwei'), 'gwei');
+  console.log('[Execution] Gas limit', params.gasParams.gasLimit.toString());
+
   console.log('[Execution] Sending transaction in block', targetBlockNumber);
-  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
-  // const protectTx = await protect.sendTransaction(signedTx);
-  // console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx/?hash=${protectTx.hash}`);
 
   const bundle: FlashbotBundle = [
     {
       signedTransaction: signedTx,
     },
   ];
-  console.log('[Execution] Signed with hash:', signedTx);
+
   if (await submitBundleForBlock(bundle, targetBlockNumber)) {
     console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
     return true;
@@ -198,6 +218,7 @@ async function generateAndSendBundle(params: {
   if (!params.retryNumber) params.retryNumber = 0;
   params.retryNumber++;
   if (params.retryNumber! >= RETRIES) {
+    console.log('[Execution] Failed after', RETRIES, 'retries');
     return false;
   } else {
     return await generateAndSendBundle(params);
@@ -205,26 +226,18 @@ async function generateAndSendBundle(params: {
 }
 
 async function submitBundleForBlock(bundle: FlashbotBundle, targetBlockNumber: number): Promise<boolean> {
-  let included = false;
-  let rejected = false;
-  while (!(included || rejected)) {
-    if (!(await simulateBundle(bundle, targetBlockNumber))) {
-      rejected = true;
-      continue;
-    }
-    const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlockNumber);
-    const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
-    if (resolution == FlashbotsBundleResolution.BundleIncluded) {
-      console.log('[Flashbot] BundleIncluded, sucess!');
-      included = true;
-    } else if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
-      console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
-    } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
-      console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
-      rejected = true;
-    }
+  if (!(await simulateBundle(bundle, targetBlockNumber))) return false;
+  const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlockNumber);
+  const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
+  if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
+    console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
+    return false;
+  } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
+    console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
+    return false;
   }
-  return included;
+  console.log('[Flashbot] BundleIncluded, sucess!');
+  return true;
 }
 
 async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Promise<boolean> {
