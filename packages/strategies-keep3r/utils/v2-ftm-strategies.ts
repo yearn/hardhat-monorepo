@@ -147,6 +147,35 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     name: 'ssbeet_asUsdcPool_usdc',
     added: false,
     address: '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9'
+  {
+    name: 'levscream_weth',
+    added: true,
+    address: '0x9DF9418837281faC4C4c1166f55D35F2799A9107',
+  },
+  {
+    name: 'levscream_wbtc',
+    added: true,
+    address: '0x0ed5C4effED69B39C86a8D806462d709Fb96A9E4',
+  },
+  {
+    name: 'levscream_crv',
+    added: true,
+    address: '0x6EEb47BBcDf0059E5F1D6Ee844Ba793D5401bF18',
+  },
+  {
+    name: 'levscream_spell',
+    added: true,
+    address: '0x35B51a621d78609dE7Cf25BC4e0682c7DEA38799',
+  },
+  {
+    name: 'levscream_dola',
+    added: true,
+    address: '0x36A1E9dF5EfdAB9694de5bFe25A9ACc23F66BCB7',
+  },
+  {
+    name: 'levscream_fusdt',
+    added: true,
+    address: '0x3B9bc1f596844Ca8a30A7710Aac7155968Db7d13',
   },
 ];
 
