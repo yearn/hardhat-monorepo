@@ -4,6 +4,7 @@ import * as contracts from '../../../utils/contracts';
 import * as accounts from '../../../utils/accounts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { v2FtmTendStrategies } from '../../../utils/v2-ftm-strategies';
+import { constants } from 'ethers';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'correct address?' });
@@ -19,22 +20,22 @@ function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
     const [owner] = await ethers.getSigners();
     let signer = owner;
-    if (owner.address != accounts.yKeeper) {
-      console.log('on fork mode, impersonating yKeeper');
-      await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [accounts.yKeeper],
-      });
-      const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
-      yKeeper.address = yKeeper._address;
-      signer = yKeeper;
-    }
+    // if (owner.address != accounts.yKeeper) {
+    //   console.log('on fork mode, impersonating yKeeper');
+    //   await network.provider.request({
+    //     method: 'hardhat_impersonateAccount',
+    //     params: [accounts.yKeeper],
+    //   });
+    //   const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
+    //   yKeeper.address = yKeeper._address;
+    //   signer = yKeeper;
+    // }
 
     console.log('using address:', signer.address);
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const tendV2DetachedJob = await ethers.getContractAt('TendV2DetachedJob', contracts.tendV2DetachedJob.fantom, signer);
+          const tendV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.tendV2DetachedJob.fantom, signer);
 
           const jobStrategies = await tendV2DetachedJob.callStatic.strategies();
 

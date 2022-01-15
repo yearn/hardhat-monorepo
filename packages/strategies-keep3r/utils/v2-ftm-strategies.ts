@@ -1,10 +1,11 @@
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import { e18, ZERO_ADDRESS } from './web3-utils';
 
 export interface v2FtmStrategy {
   name: string;
   added: boolean;
   address: string;
+  requiredAmounts?: BigNumber;
   costToken?: string;
   costPair?: string;
 }
@@ -56,21 +57,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     address: '0x83a5Af7540E919dE74cf2D6d5F40e47f11D3E8d1',
   },
   {
-    name: 'ssb_dai',
-    added: true,
-    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
-  },
-  {
-    name: 'ssb_usdc',
-    added: true,
-    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
-  },
-  {
-    name: 'ssb_mim',
-    added: true,
-    address: '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
-  },
-  {
     name: 'levscream_dai',
     added: true,
     address: '0xdC9D3bB76Df8bE1e9Ca68C7BF32293a86C829D81',
@@ -84,6 +70,66 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     name: 'levscream_mim',
     added: true,
     address: '0x8A807b5742587024783Df3Ed2F149725C197b5eE',
+  },
+  {
+    name: 'ssbeet_steadyBeetPool_dai',
+    added: true,
+    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
+  },
+  {
+    name: 'ssbeet_steadyBeetPool_usdc',
+    added: true,
+    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
+  },
+  {
+    name: 'ssbeet_staBeetPool_dai',
+    added: true,
+    address: '0xB905eabA7A23424265638bdACFFE55564c7B299B',
+  },
+  {
+    name: 'ssbeet_staBeetPool_usdc',
+    added: true,
+    address: '0x56aF79e182a7f98ff6d0bF99d589ac2CabA24e2d',
+  },
+  {
+    name: 'ssbeet_guqinQiPool_dai',
+    added: true,
+    address: '0x85c307D24da7086c41537b994de9bFc4C21BAEB5',
+  },
+  {
+    name: 'ssbeet_guqinQiPool_usdc',
+    added: true,
+    address: '0xBd3791F3Dcf9DD5633cd30662381C80a2Cd945bd',
+  },
+  {
+    name: 'ssbeet_beetXlpMimUsdcUsdtPool_mim',
+    added: true,
+    address: '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
+  },
+  {
+    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdc',
+    added: true,
+    address: '0x4003eE222d44953B0C3eB61318dD211a4A6f109f',
+  },
+  {
+    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdt',
+    added: true,
+    address: '0x36E74086C388305CEcdeff83d6cf31a2762A3c91',
+  },
+  {
+    name: 'ssbeet_mimUsdcUstPool_usdc',
+    added: true,
+    address: '0x1c13C43f8F2fa0CdDEE6DFF6F785757650B8c2BF',
+  },
+  {
+    name: 'ssbeet_mimUsdcUstPool_mim',
+    added: true,
+    address: '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
+  },
+  {
+    name: 'ssbeet_asUsdcPool_usdc',
+    added: true,
+    address: '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
   },
   {
     name: 'levscream_weth',
@@ -117,4 +163,60 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
   },
 ];
 
-export const v2FtmTendStrategies: v2FtmStrategy[] = [];
+export const v2FtmTendStrategies: v2FtmStrategy[] = [
+  {
+    name: 'ssbeet_steadyBeetPool_dai',
+    added: true,
+    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
+  },
+  {
+    name: 'ssbeet_steadyBeetPool_usdc',
+    added: true,
+    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
+  },
+  {
+    name: 'ssbeet_staBeetPool_dai',
+    added: true,
+    address: '0xB905eabA7A23424265638bdACFFE55564c7B299B',
+  },
+  {
+    name: 'ssbeet_staBeetPool_usdc',
+    added: true,
+    address: '0x56aF79e182a7f98ff6d0bF99d589ac2CabA24e2d',
+  },
+  {
+    name: 'ssbeet_guqinQiPool_dai',
+    added: true,
+    address: '0x85c307D24da7086c41537b994de9bFc4C21BAEB5',
+  },
+  {
+    name: 'ssbeet_guqinQiPool_usdc',
+    added: true,
+    address: '0xBd3791F3Dcf9DD5633cd30662381C80a2Cd945bd',
+  },
+  {
+    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdc',
+    added: true,
+    address: '0x4003eE222d44953B0C3eB61318dD211a4A6f109f',
+  },
+  {
+    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdt',
+    added: true,
+    address: '0x36E74086C388305CEcdeff83d6cf31a2762A3c91',
+  },
+  {
+    name: 'ssbeet_mimUsdcUstPool_usdc',
+    added: true,
+    address: '0x1c13C43f8F2fa0CdDEE6DFF6F785757650B8c2BF',
+  },
+  {
+    name: 'ssbeet_mimUsdcUstPool_mim',
+    added: true,
+    address: '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
+  },
+  {
+    name: 'ssbeet_asUsdcPool_usdc',
+    added: true,
+    address: '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
+  },
+];

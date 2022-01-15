@@ -19,16 +19,16 @@ function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
     const [owner] = await ethers.getSigners();
     let signer = owner;
-    if (owner.address != accounts.yKeeper) {
-      console.log('on fork mode, impersonating yKeeper');
-      await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [accounts.yKeeper],
-      });
-      const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
-      yKeeper.address = yKeeper._address;
-      signer = yKeeper;
-    }
+    // if (owner.address != accounts.yKeeper) {
+    //   console.log('on fork mode, impersonating yKeeper');
+    //   await network.provider.request({
+    //     method: 'hardhat_impersonateAccount',
+    //     params: [accounts.yKeeper],
+    //   });
+    //   const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
+    //   yKeeper.address = yKeeper._address;
+    //   signer = yKeeper;
+    // }
 
     console.log('using address:', signer.address);
     prompt.run().then(async (answer: any) => {

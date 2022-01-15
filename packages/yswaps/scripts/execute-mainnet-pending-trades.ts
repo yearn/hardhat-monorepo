@@ -22,6 +22,12 @@ import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 
+enum EXECUTION_TYPE {
+  PROTECT,
+  FLASHBOT,
+}
+
+const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
 const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
@@ -58,10 +64,10 @@ async function main() {
   httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
   // console.log('[Setup] Creating flashbots provider ...');
-  // flashbotsProvider = await FlashbotsBundleProvider.create(
-  //   httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
-  //   ymech // ethers.js signer wallet, only for signing request payloads, not transactions
-  // );
+  flashbotsProvider = await FlashbotsBundleProvider.create(
+    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    ymech // ethers.js signer wallet, only for signing request payloads, not transactions
+  );
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
@@ -158,18 +164,22 @@ async function main() {
       chainId: 1,
     });
 
-    console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
-    const protectTx = await protect.sendTransaction(signedTx);
-    console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx?hash=${protectTx.hash}`);
-    nonce++;
-
-    // const bundle: FlashbotBundle = [
-    //   {
-    //     signedTransaction: signedTx,
-    //   },
-    // ];
-    // console.log('[Execution] Signed with hash:', protectTx.hash);
-    // if (await submitBundle(bundle)) console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+    if (EXECUTION == EXECUTION_TYPE.PROTECT) {
+      console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
+      const protectTx = await protect.sendTransaction(signedTx); // todo: create library to check for this tx status
+      console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx?hash=${protectTx.hash}`);
+      nonce++;
+    } else {
+      const bundle: FlashbotBundle = [
+        {
+          signedTransaction: signedTx,
+        },
+      ];
+      if (await submitBundle(bundle)) {
+        console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
+        nonce++;
+      }
+    }
 
     await sleep(DELAY);
   }
