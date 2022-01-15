@@ -12,6 +12,9 @@ import {
   FlashbotsBundleTransaction,
   FlashbotsTransaction,
   FlashbotsTransactionResponse,
+  RelayResponseError,
+  SimulationResponseSuccess,
+  TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
@@ -24,7 +27,7 @@ import * as evm from '@test-utils/evm';
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 5;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
-const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 6;
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
@@ -181,7 +184,11 @@ async function generateAndSendBundle(params: {
       type: 'function',
     },
   ];
-  const blockProtection = await ethers.getContractAt(blockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', params.wallet);
+  const blockProtection = await ethers.getContractAt(
+    blockProtectionABI,
+    '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5',
+    params.wallet.connect(httpProvider)
+  );
   const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
 
   const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
@@ -243,17 +250,30 @@ async function submitBundleForBlock(bundle: FlashbotBundle, targetBlockNumber: n
 async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Promise<boolean> {
   const signedBundle = await flashbotsProvider.signBundle(bundle);
   try {
-    const simulation = await flashbotsProvider.simulate(signedBundle, blockNumber);
-    if ('error' in simulation) {
-      console.error(`[Flashbot] Simulation error: ${simulation.error.message}`);
+    const simulationResponse = await flashbotsProvider.simulate(signedBundle, blockNumber);
+    if ((simulationResponse as RelayResponseError).error) {
+      console.error(`[Flashbot] Simulation error: ${(simulationResponse as RelayResponseError).error.message}`);
     } else {
-      console.log('[Flashbot] Simulation success !');
-      return true;
+      const resultsFromSimulation = (simulationResponse as SimulationResponseSuccess).results;
+      for (let i = 0; i < resultsFromSimulation.length; i++) {
+        if ((resultsFromSimulation[i] as TransactionSimulationRevert).error) {
+          console.log(
+            '[Flashbot] Simulation error:',
+            (resultsFromSimulation[i] as TransactionSimulationRevert).error,
+            'in transaction',
+            i,
+            'in bundle'
+          );
+          return false;
+        }
+      }
     }
   } catch (error: any) {
     console.error('[Flashbot] Simulation error:', error.message);
+    return false;
   }
-  return false;
+  console.log('[Flashbot] Simulation success !');
+  return true;
 }
 
 main()
