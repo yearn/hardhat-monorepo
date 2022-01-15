@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata, MultiCallOptimizedSwapper__factory } from '@typechained';
+import { IERC20Metadata } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
@@ -23,9 +23,10 @@ import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
+import { abi as BlockProtectionABI } from './abis/BlockProtection';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
-const RETRIES = 5;
+const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
 const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
 
@@ -50,7 +51,7 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
-  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
+  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
@@ -89,13 +90,13 @@ async function main() {
     );
 
     let bestSetup: TradeSetup;
-
+    let snapshotId;
     // Check if we need to run over a multicall swapper
     const multicall = multicalls.find((mc) => mc.match(pendingTrade));
     if (multicall) {
       console.log('[Multicall] Taking snapshot of fork');
 
-      const snapshotId = (await network.provider.request({
+      snapshotId = (await network.provider.request({
         method: 'evm_snapshot',
         params: [],
       })) as string;
@@ -134,32 +135,40 @@ async function main() {
     const confirmedTx = await simulatedTx.wait();
     console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
+    await network.provider.request({
+      method: 'evm_revert',
+      params: [snapshotId],
+    });
+
     const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
       bestSetup.swapper,
       bestSetup.minAmountOut!,
       bestSetup.data
     );
+    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-    if (
-      await generateAndSendBundle({
-        pendingTrade,
-        bestSetup,
-        wallet: ymech,
-        executeTx,
-        gasParams: {
-          ...gasPriceParams,
-          gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        },
-        nonce,
-      })
-    )
-      await sleep(DELAY);
+    await generateAndSendBundle({
+      pendingTrade,
+      blockProtection,
+      bestSetup,
+      wallet: ymech,
+      executeTx,
+      gasParams: {
+        ...gasPriceParams,
+        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        gasLimit: BigNumber.from(2_000_000),
+      },
+      nonce,
+    });
   }
+
+  await sleep(DELAY);
 }
 
 async function generateAndSendBundle(params: {
   pendingTrade: PendingTrade;
+  blockProtection: any;
   bestSetup: TradeSetup;
   wallet: Wallet;
   executeTx: PopulatedTransaction;
@@ -171,27 +180,9 @@ async function generateAndSendBundle(params: {
   nonce: number;
   retryNumber?: number;
 }): Promise<boolean> {
-  const blockProtectionABI = [
-    {
-      inputs: [
-        { internalType: 'address', name: '_to', type: 'address' },
-        { internalType: 'bytes', name: '_data', type: 'bytes' },
-        { internalType: 'uint256', name: '_blockNumber', type: 'uint256' },
-      ],
-      name: 'callWithBlockProtection',
-      outputs: [{ internalType: 'bytes', name: '_returnData', type: 'bytes' }],
-      stateMutability: 'payable',
-      type: 'function',
-    },
-  ];
-  const blockProtection = await ethers.getContractAt(
-    blockProtectionABI,
-    '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5',
-    params.wallet.connect(httpProvider)
-  );
   const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
 
-  const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
+  const populatedTx = await params.blockProtection.populateTransaction.callWithBlockProtection(
     params.executeTx.to, // address _to,
     params.executeTx.data, // bytes memory _data,
     targetBlockNumber // uint256 _blockNumber
