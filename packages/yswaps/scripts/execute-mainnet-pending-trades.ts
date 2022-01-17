@@ -1,8 +1,8 @@
 import { ethers, network } from 'hardhat';
+import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
+import { IERC20Metadata } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { BigNumber, utils } from 'ethers';
-import { IERC20Metadata, IERC20__factory, TradeFactory } from '@typechained';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/gasprice';
 import {
@@ -12,15 +12,18 @@ import {
   FlashbotsBundleTransaction,
   FlashbotsTransaction,
   FlashbotsTransactionResponse,
+  RelayResponseError,
+  SimulationResponseSuccess,
+  TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
 import { Router } from './Router';
-import { impersonate } from './utils';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
+import { abi as BlockProtectionABI } from './abis/BlockProtection';
 
 enum EXECUTION_TYPE {
   PROTECT,
@@ -29,9 +32,9 @@ enum EXECUTION_TYPE {
 
 const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
+const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
 const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
-const MAX_PRIORITY_FEE_PER_GAS = utils.parseUnits('6', 'gwei');
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
@@ -54,7 +57,7 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
-  const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
+  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
@@ -69,7 +72,7 @@ async function main() {
     ymech // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
+  const tradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
@@ -93,13 +96,13 @@ async function main() {
     );
 
     let bestSetup: TradeSetup;
-
+    let snapshotId;
     // Check if we need to run over a multicall swapper
     const multicall = multicalls.find((mc) => mc.match(pendingTrade));
     if (multicall) {
       console.log('[Multicall] Taking snapshot of fork');
 
-      const snapshotId = (await network.provider.request({
+      snapshotId = (await network.provider.request({
         method: 'evm_snapshot',
         params: [],
       })) as string;
@@ -118,7 +121,7 @@ async function main() {
     }
 
     const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    const gasParams = {
+    const gasPriceParams = {
       maxFeePerGas: MAX_GAS_PRICE,
       maxPriorityFeePerGas:
         currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
@@ -128,105 +131,146 @@ async function main() {
 
     // Execute in our fork
     console.log('[Execution] Executing trade in fork');
+
     const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
       pendingTrade._id,
       bestSetup.swapper,
       bestSetup.minAmountOut!,
-      bestSetup.data,
-      {
-        nonce,
-      }
+      bestSetup.data
     );
     const confirmedTx = await simulatedTx.wait();
-    console.log('[Execution] Simulation in fork succeeded and used', confirmedTx.gasUsed.toString(), 'gas');
+    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
-    const populatedTx = await tradeFactory
-      .connect(httpProvider)
-      .populateTransaction['execute(uint256,address,uint256,bytes)'](
-        pendingTrade._id,
-        bestSetup.swapper,
-        bestSetup.minAmountOut!,
-        bestSetup.data,
-        {
-          nonce,
-          ...gasParams,
-          gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)), // We add a safety net of 20% more of gass
-        }
-      );
-
-    const signedTx = await ymech.connect(httpProvider).signTransaction({
-      ...gasParams,
-      type: 2,
-      to: populatedTx.to!,
-      nonce,
-      gasLimit: populatedTx.gasLimit!.toNumber(),
-      data: populatedTx.data!,
-      chainId: 1,
+    await network.provider.request({
+      method: 'evm_revert',
+      params: [snapshotId],
     });
 
-    if (EXECUTION == EXECUTION_TYPE.PROTECT) {
-      console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
-      const protectTx = await protect.sendTransaction(signedTx); // todo: create library to check for this tx status
-      console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx?hash=${protectTx.hash}`);
-      nonce++;
-    } else {
-      const bundle: FlashbotBundle = [
-        {
-          signedTransaction: signedTx,
-        },
-      ];
-      if (await submitBundle(bundle)) {
-        console.log('[Execution] Pending trade', pendingTrade._id, 'executed via', bestSetup.swapper);
-        nonce++;
-      }
-    }
+    const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
+      pendingTrade._id,
+      bestSetup.swapper,
+      bestSetup.minAmountOut!,
+      bestSetup.data
+    );
+    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-    await sleep(DELAY);
+    await generateAndSendBundle({
+      pendingTrade,
+      blockProtection,
+      bestSetup,
+      wallet: ymech,
+      executeTx,
+      gasParams: {
+        ...gasPriceParams,
+        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        gasLimit: BigNumber.from(2_000_000),
+      },
+      nonce,
+    });
+  }
+
+  await sleep(DELAY);
+}
+
+async function generateAndSendBundle(params: {
+  pendingTrade: PendingTrade;
+  blockProtection: any;
+  bestSetup: TradeSetup;
+  wallet: Wallet;
+  executeTx: PopulatedTransaction;
+  gasParams: {
+    maxFeePerGas: BigNumber;
+    maxPriorityFeePerGas: BigNumber;
+    gasLimit: BigNumber;
+  };
+  nonce: number;
+  retryNumber?: number;
+}): Promise<boolean> {
+  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
+
+  const populatedTx = await params.blockProtection.populateTransaction.callWithBlockProtection(
+    params.executeTx.to, // address _to,
+    params.executeTx.data, // bytes memory _data,
+    targetBlockNumber // uint256 _blockNumber
+  );
+
+  const signedTx = await params.wallet.connect(httpProvider).signTransaction({
+    ...params.gasParams,
+    type: 2,
+    to: populatedTx.to!,
+    data: populatedTx.data!,
+    chainId: 1,
+    nonce: params.nonce,
+  });
+
+  console.log('[Execution] Fee per gas', utils.formatUnits(params.gasParams.maxFeePerGas, 'gwei'), 'gwei');
+  console.log('[Execution] Fee priority fee gas', utils.formatUnits(params.gasParams.maxPriorityFeePerGas, 'gwei'), 'gwei');
+  console.log('[Execution] Gas limit', params.gasParams.gasLimit.toString());
+
+  console.log('[Execution] Sending transaction in block', targetBlockNumber);
+
+  const bundle: FlashbotBundle = [
+    {
+      signedTransaction: signedTx,
+    },
+  ];
+
+  if (await submitBundleForBlock(bundle, targetBlockNumber)) {
+    console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
+    return true;
+  }
+  if (!params.retryNumber) params.retryNumber = 0;
+  params.retryNumber++;
+  if (params.retryNumber! >= RETRIES) {
+    console.log('[Execution] Failed after', RETRIES, 'retries');
+    return false;
+  } else {
+    return await generateAndSendBundle(params);
   }
 }
 
-async function submitBundle(bundle: FlashbotBundle): Promise<boolean> {
-  let submitted = false;
-  let rejected = false;
-  const blockNumber = await httpProvider.getBlockNumber();
-  let targetBlock = blockNumber + 1;
-  while (!(submitted || rejected)) {
-    if (!(await simulateBundle(bundle, targetBlock))) {
-      rejected = true;
-      continue;
-    }
-    const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlock);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 1);
-    flashbotsProvider.sendBundle(bundle, targetBlock + 2);
-    const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
-    if (resolution == FlashbotsBundleResolution.BundleIncluded) {
-      console.log('[Flashbot] BundleIncluded, sucess!');
-      submitted = true;
-    } else if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
-      console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
-    } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
-      console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
-      rejected = true;
-    }
-    targetBlock += 1;
+async function submitBundleForBlock(bundle: FlashbotBundle, targetBlockNumber: number): Promise<boolean> {
+  if (!(await simulateBundle(bundle, targetBlockNumber))) return false;
+  const flashbotsTransactionResponse: FlashbotsTransaction = await flashbotsProvider.sendBundle(bundle, targetBlockNumber);
+  const resolution = await (flashbotsTransactionResponse as FlashbotsTransactionResponse).wait();
+  if (resolution == FlashbotsBundleResolution.BlockPassedWithoutInclusion) {
+    console.log('[Flashbot] BlockPassedWithoutInclusion, re-build and re-send bundle');
+    return false;
+  } else if (resolution == FlashbotsBundleResolution.AccountNonceTooHigh) {
+    console.log('[Flashbot] AccountNonceTooHigh, adjust nonce');
+    return false;
   }
-  return submitted;
+  console.log('[Flashbot] BundleIncluded, sucess!');
+  return true;
 }
 
 async function simulateBundle(bundle: FlashbotBundle, blockNumber: number): Promise<boolean> {
   const signedBundle = await flashbotsProvider.signBundle(bundle);
   try {
-    const simulation = await flashbotsProvider.simulate(signedBundle, blockNumber);
-    if ('error' in simulation) {
-      console.error(`[Flashbot] Simulation error: ${simulation.error.message}`);
+    const simulationResponse = await flashbotsProvider.simulate(signedBundle, blockNumber);
+    if ((simulationResponse as RelayResponseError).error) {
+      console.error(`[Flashbot] Simulation error: ${(simulationResponse as RelayResponseError).error.message}`);
     } else {
-      console.log('[Flashbot] Simulation success !');
-      return true;
+      const resultsFromSimulation = (simulationResponse as SimulationResponseSuccess).results;
+      for (let i = 0; i < resultsFromSimulation.length; i++) {
+        if ((resultsFromSimulation[i] as TransactionSimulationRevert).error) {
+          console.log(
+            '[Flashbot] Simulation error:',
+            (resultsFromSimulation[i] as TransactionSimulationRevert).error,
+            'in transaction',
+            i,
+            'in bundle'
+          );
+          return false;
+        }
+      }
     }
   } catch (error: any) {
     console.error('[Flashbot] Simulation error:', error.message);
+    return false;
   }
-  return false;
+  console.log('[Flashbot] Simulation success !');
+  return true;
 }
 
 main()
