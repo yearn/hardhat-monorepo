@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { utils, Wallet } from 'ethers';
+import { BigNumber, utils, Wallet } from 'ethers';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
@@ -9,7 +9,7 @@ import forkBlockNumber from '@integration/fork-block-numbers';
 import bancor, { SwapResponse } from '@scripts/libraries/bancor';
 import * as setup from '../setup';
 
-const AMOUNT_IN = utils.parseEther('100');
+const AMOUNT_IN = utils.parseEther('69.420');
 
 describe('Bancor', function () {
   let yMech: JsonRpcSigner;
@@ -55,7 +55,6 @@ describe('Bancor', function () {
         fromTokenAddress: BNT_ADDRESS,
         toTokenAddress: USDC_ADDRESS,
         fromTokenWhaleAddress: BNT_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -74,14 +73,24 @@ describe('Bancor', function () {
     });
 
     describe('swap', () => {
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(yMech)
-          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, bancorResponse.minAmountOut!, bancorResponse.data);
+        preSwapBalance = await BNT.balanceOf(strategy.address);
+        await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+          {
+            _strategy: strategy.address,
+            _tokenIn: BNT_ADDRESS,
+            _tokenOut: USDC_ADDRESS,
+            _amount: AMOUNT_IN,
+            _minAmountOut: bancorResponse.minAmountOut!,
+          },
+          swapper.address,
+          bancorResponse.data
+        );
       });
 
       then('BNT gets taken from strategy', async () => {
-        expect(await BNT.balanceOf(strategy.address)).to.equal(0);
+        expect(await BNT.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
       then('USDC gets airdropped to strategy', async () => {
         expect(await USDC.balanceOf(strategy.address)).to.be.gt(0);

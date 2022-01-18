@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { utils, Wallet } from 'ethers';
+import { BigNumber, utils, Wallet } from 'ethers';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
@@ -56,7 +56,6 @@ describe('Sushiswap', function () {
         fromTokenAddress: CRV_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: CRV_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -78,14 +77,24 @@ describe('Sushiswap', function () {
     });
 
     describe('swap', () => {
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(yMech)
-          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, sushiswapResponse.minAmountOut!, sushiswapResponse.data);
+        preSwapBalance = await CRV.balanceOf(strategy.address);
+        await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+          {
+            _strategy: strategy.address,
+            _tokenIn: CRV_ADDRESS,
+            _tokenOut: DAI_ADDRESS,
+            _amount: AMOUNT_IN,
+            _minAmountOut: sushiswapResponse.minAmountOut!,
+          },
+          swapper.address,
+          sushiswapResponse.data
+        );
       });
 
       then('CRV gets taken from strategy', async () => {
-        expect(await CRV.balanceOf(strategy.address)).to.equal(0);
+        expect(await CRV.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
       then('DAI gets airdropped to strategy', async () => {
         expect(await DAI.balanceOf(strategy.address)).to.be.gt(0);
@@ -122,7 +131,6 @@ describe('Sushiswap', function () {
         fromTokenAddress: CRV_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: CRV_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -144,14 +152,24 @@ describe('Sushiswap', function () {
     });
 
     describe('swap', () => {
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(yMech)
-          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, sushiswapResponse.minAmountOut!, sushiswapResponse.data);
+        preSwapBalance = await CRV.balanceOf(strategy.address);
+        await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+          {
+            _strategy: strategy.address,
+            _tokenIn: CRV_ADDRESS,
+            _tokenOut: DAI_ADDRESS,
+            _amount: AMOUNT_IN,
+            _minAmountOut: sushiswapResponse.minAmountOut!,
+          },
+          swapper.address,
+          sushiswapResponse.data
+        );
       });
 
       then('CRV gets taken from strategy', async () => {
-        expect(await CRV.balanceOf(strategy.address)).to.equal(0);
+        expect(await CRV.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
       then('DAI gets airdropped to strategy', async () => {
         expect(await DAI.balanceOf(strategy.address)).to.be.gt(0);

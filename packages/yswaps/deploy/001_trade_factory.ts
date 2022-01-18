@@ -68,8 +68,6 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
         SWAPPER_ADDER[chainId],
         SWAPPER_SETTER[chainId],
         STRATEGY_MODIFIER[chainId],
-        TRADE_MODIFIER[chainId],
-        TRADE_SETTLER[chainId],
         MECHANICS_REGISTRY[chainId],
       ],
     });
