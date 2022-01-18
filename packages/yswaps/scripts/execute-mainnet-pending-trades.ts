@@ -25,12 +25,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
 
-enum EXECUTION_TYPE {
-  PROTECT,
-  FLASHBOT,
-}
 
-const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
@@ -50,14 +45,12 @@ async function main() {
   await gasprice.start();
 
   console.log('[Setup] Forking mainnet');
-
+  console.log(network.name)
   // We set this so hardhat-deploys uses the correct deployment addresses.
   process.env.HARDHAT_DEPLOY_FORK = 'mainnet';
   await evm.reset({
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
-
-  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
@@ -75,6 +68,11 @@ async function main() {
   const tradeFactory = await ethers.getContract('TradeFactory', ymech);
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
+
+  if (pendingTrades.length == 0) {
+    console.log('[Setup] No pending trades');
+    return;
+  }
 
   for (const id of pendingTradesIds) {
     pendingTrades.push(await tradeFactory.pendingTradesById(id));
