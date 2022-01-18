@@ -45,6 +45,7 @@ let httpProvider: JsonRpcProvider;
 
 // Multicall swappers
 const multicalls = [new ThreePoolCrvMulticall()];
+const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
 async function main() {
   await gasprice.start();
@@ -56,8 +57,6 @@ async function main() {
   await evm.reset({
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
-
-  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
@@ -154,19 +153,44 @@ async function main() {
     );
     const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-    await generateAndSendBundle({
-      pendingTrade,
-      blockProtection,
-      bestSetup,
-      wallet: ymech,
-      executeTx,
-      gasParams: {
-        ...gasPriceParams,
-        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        gasLimit: BigNumber.from(2_000_000),
-      },
-      nonce,
+    // simulate bundle and get gas cost
+    const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
+
+    const populatedTx = await blockProtection.populateTransaction.callWithBlockProtection(
+      executeTx.to, // address _to,
+      executeTx.data, // bytes memory _data,
+      targetBlockNumber // uint256 _blockNumber
+    );
+
+    const signedTx = await ymech.connect(httpProvider).signTransaction({
+      ...gasPriceParams,
+      type: 2,
+      to: populatedTx.to!,
+      data: populatedTx.data!,
+      chainId: 1,
+      nonce: nonce,
     });
+
+    const simulationResponse = await flashbotsProvider.simulate(await flashbotsProvider.signBundle([
+      {
+        signedTransaction: signedTx,
+      },
+    ]), targetBlockNumber);
+
+    console.log('simulationResponse')
+    console.log(simulationResponse)
+
+    // await generateAndSendBundle({
+    //   pendingTrade,
+    //   blockProtection,
+    //   bestSetup,
+    //   wallet: ymech,
+    //   executeTx,
+    //   gasParams: {
+    //     ...gasPriceParams,
+    //   },
+    //   nonce,
+    // });
   }
 
   await sleep(DELAY);
@@ -209,16 +233,23 @@ async function generateAndSendBundle(params: {
 
   console.log('[Execution] Sending transaction in block', targetBlockNumber);
 
-  const bundle: FlashbotBundle = [
-    {
-      signedTransaction: signedTx,
-    },
-  ];
 
-  if (await submitBundleForBlock(bundle, targetBlockNumber)) {
-    console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
-    return true;
+
+  if (EXECUTION == EXECUTION_TYPE.PROTECT) {
+    console.log('[Execution] Sending transaction in block', await httpProvider.getBlockNumber());
+    const protectTx = await protect.sendTransaction(signedTx); // todo: create library to check for this tx status
+    console.log(`[Execution] Transaction submitted via protect rpc - https://protect.flashbots.net/tx?hash=${protectTx.hash}`);
+    
+  } else if (EXECUTION == EXECUTION_TYPE.FLASHBOT) {
+    const bundle: FlashbotBundle = [{ signedTransaction: signedTx }];
+    if (await submitBundleForBlock(bundle, targetBlockNumber)) {
+      console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
+      return true;
+    }
+  } else {
+    throw new Error('[Execution] Invalid EXECUTION_TYPE:' + EXECUTION);
   }
+  
   if (!params.retryNumber) params.retryNumber = 0;
   params.retryNumber++;
   if (params.retryNumber! >= RETRIES) {

@@ -42,11 +42,13 @@ function mainExecute(): Promise<void | Error> {
     // Flashbots provider requires passing in a standard provider
     console.log('creating flashbotsProvider');
     const flashbotsProvider = await FlashbotsBundleProvider.create(
-      provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+      new ethers.providers.JsonRpcProvider(), // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+      // provider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
       flashbotSigner, // ethers.js signer wallet, only for signing request payloads, not transactions
       'https://relay-goerli.flashbots.net/',
       'goerli'
     );
+    
 
     // build work tx
     const mintAmount = utils.parseEther('100');
