@@ -10,15 +10,12 @@ import { mergeTransactions } from '@scripts/libraries/multicall';
 
 contract('MultiCallOptimizedSwapper', () => {
   let masterAdmin: SignerWithAddress;
-  let mechanic: SignerWithAddress;
+  let yMech: SignerWithAddress;
   let strategy: SignerWithAddress;
   let hodler: SignerWithAddress;
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
   let strategyModifier: SignerWithAddress;
-  let tradeModifier: SignerWithAddress;
-  let tradeSettler: SignerWithAddress;
-  let otcPoolGovernor: SignerWithAddress;
 
   let tokenIn: IERC20;
   let tokenOut: IERC20;
@@ -33,31 +30,16 @@ contract('MultiCallOptimizedSwapper', () => {
   const amountIn = utils.parseEther('10');
 
   before('create fixture loader', async () => {
-    [
-      masterAdmin,
-      swapperAdder,
-      swapperSetter,
-      strategyModifier,
-      tradeModifier,
-      tradeSettler,
-      mechanic,
-      strategy,
-      hodler,
-      swapperSetter,
-      otcPoolGovernor,
-    ] = await ethers.getSigners();
+    [masterAdmin, swapperAdder, swapperSetter, strategyModifier, yMech, strategy, hodler, swapperSetter] = await ethers.getSigners();
 
-    ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
+    ({ mechanicsRegistry } = await fixtures.machineryFixture(yMech.address));
 
     ({ tradeFactory, multiCallOptimizedAsyncSwapper } = await fixtures.multiCallOptimizedSwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
       strategyModifier.address,
-      tradeModifier.address,
-      tradeSettler.address,
-      mechanicsRegistry.address,
-      otcPoolGovernor.address
+      mechanicsRegistry.address
     ));
 
     await tradeFactory.connect(strategyModifier).grantRole(await tradeFactory.STRATEGY(), strategy.address);
@@ -78,7 +60,8 @@ contract('MultiCallOptimizedSwapper', () => {
     });
 
     await tokenIn.connect(hodler).transfer(strategy.address, amountIn);
-    await tokenIn.connect(strategy).approve(tradeFactory.address, amountIn);
+
+    await tokenIn.connect(strategy).approve(tradeFactory.address, constants.MaxUint256);
 
     // allows amount out just for extra complexity
     await tokenOut.connect(hodler).approve(multiCallOptimizedAsyncSwapper.address, 2);
@@ -93,7 +76,7 @@ contract('MultiCallOptimizedSwapper', () => {
   describe('swap', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn);
+      await tradeFactory.connect(strategy).enable(tokenIn.address, tokenOut.address);
       const transactions: PopulatedTransaction[] = [];
       // swapper has tokenIn, it sends it all to the holder
       transactions.push(await tokenIn.populateTransaction.transfer(hodler.address, amountIn));
@@ -104,23 +87,23 @@ contract('MultiCallOptimizedSwapper', () => {
 
       minAmountOut = BigNumber.from(1);
 
-      const tx = tradeFactory
-        .connect(mechanic)
-        ['execute(uint256,address,uint256,bytes)'](
-          1,
-          multiCallOptimizedAsyncSwapper.address,
-          minAmountOut,
-          mergeTransactions([await tokenIn.populateTransaction.transfer(hodler.address, amountIn.add(1))])
-        );
-      await expect(tx).to.be.revertedWith('MultiCallRevert()');
-
-      await tradeFactory
-        .connect(mechanic)
-        ['execute(uint256,address,uint256,bytes)'](1, multiCallOptimizedAsyncSwapper.address, minAmountOut, mergeTransactions(transactions));
+      await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+        {
+          _strategy: strategy.address,
+          _tokenIn: tokenIn.address,
+          _tokenOut: tokenOut.address,
+          _amount: amountIn,
+          _minAmountOut: minAmountOut,
+        },
+        multiCallOptimizedAsyncSwapper.address,
+        mergeTransactions(transactions)
+      );
     });
+
     then('tokens in gets taken from strategy', async () => {
       expect(await tokenIn.balanceOf(strategy.address)).to.equal(0);
     });
+
     then('token out gets airdropped to strategy', async () => {
       expect(await tokenOut.balanceOf(strategy.address)).to.be.gte(minAmountOut);
     });
