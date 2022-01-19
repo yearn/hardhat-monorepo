@@ -16,15 +16,11 @@ contract('TradeFactory', () => {
   let swapperAdder: SignerWithAddress;
   let swapperSetter: SignerWithAddress;
   let strategyModifier: SignerWithAddress;
-  let tradeModifier: SignerWithAddress;
-  let tradeSettler: SignerWithAddress;
-  let otcPoolGovernor: SignerWithAddress;
 
   let tokenIn: IERC20;
   let tokenOut: IERC20;
 
   let mechanicsRegistry: Contract;
-  let machinery: Contract;
   let tradeFactory: TradeFactory;
 
   let uniswapV2Factory: Contract;
@@ -40,31 +36,16 @@ contract('TradeFactory', () => {
   const INITIAL_LIQUIDITY = utils.parseEther('100000');
 
   before('create fixture loader', async () => {
-    [
-      masterAdmin,
-      swapperAdder,
-      swapperSetter,
-      strategyModifier,
-      tradeModifier,
-      tradeSettler,
-      mechanic,
-      strategy,
-      hodler,
-      swapperSetter,
-      otcPoolGovernor,
-    ] = await ethers.getSigners();
+    [masterAdmin, swapperAdder, swapperSetter, strategyModifier, mechanic, strategy, hodler, swapperSetter] = await ethers.getSigners();
 
-    ({ mechanicsRegistry, machinery } = await fixtures.machineryFixture(mechanic.address));
+    ({ mechanicsRegistry } = await fixtures.machineryFixture(mechanic.address));
 
     ({ tradeFactory, uniswapV2AsyncSwapper, uniswapV2SyncSwapper, uniswapV2Factory, uniswapV2Router02 } = await fixtures.uniswapV2SwapperFixture(
       masterAdmin.address,
       swapperAdder.address,
       swapperSetter.address,
       strategyModifier.address,
-      tradeModifier.address,
-      tradeSettler.address,
-      mechanicsRegistry.address,
-      otcPoolGovernor.address
+      mechanicsRegistry.address
     ));
 
     await tradeFactory.connect(strategyModifier).grantRole(await tradeFactory.STRATEGY(), strategy.address);
@@ -112,9 +93,15 @@ contract('TradeFactory', () => {
       const data = ethers.utils.defaultAbiCoder.encode([], []);
       // We can do this since ratio is 1 = 1
       minAmountOut = amountIn.sub(amountIn.mul(maxSlippage).div(10000 / 100));
-      await tradeFactory
-        .connect(strategy)
-        ['execute(address,address,uint256,uint256,bytes)'](tokenIn.address, tokenOut.address, amountIn, maxSlippage, data);
+      await tradeFactory.connect(strategy)['execute((address,address,uint256,uint256),bytes)'](
+        {
+          _tokenIn: tokenIn.address,
+          _tokenOut: tokenOut.address,
+          _amountIn: amountIn,
+          _maxSlippage: maxSlippage,
+        },
+        data
+      );
     });
     then('tokens in gets taken from strategy', async () => {
       expect(await tokenIn.balanceOf(strategy.address)).to.equal(0);
@@ -131,7 +118,7 @@ contract('TradeFactory', () => {
   describe('async trade executed', () => {
     let minAmountOut: BigNumber;
     given(async () => {
-      await tradeFactory.connect(strategy).create(tokenIn.address, tokenOut.address, amountIn);
+      await tradeFactory.connect(strategy).enable(tokenIn.address, tokenOut.address);
       const bestPath = await uniswapLibrary.getBestPathEncoded({
         tokenIn: tokenIn.address,
         tokenOut: tokenOut.address,
@@ -141,9 +128,17 @@ contract('TradeFactory', () => {
       });
       // We can do this since ratio is 1 = 1
       minAmountOut = bestPath.amountOut.sub(bestPath.amountOut.mul(maxSlippage).div(10000).div(100));
-      await tradeFactory
-        .connect(mechanic)
-        ['execute(uint256,address,uint256,bytes)'](1, uniswapV2AsyncSwapper.address, minAmountOut, bestPath.data);
+      await tradeFactory.connect(mechanic)['execute((address,address,address,uint256,uint256),address,bytes)'](
+        {
+          _strategy: strategy.address,
+          _tokenIn: tokenIn.address,
+          _tokenOut: tokenOut.address,
+          _amount: amountIn,
+          _minAmountOut: minAmountOut,
+        },
+        uniswapV2AsyncSwapper.address,
+        bestPath.data
+      );
     });
     then('tokens in gets taken from strategy', async () => {
       expect(await tokenIn.balanceOf(strategy.address)).to.equal(0);
