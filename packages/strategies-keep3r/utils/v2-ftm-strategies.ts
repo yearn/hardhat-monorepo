@@ -72,16 +72,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     address: '0x8A807b5742587024783Df3Ed2F149725C197b5eE',
   },
   {
-    name: 'ssbeet_steadyBeetPool_dai',
-    added: true,
-    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
-  },
-  {
-    name: 'ssbeet_steadyBeetPool_usdc',
-    added: true,
-    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
-  },
-  {
     name: 'ssbeet_staBeetPool_dai',
     added: true,
     address: '0xB905eabA7A23424265638bdACFFE55564c7B299B',
@@ -164,16 +154,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
 ];
 
 export const v2FtmTendStrategies: v2FtmStrategy[] = [
-  {
-    name: 'ssbeet_steadyBeetPool_dai',
-    added: true,
-    address: '0xE6b7D27157673aD2ae21AFD23CC35DA766105431',
-  },
-  {
-    name: 'ssbeet_steadyBeetPool_usdc',
-    added: true,
-    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
-  },
   {
     name: 'ssbeet_staBeetPool_dai',
     added: true,
