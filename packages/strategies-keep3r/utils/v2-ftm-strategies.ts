@@ -151,6 +151,36 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     added: true,
     address: '0x3B9bc1f596844Ca8a30A7710Aac7155968Db7d13',
   },
+  {
+    name: '0xDAO_WFTM',
+    added: true,
+    address: '0x585D4024C6aB31b67Dfd1624F2cA01Eb1dBe8D22',
+  },
+  {
+    name: '0xDAO_WETH',
+    added: true,
+    address: '0xcF37B4a55f06dDA65591B1AF56812c5bb7E6d336',
+  },
+  {
+    name: '0xDAO_WBTC',
+    added: true,
+    address: '0x71304d618bd2F1334d25F3aC836a2BA94A0622Ae',
+  },
+  {
+    name: '0xDAO_USDC',
+    added: true,
+    address: '0x177E745771494F1FF8Ed3FCDcdfF02213A1AD761',
+  },
+  {
+    name: '0xDAO_DAI',
+    added: true,
+    address: '0x44E0403e7Ee547F522BbBA5f49fd04a432d2ad82',
+  },
+  {
+    name: '0xDAO_MIM',
+    added: true,
+    address: '0x76e32c811Cad5b835B780461efd202D561723D14',
+  },
 ];
 
 export const v2FtmTendStrategies: v2FtmStrategy[] = [

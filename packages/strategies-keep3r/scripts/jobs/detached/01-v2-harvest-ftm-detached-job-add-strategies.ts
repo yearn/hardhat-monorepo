@@ -4,6 +4,7 @@ import * as contracts from '../../../utils/contracts';
 import * as accounts from '../../../utils/accounts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { v2FtmHarvestStrategies } from '../../../utils/v2-ftm-strategies';
+import { utils } from 'ethers';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'correct address?' });
@@ -76,13 +77,14 @@ function promptAndSubmit(): Promise<void | Error> {
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
             strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
           );
-          await harvestV2DetachedJob.addStrategies(
+          const tx = await harvestV2DetachedJob.addStrategies(
             strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
             // strategiesToAdd.map(() => 0), // address _requiredAmount,
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
-            strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
+            strategiesToAdd.map((strategy) => strategy.costPair), // address _costPair
+            { gasPrice: utils.parseUnits('3000', 'gwei') }
           );
-
+          console.log(`Tx submitted, track it on https://ftmscan.com/tx/${tx.hash}`);
           resolve();
         } catch (err: any) {
           reject(`Error while adding strategies to v2 harvest detached job: ${err.message}`);
