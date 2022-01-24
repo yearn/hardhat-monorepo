@@ -1,8 +1,6 @@
 import { run, ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
-import * as accounts from '../../../utils/accounts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { v2FtmHarvestStrategies } from '../../../utils/v2-ftm-strategies';
 import { utils } from 'ethers';
 
@@ -37,11 +35,13 @@ function promptAndSubmit(): Promise<void | Error> {
         try {
           const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom, signer);
 
-          const jobStrategies = await harvestV2DetachedJob.callStatic.strategies();
+          const jobStrategies = (await harvestV2DetachedJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
-          const strategiesAdded = v2FtmHarvestStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address);
+          const strategiesAdded = v2FtmHarvestStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
 
-          const strategiesNotYetAdded = v2FtmHarvestStrategies.filter((strategy) => !strategy.added).map((strategy) => strategy.address);
+          const strategiesNotYetAdded = v2FtmHarvestStrategies
+            .filter((strategy) => !strategy.added)
+            .map((strategy) => strategy.address.toLowerCase());
 
           for (const strategyAdded of strategiesAdded) {
             if (jobStrategies.indexOf(strategyAdded) == -1)

@@ -181,6 +181,66 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     added: true,
     address: '0x76e32c811Cad5b835B780461efd202D561723D14',
   },
+  {
+    name: 'StrategyLenderYieldOptimiser_FTM',
+    added: true,
+    address: '0x695A4a6e5888934828Cb97A3a7ADbfc71A70922D',
+  },
+  {
+    name: 'StrategyLenderYieldOptimiser_MIM',
+    added: true,
+    address: '0xD0D1f041F93c0fF1091457618E529610C67A76de',
+  },
+  {
+    name: 'GenLevCompV3NoFlash_FTM',
+    added: true,
+    address: '0x935601c5694f23491921c14aA235c65c2ea2c4DE',
+  },
+  {
+    name: 'StrategyMPH_FTM',
+    added: true,
+    address: '0xC395e256BDf89F2e9189dc67c9215e1949A22562',
+  },
+  {
+    name: 'VeDaoMasterChef_ETH',
+    added: true,
+    address: '0x15045FC686d1E597D5bb6390d33CEA99C809C9A3',
+  },
+  {
+    name: 'SingleSidedBeethoven_USDC',
+    added: true,
+    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
+  },
+  {
+    name: 'GenLevCompV3NoFlash_LINK',
+    added: true,
+    address: '0x1e0F7D116ffB998EeC879B96698222D1Ee8d87CB',
+  },
+  {
+    name: 'VeDaoMasterChef_YFI',
+    added: true,
+    address: '0x6a59081C7d5ac3e82c58D5f595ed25D55E71EBDa',
+  },
+  {
+    name: 'VeDaoMasterChef_MIM',
+    added: true,
+    address: '0x235750AF5Fdb77cA827c2ee0Ab469188bC877cC6',
+  },
+  {
+    name: 'VeDaoMasterChef_FRAX',
+    added: true,
+    address: '0xcc94F866717093Bd60b9a58AD9ca343b1438c865',
+  },
+  {
+    name: 'VeDaoMasterChef_USDC',
+    added: true,
+    address: '0xff0bCcA5848a063D3D23aC9d534CE4F5A8286BeE',
+  },
+  {
+    name: 'VeDaoMasterChef_FTM',
+    added: true,
+    address: '0x3f4100F690a435b63Ad5e27B7d0d2587128B12fe',
+  },
 ];
 
 export const v2FtmTendStrategies: v2FtmStrategy[] = [
