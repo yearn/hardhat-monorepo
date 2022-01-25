@@ -40,7 +40,7 @@ export function getPrivateKeys(networkName: string): string[] {
     const privateKey = process.env[`${networkName.toUpperCase()}_${i}_PRIVATE_KEY`];
     if (!!privateKey) privateKeys.push(privateKey);
   }
-  if (privateKeys.length == 0) {
+  if (privateKeys.length === 0) {
     console.warn(`No private keys for network ${networkName}`);
     privateKeys.push('0x0000000000000000000000000000000000000000000000000000000000000bad');
   }

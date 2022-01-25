@@ -1,7 +1,7 @@
 import { run, ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
-import { v2FtmHarvestStrategies } from '../../../utils/v2-ftm-strategies';
+import { harvestConfigurations } from '../../../utils/v2-ftm-strategies';
 import { utils } from 'ethers';
 
 const { Confirm } = require('enquirer');
@@ -16,30 +16,18 @@ async function main() {
 
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
-    const [owner] = await ethers.getSigners();
-    let signer = owner;
-    // if (owner.address != accounts.yKeeper) {
-    //   console.log('on fork mode, impersonating yKeeper');
-    //   await network.provider.request({
-    //     method: 'hardhat_impersonateAccount',
-    //     params: [accounts.yKeeper],
-    //   });
-    //   const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
-    //   yKeeper.address = yKeeper._address;
-    //   signer = yKeeper;
-    // }
-
-    console.log('using address:', signer.address);
+    const [signer] = await ethers.getSigners();
+    console.log('Using address:', signer.address);
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom, signer);
+          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom);
 
           const jobStrategies = (await harvestV2DetachedJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
-          const strategiesAdded = v2FtmHarvestStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
+          const strategiesAdded = harvestConfigurations.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
 
-          const strategiesNotYetAdded = v2FtmHarvestStrategies
+          const strategiesNotYetAdded = harvestConfigurations
             .filter((strategy) => !strategy.added)
             .map((strategy) => strategy.address.toLowerCase());
 
@@ -58,7 +46,7 @@ function promptAndSubmit(): Promise<void | Error> {
               console.log(`strategy: ${jobStrategy} should not be on job, or is missing from config`);
           }
 
-          const strategiesToAdd = v2FtmHarvestStrategies
+          const strategiesToAdd = harvestConfigurations
             .filter((strategy) => !strategy.added)
             .map((strategy) => ({
               name: strategy.name,
