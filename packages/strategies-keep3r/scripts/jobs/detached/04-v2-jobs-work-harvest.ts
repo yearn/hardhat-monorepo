@@ -29,7 +29,7 @@ async function main() {
   // Map when was the last time a reward token was dumped
   lastWorksAt.forEach((lastWorkAt) => {
     const harvestConfiguration: HarvestConfiguration | undefined = harvestConfigurations.find(
-      (harvestConfiguration) => harvestConfiguration.address === lastWorkAt.strategy
+      (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === lastWorkAt.strategy.toLowerCase()
     );
     if (!harvestConfiguration) throw new Error('Mismatch between harvests configuration and job strategies');
     if (
@@ -44,7 +44,7 @@ async function main() {
     console.log('Checking strategy', strategy);
     try {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
-        (harvestConfiguration) => harvestConfiguration.address === strategy
+        (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
       const rewardLastDumpedAt = lastTimeRewardWasDumped[strategyHarvestConfiguration.rewards];
       if (moment().subtract(REWARD_DUMPED_COOLDOWN).isBefore(rewardLastDumpedAt.toNumber())) {
