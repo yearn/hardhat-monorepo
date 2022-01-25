@@ -152,36 +152,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     address: '0x3B9bc1f596844Ca8a30A7710Aac7155968Db7d13',
   },
   {
-    name: '0xDAO_WFTM',
-    added: true,
-    address: '0x585D4024C6aB31b67Dfd1624F2cA01Eb1dBe8D22',
-  },
-  {
-    name: '0xDAO_WETH',
-    added: true,
-    address: '0xcF37B4a55f06dDA65591B1AF56812c5bb7E6d336',
-  },
-  {
-    name: '0xDAO_WBTC',
-    added: true,
-    address: '0x71304d618bd2F1334d25F3aC836a2BA94A0622Ae',
-  },
-  {
-    name: '0xDAO_USDC',
-    added: true,
-    address: '0x177E745771494F1FF8Ed3FCDcdfF02213A1AD761',
-  },
-  {
-    name: '0xDAO_DAI',
-    added: true,
-    address: '0x44E0403e7Ee547F522BbBA5f49fd04a432d2ad82',
-  },
-  {
-    name: '0xDAO_MIM',
-    added: true,
-    address: '0x76e32c811Cad5b835B780461efd202D561723D14',
-  },
-  {
     name: 'StrategyLenderYieldOptimiser_FTM',
     added: true,
     address: '0x695A4a6e5888934828Cb97A3a7ADbfc71A70922D',
@@ -202,11 +172,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     address: '0xC395e256BDf89F2e9189dc67c9215e1949A22562',
   },
   {
-    name: 'VeDaoMasterChef_ETH',
-    added: true,
-    address: '0x15045FC686d1E597D5bb6390d33CEA99C809C9A3',
-  },
-  {
     name: 'SingleSidedBeethoven_USDC',
     added: true,
     address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
@@ -215,31 +180,6 @@ export const v2FtmHarvestStrategies: v2FtmStrategy[] = [
     name: 'GenLevCompV3NoFlash_LINK',
     added: true,
     address: '0x1e0F7D116ffB998EeC879B96698222D1Ee8d87CB',
-  },
-  {
-    name: 'VeDaoMasterChef_YFI',
-    added: true,
-    address: '0x6a59081C7d5ac3e82c58D5f595ed25D55E71EBDa',
-  },
-  {
-    name: 'VeDaoMasterChef_MIM',
-    added: true,
-    address: '0x235750AF5Fdb77cA827c2ee0Ab469188bC877cC6',
-  },
-  {
-    name: 'VeDaoMasterChef_FRAX',
-    added: true,
-    address: '0xcc94F866717093Bd60b9a58AD9ca343b1438c865',
-  },
-  {
-    name: 'VeDaoMasterChef_USDC',
-    added: true,
-    address: '0xff0bCcA5848a063D3D23aC9d534CE4F5A8286BeE',
-  },
-  {
-    name: 'VeDaoMasterChef_FTM',
-    added: true,
-    address: '0x3f4100F690a435b63Ad5e27B7d0d2587128B12fe',
   },
 ];
 
