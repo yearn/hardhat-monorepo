@@ -23,6 +23,7 @@ function promptAndSubmit(): Promise<void | Error> {
           const workable = await tendV2DetachedJob.callStatic.workable(strategy);
           if (!workable) {
             console.log('Not workable');
+            console.log('***************************');
             notWorkable.push(strategy);
             continue;
           }
