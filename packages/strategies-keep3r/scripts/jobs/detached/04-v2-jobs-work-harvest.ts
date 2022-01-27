@@ -30,12 +30,11 @@ async function main() {
       (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === lastWorkAt.strategy.toLowerCase()
     );
     if (!harvestConfiguration) throw new Error('Mismatch between harvests configuration and job strategies');
-    if (
-      !lastTimeRewardWasDumped.hasOwnProperty(harvestConfiguration.rewards) ||
-      lastWorkAt.timestamp > lastTimeRewardWasDumped[harvestConfiguration.rewards]
-    ) {
-      lastTimeRewardWasDumped[harvestConfiguration.rewards] = lastWorkAt.timestamp;
-    }
+    harvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
+      if (!lastTimeRewardWasDumped.hasOwnProperty(tokenBeingDumped) || lastWorkAt.timestamp > lastTimeRewardWasDumped[tokenBeingDumped]) {
+        lastTimeRewardWasDumped[tokenBeingDumped] = lastWorkAt.timestamp;
+      }
+    });
   });
 
   for (const strategy of strategies) {
@@ -44,7 +43,6 @@ async function main() {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
         (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
-      const rewardLastDumpedAt = lastTimeRewardWasDumped[strategyHarvestConfiguration.rewards];
       const workable = await harvestV2DetachedJob.callStatic.workable(strategy);
       if (!workable) {
         console.log('Not workable');
@@ -52,7 +50,13 @@ async function main() {
         notWorkable.push(strategy);
         continue;
       }
-      if (moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= rewardLastDumpedAt) {
+
+      let isStratOnLiquidityCooldown: boolean = false;
+      strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
+        isStratOnLiquidityCooldown =
+          isStratOnLiquidityCooldown || moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= lastTimeRewardWasDumped[tokenBeingDumped];
+      });
+      if (isStratOnLiquidityCooldown) {
         console.log('On liquidity cooldown');
         console.log('***************************');
         onLiquidityCooldown.push(strategy);
@@ -61,7 +65,9 @@ async function main() {
       console.log('Working...');
       const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
       const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
-      lastTimeRewardWasDumped[strategyHarvestConfiguration.rewards] = moment().unix();
+      strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
+        lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
+      });
       worked.push(strategy);
       console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
     } catch (error: any) {
