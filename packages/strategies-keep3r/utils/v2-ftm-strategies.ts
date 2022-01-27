@@ -253,6 +253,20 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     rewards: '0x72a34AbafAB09b15E7191822A679f28E067C4a16',
     want: '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
   },
+  {
+    name: 'Strategy_ProviderOfUSDCToHedgilSpookyJoint_wftm_usdc',
+    added: false,
+    address: '0x84a92b621897bf7e4a95e80d91b3ab7491e9db39',
+    rewards: '0x72a34AbafAB09b15E7191822A679f28E067C4a1', 
+    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
+  },
+  {
+    name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_usdc',
+    added: false,
+    address: '0x9b536FD704944110d5F742840a206C45f6858920',
+    rewards: '0x72a34AbafAB09b15E7191822A679f28E067C4a1', 
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [
