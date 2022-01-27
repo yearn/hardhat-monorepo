@@ -19,7 +19,21 @@ async function main() {
   console.log('Using address:', harvester.address, 'on fantom');
 
   harvestV2DetachedJob = await HarvestV2DetachedJob__factory.connect(contracts.harvestV2DetachedJob[networkName], harvester);
-  const strategies = await harvestV2DetachedJob.callStatic.strategies();
+
+  const sbeetStrats = [
+    '0xB905eabA7A23424265638bdACFFE55564c7B299B',
+    '0x56aF79e182a7f98ff6d0bF99d589ac2CabA24e2d',
+    '0x85c307D24da7086c41537b994de9bFc4C21BAEB5',
+    '0xBd3791F3Dcf9DD5633cd30662381C80a2Cd945bd',
+    '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
+    '0x4003eE222d44953B0C3eB61318dD211a4A6f109f',
+    '0x36E74086C388305CEcdeff83d6cf31a2762A3c91',
+    '0x1c13C43f8F2fa0CdDEE6DFF6F785757650B8c2BF',
+    '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
+    '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
+  ];
+
+  const strategies = (await harvestV2DetachedJob.callStatic.strategies()).filter((strategy) => sbeetStrats.indexOf(strategy) === -1);
 
   // Get all last worked at
   const lastWorksAt = await Promise.all(strategies.map((strategy) => getLastWorkAt(strategy)));
