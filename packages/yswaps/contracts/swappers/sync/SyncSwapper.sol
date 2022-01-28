@@ -35,7 +35,6 @@ abstract contract SyncSwapper is ISyncSwapper, Swapper {
   ) internal pure {
     if (_receiver == address(0) || _tokenIn == address(0) || _tokenOut == address(0)) revert CommonErrors.ZeroAddress();
     if (_amountIn == 0) revert CommonErrors.ZeroAmount();
-    if (_maxSlippage == 0) revert CommonErrors.ZeroSlippage();
   }
 
   function _executeSwap(
