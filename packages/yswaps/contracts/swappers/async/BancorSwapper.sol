@@ -32,13 +32,17 @@ interface IBancorNetwork {
   ) external payable returns (uint256 returnAmount);
 }
 
-interface IBancorSwapper is IAsyncSwapper {}
+interface IBancorSwapper is IAsyncSwapper {
+  function contractRegistry() external returns (IContractRegistry);
+
+  function bancorNetworkName() external returns (bytes32);
+}
 
 contract BancorSwapper is IBancorSwapper, AsyncSwapper {
   using SafeERC20 for IERC20;
 
-  IContractRegistry public contractRegistry;
-  bytes32 public bancorNetworkName;
+  IContractRegistry public immutable override contractRegistry;
+  bytes32 public immutable override bancorNetworkName;
 
   constructor(
     address _governor,
