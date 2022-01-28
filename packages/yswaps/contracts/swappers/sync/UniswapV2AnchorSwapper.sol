@@ -71,7 +71,7 @@ contract UniswapV2AnchorSwapper is IUniswapV2AnchorSwapper, SyncSwapper {
       _path,
       _receiver,
       block.timestamp + 1800
-    )[_path.length - 1];
+    );
   }
 
   function _getPathAndAmountOut(
