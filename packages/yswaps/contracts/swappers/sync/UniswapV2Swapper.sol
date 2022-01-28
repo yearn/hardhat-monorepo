@@ -64,7 +64,7 @@ contract UniswapV2Swapper is IUniswapV2Swapper, SyncSwapper {
       _path,
       _receiver,
       block.timestamp
-    )[_path.length - 1];
+    );
   }
 
   function _getPathAndAmountOut(
