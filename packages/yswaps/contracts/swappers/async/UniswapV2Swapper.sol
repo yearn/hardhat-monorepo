@@ -49,6 +49,6 @@ contract UniswapV2Swapper is IUniswapV2Swapper, AsyncSwapper {
       _path,
       _receiver,
       block.timestamp
-    )[_path.length - 1];
+    );
   }
 }
