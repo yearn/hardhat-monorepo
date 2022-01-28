@@ -52,18 +52,6 @@ contract BancorSwapper is IBancorSwapper, SyncSwapper {
     bancorNetworkName = _bancorNetworkName;
   }
 
-  // path and minReturn generated on chain
-  function trade(
-    address _sourceToken,
-    address _targetToken,
-    uint256 _amount
-  ) external payable returns (uint256 returnAmount) {
-    IBancorNetwork bancorNetwork = IBancorNetwork(contractRegistry.addressOf(bancorNetworkName));
-    address[] memory path = bancorNetwork.conversionPath(_sourceToken, _targetToken);
-    uint256 minReturn = bancorNetwork.rateByPath(path, _amount);
-    returnAmount = bancorNetwork.convertByPath{value: msg.value}(path, _amount, minReturn, address(0x0), address(0x0), 0);
-  }
-
   function _executeSwap(
     address _receiver,
     address _tokenIn,
