@@ -4,7 +4,7 @@ import { erc20, evm } from '@test-utils';
 import * as fixtures from '../../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
-import { IERC20, TradeFactory } from '@typechained';
+import { ERC20Mock, TradeFactory } from '@typechained';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { mergeTransactions } from '@scripts/libraries/multicall';
 
@@ -17,8 +17,8 @@ contract('MultiCallOptimizedSwapper', () => {
   let swapperSetter: SignerWithAddress;
   let strategyModifier: SignerWithAddress;
 
-  let tokenIn: IERC20;
-  let tokenOut: IERC20;
+  let tokenIn: ERC20Mock;
+  let tokenOut: ERC20Mock;
 
   let mechanicsRegistry: Contract;
   let tradeFactory: TradeFactory;

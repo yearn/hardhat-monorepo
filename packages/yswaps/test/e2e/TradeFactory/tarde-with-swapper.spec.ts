@@ -5,7 +5,7 @@ import * as fixtures from '../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
 import uniswapLibrary from '../../../scripts/libraries/uniswap-v2';
-import { IERC20, TradeFactory } from '@typechained';
+import { ERC20Mock, IERC20, TradeFactory } from '@typechained';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 contract('TradeFactory', () => {
@@ -17,8 +17,8 @@ contract('TradeFactory', () => {
   let swapperSetter: SignerWithAddress;
   let strategyModifier: SignerWithAddress;
 
-  let tokenIn: IERC20;
-  let tokenOut: IERC20;
+  let tokenIn: ERC20Mock;
+  let tokenOut: ERC20Mock;
 
   let mechanicsRegistry: Contract;
   let tradeFactory: TradeFactory;
