@@ -154,14 +154,14 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
   },
   {
     name: 'convex_lusd',
-    added: true,
-    address: '0x789685963DF287337759A9FaB65d8c645a3B4cba',
+    added: false,
+    address: '0xecFF3267626DEF1bE8AA58E525b72af295c78131',
     amount: 2_000_000,
   },
   {
     name: 'convex_frax',
-    added: true,
-    address: '0x8c312B63Bc4000f61E1C4df4868A3A1f09b31A73',
+    added: false,
+    address: '0x5E1dCe90AB54382e3f66E0b245E07209798c171c',
     amount: 2_000_000,
   },
   {
@@ -184,8 +184,8 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
   },
   {
     name: 'convex_alusd',
-    added: true,
-    address: '0xf8Fb278DeeaF30Ff3F6326d928A61eA8b9397d16',
+    added: false,
+    address: '0x02E158754e92c9ccDB5E61b42902EF6a4e008f48',
     amount: 2_000_000,
   },
   {
