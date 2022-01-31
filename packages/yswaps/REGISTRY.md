@@ -1,3 +1,17 @@
+# Version 0.2.0
+
+## ♦ Mainnet
+
+### Base Protocol
+
+- yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.io/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
+- ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.io/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
+- TradeFactory: [0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29](https://etherscan.io/address/0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29)
+
+### Swappers
+
+- MultiCallOptimizedSwapper: [0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA](https://etherscan.io/address/0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA)
+
 # Version 0.1.0
 
 ## ♦ Mainnet
@@ -6,8 +20,7 @@
 
 - yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.io/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
 - ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.io/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
-- TradeFactory [0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29](https://etherscan.io/address/0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29)
-- TradeFactory_V1: [0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d](https://etherscan.io/address/0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d)
+- TradeFactory: [0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d](https://etherscan.io/address/0xBf26Ff7C7367ee7075443c4F95dEeeE77432614d)
 - OTCPool: [0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06](https://etherscan.io/address/0x9B2Aab476E77Cd9bB98A206dF11c8F294d06bF06)
 
 ### Swappers
