@@ -267,6 +267,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: [],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
+  {
+    name: 'Strategy0xDAOStakerBoo',
+    added: false,
+    address: '0xA36c91E38bf24E9F2df358E47D4134a8894C6a4c',
+    tokensBeingDumped: ['0xc165d941481e68696f43EE6E99BFB2B23E0E3114'],
+    want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [
