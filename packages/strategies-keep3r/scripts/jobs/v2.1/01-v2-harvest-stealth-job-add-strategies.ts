@@ -16,34 +16,23 @@ async function main() {
 
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
-    const [owner] = await ethers.getSigners();
-    let signer = owner;
-    if (owner.address != accounts.yKeeper) {
-      console.log('on fork mode, impersonating yKeeper');
-      await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [accounts.yKeeper],
-      });
-      const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any;
-      yKeeper.address = yKeeper._address;
-      signer = yKeeper;
-    }
-
-    console.log('using address:', signer.address);
+    const [signer] = await ethers.getSigners();
+    console.log('Using address:', signer.address);
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
           const harvestV2Keep3rStealthJob = await ethers.getContractAt(
             'HarvestV2Keep3rStealthJob',
-            contracts.harvestV2Keep3rStealthJob.mainnet as string,
-            signer
+            contracts.harvestV2Keep3rStealthJob.mainnet as string
           );
 
-          const jobStrategies = await harvestV2Keep3rStealthJob.callStatic.strategies();
+          const jobStrategies = (await harvestV2Keep3rStealthJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
-          const strategiesAdded = v2StealthStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address);
+          const strategiesAdded = v2StealthStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
 
-          const strategiesNotYetAdded = v2StealthStrategies.filter((strategy) => !strategy.added).map((strategy) => strategy.address);
+          const strategiesNotYetAdded = v2StealthStrategies
+            .filter((strategy) => !strategy.added)
+            .map((strategy) => strategy.address.toLowerCase());
 
           for (const strategyAdded of strategiesAdded) {
             if (jobStrategies.indexOf(strategyAdded) == -1)
@@ -74,7 +63,7 @@ function promptAndSubmit(): Promise<void | Error> {
           console.log(strategiesToAdd);
           if (!(await confirm.run())) return;
 
-          const gasLimit = 200_000;
+          const gasLimit = 400_000;
           await harvestV2Keep3rStealthJob.callStatic.addStrategies(
             strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
             strategiesToAdd.map((strategy) => strategy.amount), // uint256 _requiredAmount,

@@ -154,13 +154,13 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
   },
   {
     name: 'convex_lusd',
-    added: false,
+    added: true,
     address: '0xecFF3267626DEF1bE8AA58E525b72af295c78131',
     amount: 2_000_000,
   },
   {
     name: 'convex_frax',
-    added: false,
+    added: true,
     address: '0x5E1dCe90AB54382e3f66E0b245E07209798c171c',
     amount: 2_000_000,
   },
@@ -184,7 +184,7 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
   },
   {
     name: 'convex_alusd',
-    added: false,
+    added: true,
     address: '0x02E158754e92c9ccDB5E61b42902EF6a4e008f48',
     amount: 2_000_000,
   },
@@ -206,13 +206,6 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
     address: '0x2b0b941d98848d6c9C729d944E3B1BD9C00A5529',
     amount: 2_000_000,
   },
-  //   { // deprecated for now
-  //     name: 'curve_ironbank',
-  //     added: true,
-  //     address: '0x6D892A5585F45f3C45A238C717AA0a228aE69e2C',
-  //     amount: 2_000_000,
-  //   },
-  /* MISC */
   {
     name: 'convex_link',
     added: true,
@@ -249,12 +242,6 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
     address: '0xC8f17f8E15900b6D6079680b15Da3cE5263f62AA',
     amount: 2_000_000,
   },
-  // {
-  //   name: 'weth_lev_comp',
-  //   added: true,
-  //   address: '0x83B6211379c26E0bA8d01b9EcD4eE1aE915630aa',
-  //   amount: 2_000_000,
-  // },
   {
     name: 'dai_lev_comp',
     added: true,
@@ -267,12 +254,6 @@ export const v2StealthStrategies: v2HarvestStealthStrategy[] = [
     address: '0xE6c78b85f93c25B8EE7d963fD15d1d53a00F5908',
     amount: 2_000_000,
   },
-  // {
-  //   name: 'wbtc_lev_comp',
-  //   added: true,
-  //   address: '0x4F3c19878da5366fd85648Ef8692D96067dEE16D',
-  //   amount: 2_000_000,
-  // },
   {
     name: 'dai_router',
     added: true,
