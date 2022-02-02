@@ -36,17 +36,19 @@ async function main() {
   const strategies = (await harvestV2DetachedJob.callStatic.strategies()).filter((strategy) => sbeetStrats.indexOf(strategy) === -1);
 
   // Get all last worked at
-  const lastWorksAt = await Promise.all(strategies.map((strategy) => getLastWorkAt(strategy)));
+  const lastWorksAt = (await Promise.all(strategies.map((strategy) => harvestV2DetachedJob.callStatic.lastWorkAt(strategy)))).map(
+    (timestampBn) => timestampBn.toNumber()
+  );
 
   // Map when was the last time a reward token was dumped
-  lastWorksAt.forEach((lastWorkAt) => {
+  lastWorksAt.forEach((lastWorkAt: number, i: number) => {
     const harvestConfiguration: HarvestConfiguration | undefined = harvestConfigurations.find(
-      (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === lastWorkAt.strategy.toLowerCase()
+      (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategies[i].toLowerCase()
     );
     if (!harvestConfiguration) throw new Error('Mismatch between harvests configuration and job strategies');
     harvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
-      if (!lastTimeRewardWasDumped.hasOwnProperty(tokenBeingDumped) || lastWorkAt.timestamp > lastTimeRewardWasDumped[tokenBeingDumped]) {
-        lastTimeRewardWasDumped[tokenBeingDumped] = lastWorkAt.timestamp;
+      if (!lastTimeRewardWasDumped.hasOwnProperty(tokenBeingDumped) || lastWorkAt > lastTimeRewardWasDumped[tokenBeingDumped]) {
+        lastTimeRewardWasDumped[tokenBeingDumped] = lastWorkAt;
       }
     });
   });
@@ -90,12 +92,12 @@ async function main() {
       }
       console.log('Working...');
       const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
-      // const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
+      const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
       strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
         lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
       });
       worked.push(strategy);
-      // console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
+      console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
     } catch (error: any) {
       console.log('Error while working:', error.message);
       errorWhileWorked.push(strategy);
@@ -110,13 +112,6 @@ async function main() {
   console.log('***************************');
   console.log('Errored while working:', errorWhileWorked.join(','));
 }
-
-const getLastWorkAt = async (strategy: string): Promise<{ strategy: string; timestamp: number }> => {
-  return {
-    strategy,
-    timestamp: (await harvestV2DetachedJob.callStatic.lastWorkAt(strategy)).toNumber(),
-  };
-};
 
 main()
   .then(() => process.exit(0))
