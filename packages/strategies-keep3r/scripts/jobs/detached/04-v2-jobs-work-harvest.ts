@@ -16,7 +16,8 @@ const REWARD_DUMPED_COOLDOWN = moment.duration('2.5', 'minutes');
 async function main() {
   const [harvester] = await ethers.getSigners();
   const networkName = 'fantom';
-  console.log('Using address:', harvester.address, 'on fantom');
+  console.log('Using address', harvester.address, 'on fantom');
+  console.log('Block', await ethers.provider.getBlockNumber());
 
   harvestV2DetachedJob = await HarvestV2DetachedJob__factory.connect(contracts.harvestV2DetachedJob[networkName], harvester);
 
@@ -32,6 +33,11 @@ async function main() {
     '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
     '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
   ];
+
+  const now = moment().unix();
+
+  const workCooldown = (await harvestV2DetachedJob.callStatic.workCooldown()).toNumber();
+  console.log('Work cooldown', moment.duration(workCooldown, 'seconds').humanize());
 
   const strategies = (await harvestV2DetachedJob.callStatic.strategies()).filter((strategy) => sbeetStrats.indexOf(strategy) === -1);
 
@@ -56,6 +62,9 @@ async function main() {
   // Get all workable
   const workable = await Promise.all(strategies.map((strategy) => harvestV2DetachedJob.callStatic.workable(strategy)));
 
+  // Calculating cooldowns
+  const onWorkCooldown = lastWorksAt.map((lastWorkAt) => lastWorkAt + workCooldown > now);
+
   // Get all harvest trigger
   const harvestTrigger = await Promise.all(
     strategies.map(async (strategy) => {
@@ -64,6 +73,7 @@ async function main() {
     })
   );
 
+  console.log('***************************');
   for (let i = 0; i < strategies.length; i++) {
     const strategy = strategies[i];
     console.log('Checking strategy', strategy);
@@ -74,6 +84,7 @@ async function main() {
       if (!workable[i]) {
         console.log('Not workable');
         console.log('Harvest trigger status is', harvestTrigger[i]);
+        console.log('Is it on work cooldown?', onWorkCooldown[i]);
         console.log('***************************');
         notWorkable.push(strategy);
         continue;
