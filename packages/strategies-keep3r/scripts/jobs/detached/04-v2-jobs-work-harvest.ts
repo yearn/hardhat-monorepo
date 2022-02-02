@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { HarvestV2DetachedJob, HarvestV2DetachedJob__factory } from '@typechained';
+import { HarvestV2DetachedJob, HarvestV2DetachedJob__factory, IBaseStrategy__factory } from '@typechained';
 import { ethers } from 'hardhat';
 import * as contracts from '../../../utils/contracts';
 import { HarvestConfiguration, harvestConfigurations } from '../../../utils/v2-ftm-strategies';
@@ -51,15 +51,27 @@ async function main() {
     });
   });
 
-  for (const strategy of strategies) {
+  // Get all workable
+  const workable = await Promise.all(strategies.map((strategy) => harvestV2DetachedJob.callStatic.workable(strategy)));
+
+  // Get all harvest trigger
+  const harvestTrigger = await Promise.all(
+    strategies.map(async (strategy) => {
+      const strategyContract = await IBaseStrategy__factory.connect(strategy, harvester);
+      return strategyContract.callStatic.harvestTrigger(1);
+    })
+  );
+
+  for (let i = 0; i < strategies.length; i++) {
+    const strategy = strategies[i];
     console.log('Checking strategy', strategy);
     try {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
         (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
-      const workable = await harvestV2DetachedJob.callStatic.workable(strategy);
-      if (!workable) {
+      if (!workable[i]) {
         console.log('Not workable');
+        console.log('Harvest trigger status is', harvestTrigger[i]);
         console.log('***************************');
         notWorkable.push(strategy);
         continue;
@@ -78,12 +90,12 @@ async function main() {
       }
       console.log('Working...');
       const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
-      const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
+      // const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
       strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
         lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
       });
       worked.push(strategy);
-      console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
+      // console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
     } catch (error: any) {
       console.log('Error while working:', error.message);
       errorWhileWorked.push(strategy);
