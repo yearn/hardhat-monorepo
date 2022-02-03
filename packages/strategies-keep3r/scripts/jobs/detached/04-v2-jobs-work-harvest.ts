@@ -3,6 +3,8 @@ import { HarvestV2DetachedJob, HarvestV2DetachedJob__factory, IBaseStrategy__fac
 import { ethers } from 'hardhat';
 import * as contracts from '../../../utils/contracts';
 import { HarvestConfiguration, harvestConfigurations } from '../../../utils/v2-ftm-strategies';
+import * as gasprice from '../../../utils/ftm-gas-price';
+import { BigNumber, utils } from 'ethers';
 
 let harvestV2DetachedJob: HarvestV2DetachedJob;
 const worked: string[] = [];
@@ -16,8 +18,9 @@ const REWARD_DUMPED_COOLDOWN = moment.duration('2.5', 'minutes');
 async function main() {
   const [harvester] = await ethers.getSigners();
   const networkName = 'fantom';
-  console.log('Using address', harvester.address, 'on fantom');
-  console.log('Block', await ethers.provider.getBlockNumber());
+  await gasprice.start();
+  console.log('[App] Using address', harvester.address, 'on fantom');
+  console.log('[App] Block', await ethers.provider.getBlockNumber());
 
   harvestV2DetachedJob = await HarvestV2DetachedJob__factory.connect(contracts.harvestV2DetachedJob[networkName], harvester);
 
@@ -37,7 +40,7 @@ async function main() {
   const now = moment().unix();
 
   const workCooldown = (await harvestV2DetachedJob.callStatic.workCooldown()).toNumber();
-  console.log('Work cooldown', moment.duration(workCooldown, 'seconds').humanize());
+  console.log('[App] Work cooldown', moment.duration(workCooldown, 'seconds').humanize());
 
   const strategies = (await harvestV2DetachedJob.callStatic.strategies()).filter((strategy) => sbeetStrats.indexOf(strategy) === -1);
 
@@ -76,15 +79,15 @@ async function main() {
   console.log('***************************');
   for (let i = 0; i < strategies.length; i++) {
     const strategy = strategies[i];
-    console.log('Checking strategy', strategy);
+    console.log('[App] Checking strategy', strategy);
     try {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
         (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
       if (!workable[i]) {
-        console.log('Not workable');
-        console.log('Harvest trigger status is', harvestTrigger[i]);
-        console.log('Is it on work cooldown?', onWorkCooldown[i]);
+        console.log('[App] Not workable');
+        console.log('[App] Harvest trigger status is', harvestTrigger[i]);
+        console.log('[App] Is it on work cooldown?', onWorkCooldown[i]);
         console.log('***************************');
         notWorkable.push(strategy);
         continue;
@@ -96,32 +99,35 @@ async function main() {
           isStratOnLiquidityCooldown || moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= lastTimeRewardWasDumped[tokenBeingDumped];
       });
       if (isStratOnLiquidityCooldown) {
-        console.log('On liquidity cooldown');
+        console.log('[App] On liquidity cooldown');
         console.log('***************************');
         onLiquidityCooldown.push(strategy);
         continue;
       }
-      console.log('Working...');
+      console.log('[App] Working...');
       const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
-      const tx = await harvestV2DetachedJob.work(strategy, { gasLimit: gasLimit.mul(110).div(100) });
+      const tx = await harvestV2DetachedJob.work(strategy, {
+        gasLimit: gasLimit.mul(110).div(100),
+        gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
+      });
       strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
         lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
       });
       worked.push(strategy);
-      console.log(`Check work tx at https://ftmscan.com/tx/${tx.hash}`);
+      console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash}`);
     } catch (error: any) {
-      console.log('Error while working:', error.message);
+      console.log('[App] Error while working:', error.message);
       errorWhileWorked.push(strategy);
     }
     console.log('***************************');
   }
-  console.log('On liqudity cooldown:', onLiquidityCooldown.join(','));
+  console.log('[App] On liqudity cooldown:', onLiquidityCooldown.join(','));
   console.log('***************************');
-  console.log('Not workable strategies:', notWorkable.join(','));
+  console.log('[App] Not workable strategies:', notWorkable.join(','));
   console.log('***************************');
-  console.log('Worked strategies:', worked.join(','));
+  console.log('[App] Worked strategies:', worked.join(','));
   console.log('***************************');
-  console.log('Errored while working:', errorWhileWorked.join(','));
+  console.log('[App] Errored while working:', errorWhileWorked.join(','));
 }
 
 main()
