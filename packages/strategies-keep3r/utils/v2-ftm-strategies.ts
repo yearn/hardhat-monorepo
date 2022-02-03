@@ -262,7 +262,7 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
   {
     name: 'LINK GenLender',
-    added: false,
+    added: true,
     address: '0xde39F0148496D42cd4e16563463fA5C6504CaA00',
     tokensBeingDumped: ['0xe0654C8e6fd4D733349ac7E09f6f23DA256bF475'],
     want: '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
