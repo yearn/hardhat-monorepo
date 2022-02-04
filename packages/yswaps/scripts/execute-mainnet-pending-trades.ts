@@ -18,6 +18,7 @@ import {
 } from '@flashbots/ethers-provider-bundle';
 import { PendingTrade, TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
+import { CurveSpellEthMulticall } from './multicall/CurveSpellEthMulticall';
 import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
@@ -57,6 +58,12 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
+  // Custom logic to handle fish strat
+  console.log('[HACK] do custom trade for fish strategy for now ...');
+  const curveSpellEth = new CurveSpellEthMulticall();
+  const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
+  console.log("[HACK] tradeSetup: ", tradeSetup);
+
   // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
@@ -73,6 +80,7 @@ async function main() {
   );
 
   const tradeFactory = await ethers.getContract('TradeFactory', ymech);
+
   const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
   const pendingTrades: PendingTrade[] = [];
 
