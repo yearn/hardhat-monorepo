@@ -192,12 +192,11 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
   {
     name: 'Printer WFTM Masterchef',
-    added: false,
+    added: true,
     address: '0x28F2fB6730d5dbeFc4FF9eB375Bbf33BcB36e774',
     tokensBeingDumped: ['0xea97c7c1c89d4084e0BFB88284FA90243779da9f'],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
 ];
 
-export const tendConfigurations: StrategyConfiguration[] = [
-];
+export const tendConfigurations: StrategyConfiguration[] = [];
