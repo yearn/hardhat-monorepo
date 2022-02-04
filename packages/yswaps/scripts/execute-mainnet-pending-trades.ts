@@ -62,7 +62,7 @@ async function main() {
   console.log('[HACK] do custom trade for fish strategy for now ...');
   const curveSpellEth = new CurveSpellEthMulticall();
   const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
-  console.log("[HACK] tradeSetup: ", tradeSetup);
+  console.log('[HACK] tradeSetup: ', tradeSetup);
 
   // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 

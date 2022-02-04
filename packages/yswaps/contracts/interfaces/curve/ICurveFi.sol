@@ -16,5 +16,4 @@ interface ICurveFi {
     bool,
     address
   ) external payable;
-
 }

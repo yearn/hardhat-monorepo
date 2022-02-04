@@ -7,8 +7,8 @@ import zrx from '../libraries/zrx';
 import { mergeTransactions } from '@scripts/libraries/multicall';
 
 type Tx = {
-    to: string;
-    data: string;
+  to: string;
+  data: string;
 };
 
 // 1) crv => weth with zrx
@@ -42,7 +42,7 @@ export class CurveSpellEthMulticall implements IMulticall {
     const cvxBalance = await cvx.balanceOf(this.strategy);
 
     if (crvBalance.lte(0) || cvxBalance.lte(0)) {
-      throw(":shrug:");
+      throw ':shrug:';
     }
 
     console.log('[CurveSpellEthMulticall] cvx/crv transfer to swapper for simulations');
@@ -91,7 +91,7 @@ export class CurveSpellEthMulticall implements IMulticall {
     await unwrapper.unwrap(wethBalance);
 
     console.log('[CurveSpellEthMulticall] Convert weth to crvSpellEth');
-    await curveSwap.add_liquidity([wethBalance, 0], 0, true, this.strategy, {"value": wethBalance});
+    await curveSwap.add_liquidity([wethBalance, 0], 0, true, this.strategy, { value: wethBalance });
 
     // Create txs for multichain swapper
     const transactions: PopulatedTransaction[] = [];
@@ -107,7 +107,7 @@ export class CurveSpellEthMulticall implements IMulticall {
     transactions.push(await unwrapper.populateTransaction.unwrap(wethBalance));
 
     // eth -> crvSpellEth
-    transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategy, {"value": wethBalance}));
+    transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategy, { value: wethBalance }));
 
     const data: string = mergeTransactions(transactions);
     console.log('[CurveSpellEthMulticall] Data after merging transactions:', data);
@@ -129,9 +129,8 @@ export class CurveSpellEthMulticall implements IMulticall {
     return {
       swapper: this.multicallSwapper,
       swapperName: 'MultiCallOptimizedSwapper',
-      data: "",
+      data: '',
       minAmountOut: BigNumber.from('0'),
     };
   }
-
 }
