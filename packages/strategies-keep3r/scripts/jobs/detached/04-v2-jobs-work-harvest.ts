@@ -13,7 +13,7 @@ const onLiquidityCooldown: string[] = [];
 const errorWhileWorked: string[] = [];
 const lastTimeRewardWasDumped: { [address: string]: number } = {};
 
-const REWARD_DUMPED_COOLDOWN = moment.duration('2.5', 'minutes');
+const REWARD_DUMPED_COOLDOWN = moment.duration('1.5', 'minutes');
 
 async function main() {
   const [harvester] = await ethers.getSigners();
