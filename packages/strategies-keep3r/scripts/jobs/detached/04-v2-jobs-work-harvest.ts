@@ -71,7 +71,7 @@ async function main() {
   // Get all harvest trigger
   const harvestTrigger = await Promise.all(
     strategies.map(async (strategy) => {
-      const strategyContract = await IBaseStrategy__factory.connect(strategy, harvester);
+      const strategyContract = IBaseStrategy__factory.connect(strategy, harvester);
       return strategyContract.callStatic.harvestTrigger(1);
     })
   );
@@ -106,6 +106,10 @@ async function main() {
       }
       console.log('[App] Working...');
       const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
+      await harvestV2DetachedJob.callStatic.work(strategy, {
+        gasLimit: gasLimit.mul(110).div(100),
+        gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
+      });
       const tx = await harvestV2DetachedJob.work(strategy, {
         gasLimit: gasLimit.mul(110).div(100),
         gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
