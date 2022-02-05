@@ -32,13 +32,17 @@ interface IBancorNetwork {
   ) external payable returns (uint256 returnAmount);
 }
 
-interface IBancorSwapper is IAsyncSwapper {}
+interface IBancorSwapper is IAsyncSwapper {
+  function contractRegistry() external returns (IContractRegistry);
+
+  function bancorNetworkName() external returns (bytes32);
+}
 
 contract BancorSwapper is IBancorSwapper, AsyncSwapper {
   using SafeERC20 for IERC20;
 
-  IContractRegistry public contractRegistry;
-  bytes32 public bancorNetworkName;
+  IContractRegistry public immutable override contractRegistry;
+  bytes32 public immutable override bancorNetworkName;
 
   constructor(
     address _governor,
@@ -56,13 +60,12 @@ contract BancorSwapper is IBancorSwapper, AsyncSwapper {
     address _tokenOut,
     uint256 _amountIn,
     bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     address[] memory _path = abi.decode(_data, (address[]));
     if (_tokenIn != _path[0] || _tokenOut != _path[_path.length - 1]) revert CommonErrors.IncorrectSwapInformation();
     IBancorNetwork _bancorNetwork = IBancorNetwork(contractRegistry.addressOf(bancorNetworkName));
     IERC20(_tokenIn).approve(address(_bancorNetwork), 0);
     IERC20(_tokenIn).approve(address(_bancorNetwork), _amountIn);
-    _receivedAmount = _bancorNetwork.convert(_path, _amountIn, 1);
-    IERC20(_tokenOut).safeTransfer(_receiver, _receivedAmount);
+    IERC20(_tokenOut).safeTransfer(_receiver, _bancorNetwork.convert(_path, _amountIn, 1));
   }
 }

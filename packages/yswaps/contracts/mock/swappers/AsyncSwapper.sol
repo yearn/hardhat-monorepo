@@ -26,8 +26,7 @@ contract AsyncSwapperMock is AsyncSwapper {
     address _tokenOut,
     uint256 _amountIn,
     bytes calldata _data
-  ) internal override virtual returns (uint256 __receivedAmount) {
-    __receivedAmount = _receivedAmount;
+  ) internal override virtual {
     emit MyInternalExecuteSwap(
       _receiver,
       _tokenIn,

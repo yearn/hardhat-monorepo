@@ -14,5 +14,5 @@ contract SyncSwapperMock is SyncSwapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata _data
-  ) internal override virtual returns (uint256 _receivedAmount) { }
+  ) internal override virtual { }
 }

@@ -1,3 +1,17 @@
+# Version 0.2.0
+
+## ♦ Mainnet
+
+### Base Protocol
+
+- yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.io/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
+- ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.io/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
+- TradeFactory: [0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29](https://etherscan.io/address/0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29)
+
+### Swappers
+
+- MultiCallOptimizedSwapper: [0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA](https://etherscan.io/address/0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA)
+
 # Version 0.1.0
 
 ## ♦ Mainnet
@@ -21,7 +35,7 @@
 ### Base Protocol
 
 - yMechs multisig: [0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803](https://ftmscan.com/address/0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803)
-- TradeFactory: [0x34aA402D943Ea983EBF890bD4B4d71239B6E2C00](https://ftmscan.com/address/0x34aA402D943Ea983EBF890bD4B4d71239B6E2C00)
+- TradeFactory_V1: [0x34aA402D943Ea983EBF890bD4B4d71239B6E2C00](https://ftmscan.com/address/0x34aA402D943Ea983EBF890bD4B4d71239B6E2C00)
 - OTCPool: [0xa86F5E157032c3a742a2b99a116731445AAB6882](https://ftmscan.com/address/0xa86F5E157032c3a742a2b99a116731445AAB6882)
 
 ### Swappers

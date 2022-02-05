@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { utils, Wallet } from 'ethers';
+import { BigNumber, utils, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
@@ -49,7 +49,6 @@ describe('Bancor', function () {
         fromTokenAddress: MPH_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: MPH_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -62,14 +61,22 @@ describe('Bancor', function () {
 
     describe('swap', () => {
       const data = ethers.utils.defaultAbiCoder.encode([], []);
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(strategy)
-          ['execute(address,address,uint256,uint256,bytes)'](MPH_ADDRESS, DAI_ADDRESS, AMOUNT_IN, MAX_SLIPPAGE, data);
+        preSwapBalance = await MPH.balanceOf(strategy.address);
+        await tradeFactory.connect(strategy)['execute((address,address,uint256,uint256),bytes)'](
+          {
+            _tokenIn: MPH_ADDRESS,
+            _tokenOut: DAI_ADDRESS,
+            _amountIn: AMOUNT_IN,
+            _maxSlippage: MAX_SLIPPAGE,
+          },
+          data
+        );
       });
 
       then('MPH gets taken from strategy', async () => {
-        expect(await MPH.balanceOf(strategy.address)).to.equal(0);
+        expect(await MPH.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
       then('DAI gets airdropped to strategy', async () => {
         expect(await DAI.balanceOf(strategy.address)).to.be.gt(0);

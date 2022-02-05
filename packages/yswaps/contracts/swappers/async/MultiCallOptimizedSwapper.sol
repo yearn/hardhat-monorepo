@@ -2,9 +2,9 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import './AsyncSwapper.sol';
+import './MultipleAsyncSwapper.sol';
 
-interface IMultiCallOptimizedSwapper is IAsyncSwapper {
+interface IMultiCallOptimizedSwapper is IMultipleAsyncSwapper {
   error MultiCallRevert();
   error CallOnlyOptimizationRequired();
   enum MulticallOptimization {
@@ -19,22 +19,18 @@ interface IMultiCallOptimizedSwapper is IAsyncSwapper {
   }
 }
 
-contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
+contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncSwapper {
   using SafeERC20 for IERC20;
 
-  constructor(address _governor, address _tradeFactory) AsyncSwapper(_governor, _tradeFactory) {}
+  constructor(address _governor, address _tradeFactory) MultipleAsyncSwapper(_governor, _tradeFactory) {}
 
-  function swap(
-    address _receiver,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    uint256 _minAmountOut,
+  function _executeSwap(
+    address,
+    address,
+    address,
+    uint256,
     bytes calldata _data
-  ) external override(AsyncSwapper, IAsyncSwapper) onlyTradeFactory returns (uint256 _receivedAmount) {
-    _assertPreSwap(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut);
-    uint256 _preExecutionBalance = IERC20(_tokenOut).balanceOf(_receiver);
-
+  ) internal override {
     uint8 multicallOptimization = _getMultiCallOptimization(_data);
 
     bool _success;
@@ -51,21 +47,26 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, AsyncSwapper {
     }
 
     if (!_success) revert MultiCallRevert();
-
-    _receivedAmount = IERC20(_tokenOut).balanceOf(_receiver) - _preExecutionBalance;
-
-    if (_receivedAmount < _minAmountOut) revert InvalidAmountOut();
-    emit Swapped(_receiver, _tokenIn, _tokenOut, _amountIn, _minAmountOut, _receivedAmount, _data);
   }
 
-  function _executeSwap(
-    address _receiver,
-    address _tokenIn,
-    address _tokenOut,
-    uint256 _amountIn,
-    bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
-    // unused
+  function swapMultiple(bytes calldata _data) external override onlyTradeFactory {
+    uint8 multicallOptimization = _getMultiCallOptimization(_data);
+
+    bool _success;
+
+    if (multicallOptimization == uint8(MulticallOptimization.CallOnly)) {
+      _success = _multiSendCallOnly(_data); // OptimizedCall;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlySameTo)) {
+      _success = _multiSendCallOnlySameTo(_data); // OptimizedCallSameTo;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlyNoValue)) {
+      _success = _multiSendCallOnlyNoValue(_data); // OptimizedCallNoValue;
+    } else if (multicallOptimization == uint8(MulticallOptimization.CallOnlySameToNoValue)) {
+      _success = _multiSendCallOnlySameToNoValue(_data); // OptimizedCallSameToNoValue;
+    } else {
+      revert CallOnlyOptimizationRequired();
+    }
+
+    if (!_success) revert MultiCallRevert();
   }
 
   function _getMultiCallOptimization(bytes memory _data) internal pure returns (uint8 multicallOptimization) {

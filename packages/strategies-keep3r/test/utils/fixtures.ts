@@ -59,40 +59,7 @@ export const tradeFactoryFixture = async (
   };
 };
 
-interface OTCPoolFixture extends TradeFactoryFixture {
-  otcPool: Contract;
-}
-
-export const otcPoolFixture = async (
-  masterAdmin: string,
-  swapperAdder: string,
-  swapperSetter: string,
-  strategyAdder: string,
-  tradeModifier: string,
-  tradeSettler: string,
-  mechanicsRegistry: string,
-  otcPoolGovernor: string
-): Promise<OTCPoolFixture> => {
-  const { tradeFactory } = await tradeFactoryFixture(
-    masterAdmin,
-    swapperAdder,
-    swapperSetter,
-    strategyAdder,
-    tradeModifier,
-    tradeSettler,
-    mechanicsRegistry
-  );
-  const otcPoolFactory = await ethers.getContractFactory('contracts/OTCPool.sol:OTCPool');
-  const masterAdminSigner = await wallet.impersonate(masterAdmin);
-  const otcPool = await otcPoolFactory.deploy(otcPoolGovernor, tradeFactory.address);
-  await tradeFactory.connect(masterAdminSigner).setOTCPool(otcPool.address);
-  return {
-    tradeFactory,
-    otcPool,
-  };
-};
-
-interface UniswapV2SwapperFixture extends OTCPoolFixture {
+interface UniswapV2SwapperFixture extends TradeFactoryFixture {
   WETH: Contract;
   uniswapV2Factory: Contract;
   uniswapV2Router02: Contract;
@@ -107,18 +74,16 @@ export const uniswapV2SwapperFixture = async (
   strategyAdder: string,
   tradeModifier: string,
   tradeSettler: string,
-  mechanicsRegistry: string,
-  otcPoolGovernor: string
+  mechanicsRegistry: string
 ): Promise<UniswapV2SwapperFixture> => {
-  const { tradeFactory, otcPool } = await otcPoolFixture(
+  const { tradeFactory } = await tradeFactoryFixture(
     masterAdmin,
     swapperAdder,
     swapperSetter,
     strategyAdder,
     tradeModifier,
     tradeSettler,
-    mechanicsRegistry,
-    otcPoolGovernor
+    mechanicsRegistry
   );
   const uniswapV2AsyncSwapperFactory = await ethers.getContractFactory('contracts/swappers/async/UniswapV2Swapper.sol:UniswapV2Swapper');
   const uniswapV2SyncSwapperFactory = await ethers.getContractFactory('contracts/swappers/sync/UniswapV2Swapper.sol:UniswapV2Swapper');
@@ -140,7 +105,6 @@ export const uniswapV2SwapperFixture = async (
   );
   return {
     tradeFactory,
-    otcPool,
     uniswapV2AsyncSwapper,
     uniswapV2SyncSwapper,
     ...uniswapDeployment,
