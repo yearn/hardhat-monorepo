@@ -9,7 +9,6 @@ import { BigNumber, utils } from 'ethers';
 let harvestV2DetachedJob: HarvestV2DetachedJob;
 const worked: string[] = [];
 const notWorkable: string[] = [];
-const onLiquidityCooldown: string[] = [];
 const errorWhileWorked: string[] = [];
 const lastTimeRewardWasDumped: { [address: string]: number } = {};
 
@@ -94,7 +93,6 @@ async function main() {
         console.log('[App] Harvest trigger status is', harvestTrigger[i]);
         console.log('[App] Is it on work cooldown?', onWorkCooldown[i]);
         console.log('[App] Is it on liquidity cooldown?', isStratOnLiquidityCooldown);
-        console.log('***************************');
         notWorkable.push(strategy);
       } else {
         console.log('[App] Working...');
@@ -111,7 +109,7 @@ async function main() {
           lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
         });
         worked.push(strategy);
-        console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash}`);
+        console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash} at ${moment()} (${moment().unix()})`);
       }
     } catch (error: any) {
       console.log('[App] Error while working:', error.message);
