@@ -84,49 +84,41 @@ async function main() {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
         (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
-      if (!workable[i]) {
-        console.log('[App] Not workable');
-        console.log('[App] Harvest trigger status is', harvestTrigger[i]);
-        console.log('[App] Is it on work cooldown?', onWorkCooldown[i]);
-        console.log('***************************');
-        notWorkable.push(strategy);
-        continue;
-      }
-
       let isStratOnLiquidityCooldown: boolean = false;
       strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
         isStratOnLiquidityCooldown =
           isStratOnLiquidityCooldown || moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= lastTimeRewardWasDumped[tokenBeingDumped];
       });
-      if (isStratOnLiquidityCooldown) {
-        console.log('[App] On liquidity cooldown');
+      if (!workable[i] || isStratOnLiquidityCooldown) {
+        console.log('[App] Not workable');
+        console.log('[App] Harvest trigger status is', harvestTrigger[i]);
+        console.log('[App] Is it on work cooldown?', onWorkCooldown[i]);
+        console.log('[App] Is it on liquidity cooldown?', isStratOnLiquidityCooldown);
         console.log('***************************');
-        onLiquidityCooldown.push(strategy);
-        continue;
+        notWorkable.push(strategy);
+      } else {
+        console.log('[App] Working...');
+        const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
+        await harvestV2DetachedJob.callStatic.work(strategy, {
+          gasLimit: gasLimit.mul(110).div(100),
+          gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
+        });
+        const tx = await harvestV2DetachedJob.work(strategy, {
+          gasLimit: gasLimit.mul(110).div(100),
+          gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
+        });
+        strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
+          lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
+        });
+        worked.push(strategy);
+        console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash}`);
       }
-      console.log('[App] Working...');
-      const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
-      await harvestV2DetachedJob.callStatic.work(strategy, {
-        gasLimit: gasLimit.mul(110).div(100),
-        gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
-      });
-      const tx = await harvestV2DetachedJob.work(strategy, {
-        gasLimit: gasLimit.mul(110).div(100),
-        gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
-      });
-      strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
-        lastTimeRewardWasDumped[tokenBeingDumped] = moment().unix();
-      });
-      worked.push(strategy);
-      console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash}`);
     } catch (error: any) {
       console.log('[App] Error while working:', error.message);
       errorWhileWorked.push(strategy);
     }
     console.log('***************************');
   }
-  console.log('[App] On liqudity cooldown:', onLiquidityCooldown.join(','));
-  console.log('***************************');
   console.log('[App] Not workable strategies:', notWorkable.join(','));
   console.log('***************************');
   console.log('[App] Worked strategies:', worked.join(','));
