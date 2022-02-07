@@ -110,6 +110,7 @@ async function main() {
         });
         worked.push(strategy);
         console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash} at ${moment()} (${moment().unix()})`);
+        await tx.wait();
       }
     } catch (error: any) {
       console.log('[App] Error while working:', error.message);
