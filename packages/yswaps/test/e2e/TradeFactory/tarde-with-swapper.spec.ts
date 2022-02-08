@@ -4,7 +4,7 @@ import { erc20, evm, uniswap } from '@test-utils';
 import * as fixtures from '../../fixtures';
 import { contract, given, then } from '@test-utils/bdd';
 import { expect } from 'chai';
-import uniswapLibrary from '../../../scripts/libraries/uniswap-v2';
+import uniswapLibrary from '../../../scripts/libraries/swappers/uniswap-v2';
 import { ERC20Mock, IERC20, TradeFactory } from '@typechained';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 

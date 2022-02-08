@@ -3,8 +3,8 @@ import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
 import { impersonate } from '../utils';
-import zrx from '../libraries/zrx';
-import { mergeTransactions } from '@scripts/libraries/multicall';
+import zrx from '../zrx';
+import { mergeTransactions } from '@scripts/libraries/swappers/multicall';
 
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST
