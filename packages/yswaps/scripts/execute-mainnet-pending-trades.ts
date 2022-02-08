@@ -17,8 +17,8 @@ import {
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
 import { PendingTrade, TradeSetup } from './types';
-import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
-import { CurveSpellEthMulticall } from './multicall/CurveSpellEthMulticall';
+import { ThreePoolCrvMulticall } from './libraries/swappers/multicall/ThreePoolCrvMulticall';
+import { CurveSpellEthMulticall } from './libraries/swappers/multicall/CurveSpellEthMulticall';
 import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
@@ -26,14 +26,8 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
 import { tradeFactoryStrategies } from '../utils/strategies';
-import { impersonate } from './utils';
+import * as strategistImpersonator from '@libraries/utils/strategist-impersonator';
 
-enum EXECUTION_TYPE {
-  PROTECT,
-  FLASHBOT,
-}
-
-const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
@@ -66,8 +60,6 @@ async function main() {
   // const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
   // console.log('[HACK] tradeSetup: ', tradeSetup);
 
-  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
-
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
@@ -82,15 +74,12 @@ async function main() {
   );
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
-  
-  
+
   // TODO Remove
-  const strategy = await ethers.getContractAt('IBaseStrategy', '0xeDB4B647524FC2B9985019190551b197c6AB6C5c');  
-  const vault = await ethers.getContractAt('IVault', await strategy.vault());
-  const strategyGovernance: Signer = await impersonate(await vault.governance());
-  await strategy.connect(strategyGovernance).updateTradeFactory(tradeFactory.address);
-
-
+  strategistImpersonator.enableTradeFactory({
+    strategyAddress: '0xeDB4B647524FC2B9985019190551b197c6AB6C5c',
+    tradeFactoryAddress: tradeFactory.address,
+  });
 
   const enabledTrades = await tradeFactory.enabledTrades();
   console.log(enabledTrades);
@@ -166,7 +155,7 @@ async function main() {
       params: [snapshotId],
     });
 
-    console.log('skipping execution...')
+    console.log('skipping execution...');
     continue;
 
     // const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](

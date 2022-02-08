@@ -1,4 +1,4 @@
-import { PendingTrade, TradeSetup } from '../types';
+import { PendingTrade, TradeSetup } from '../../../types';
 
 export interface IMulticall {
   match(trade: PendingTrade): boolean;

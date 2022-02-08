@@ -38,3 +38,7 @@ interface IBaseStrategy {
 
   function setBorrowCollateralizationRatio(uint256 _c) external;
 }
+
+interface IBaseStrategyYSwaps is IBaseStrategy {
+  function updateTradeFactory(address _newTradeFactory) external;
+}

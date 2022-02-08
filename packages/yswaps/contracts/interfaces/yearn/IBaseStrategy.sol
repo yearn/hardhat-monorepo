@@ -37,6 +37,6 @@ interface IBaseStrategy {
   function harvest() external;
 
   function setBorrowCollateralizationRatio(uint256 _c) external;
-  
+
   function updateTradeFactory(address _tradeFactory) external;
 }

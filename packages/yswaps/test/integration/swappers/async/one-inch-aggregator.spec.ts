@@ -4,7 +4,7 @@ import { BigNumber, utils, Wallet } from 'ethers';
 import { evm, wallet } from '@test-utils';
 import { then } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
-import oneinch, { SwapResponse } from '@scripts/libraries/oneinch';
+import oneinch, { SwapResponse } from '@scripts/libraries/swappers/oneinch';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import * as setup from '../setup';
 

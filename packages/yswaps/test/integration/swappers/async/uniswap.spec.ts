@@ -6,7 +6,7 @@ import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import forkBlockNumber from '@integration/fork-block-numbers';
-import uniswapV2, { SwapResponse } from '@scripts/libraries/uniswap-v2';
+import uniswapV2, { SwapResponse } from '@scripts/libraries/swappers/uniswap-v2';
 import { WETH, UNISWAP_V2_ROUTER, UNISWAP_V2_FACTORY } from '@deploy/mainnet-swappers/uniswap_v2';
 import * as setup from '../setup';
 
