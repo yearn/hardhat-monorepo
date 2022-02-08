@@ -6,11 +6,11 @@
 
 - yMechs multisig: [0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6](https://etherscan.io/address/0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6)
 - ySwaps multisig: [0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0](https://etherscan.io/address/0x7d2aB9CA511EBD6F03971Fb417d3492aA82513f0)
-- TradeFactory: [0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29](https://etherscan.io/address/0x99d8679bE15011dEAD893EB4F5df474a4e6a8b29)
+- TradeFactory: [0x7A17E008c1caF7a937766fAb1C29AeDc0bF3472c](https://etherscan.io/address/0x7A17E008c1caF7a937766fAb1C29AeDc0bF3472c)
 
 ### Swappers
 
-- MultiCallOptimizedSwapper: [0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA](https://etherscan.io/address/0xB2F65F254Ab636C96fb785cc9B4485cbeD39CDAA)
+- MultiCallOptimizedSwapper: [0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8](https://etherscan.io/address/0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8)
 
 # Version 0.1.0
 

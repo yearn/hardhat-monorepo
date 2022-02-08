@@ -22,5 +22,5 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
   }
 };
 deployFunction.dependencies = ['TradeFactory'];
-deployFunction.tags = ['MultiCallOptimized', 'Mainnet', 'MultiCallOptimized222'];
+deployFunction.tags = ['MultiCallOptimized', 'Mainnet'];
 export default deployFunction;
