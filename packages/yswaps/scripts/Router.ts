@@ -1,5 +1,5 @@
-import { PendingTrade, TradeSetup } from './types';
-import uniswap from '@scripts/libraries/swappers/uniswap-v2';
+import { EnabledTrade, TradeSetup } from './types';
+import uniswap from '@libraries/swappers/uniswap-v2';
 import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER, WETH } from '@deploy/mainnet-swappers/uniswap_v2';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import { IERC20Metadata } from '@typechained';
@@ -8,7 +8,7 @@ import zrx from './libraries/swappers/zrx';
 import { utils } from 'ethers';
 
 export class Router {
-  async route(pendingTrade: PendingTrade): Promise<TradeSetup> {
+  async route(pendingTrade: EnabledTrade): Promise<TradeSetup> {
     const chainId = await getChainId();
     const SLIPPAGE_PERCENTAGE = 3;
     const tradesSetup: TradeSetup[] = [];
@@ -37,11 +37,13 @@ export class Router {
 
     // console.log('uniswap v2:', utils.formatUnits(uniswapV2MinAmountOut!, decimalsOut), uniswapV2Data);
 
+    const amountIn = await tokenIn.balanceOf(pendingTrade._strategy);
+
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
       chainId: Number(chainId),
       sellToken: pendingTrade._tokenIn,
       buyToken: pendingTrade._tokenOut,
-      sellAmount: pendingTrade._amountIn,
+      sellAmount: amountIn,
       slippagePercentage: SLIPPAGE_PERCENTAGE / 100,
     });
 

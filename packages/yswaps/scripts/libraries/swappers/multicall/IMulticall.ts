@@ -1,6 +1,6 @@
-import { PendingTrade, TradeSetup } from '../../../types';
+import { EnabledTrade, TradeSetup } from '@scripts/types';
 
 export interface IMulticall {
-  match(trade: PendingTrade): boolean;
-  asyncSwap(trade: PendingTrade): Promise<TradeSetup>;
+  match(trade: EnabledTrade): boolean;
+  asyncSwap(trade: EnabledTrade): Promise<TradeSetup>;
 }

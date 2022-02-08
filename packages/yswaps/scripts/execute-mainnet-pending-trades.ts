@@ -16,9 +16,9 @@ import {
   SimulationResponseSuccess,
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
-import { PendingTrade, TradeSetup } from './types';
-import { ThreePoolCrvMulticall } from './libraries/swappers/multicall/ThreePoolCrvMulticall';
-import { CurveSpellEthMulticall } from './libraries/swappers/multicall/CurveSpellEthMulticall';
+import { EnabledTrade, TradeSetup } from './types';
+import { ThreePoolCrvMulticall } from '@libraries/swappers/multicall/ThreePoolCrvMulticall';
+import { CurveSpellEthMulticall } from '@libraries/swappers/multicall/CurveSpellEthMulticall';
 import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
@@ -75,39 +75,31 @@ async function main() {
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  // TODO Remove
-  strategistImpersonator.enableTradeFactory({
-    strategyAddress: '0xeDB4B647524FC2B9985019190551b197c6AB6C5c',
-    tradeFactoryAddress: tradeFactory.address,
-  });
-
-  const enabledTrades = await tradeFactory.enabledTrades();
+  const enabledTrades: EnabledTrade[] = await tradeFactory.enabledTrades();
+  console.log('enabledTrades');
   console.log(enabledTrades);
-  const pendingTrades: PendingTrade[] = [];
-
-  for (const id of enabledTrades) {
-    // pendingTrades.push(await tradeFactory.pendingTradesById(id));
-  }
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
-  for (const pendingTrade of pendingTrades) {
-    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
-    const decimalsIn = await tokenIn.decimals();
+  for (const enabledTrade of enabledTrades) {
+    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrade._tokenIn);
     const symbolIn = await tokenIn.symbol();
+    const tokenOut = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrade._tokenOut);
+    const symbolOut = await tokenOut.symbol();
 
     console.log(
-      '[Execution] Executing trade with id',
-      pendingTrade._id.toNumber(),
-      'of',
-      utils.formatUnits(pendingTrade._amountIn, decimalsIn),
-      symbolIn
+      '[Execution] Processing trade of strategy',
+      enabledTrade._strategy, // TODO Add strategy name
+      'for',
+      symbolIn,
+      'to',
+      symbolOut
     );
 
     let bestSetup: TradeSetup;
     let snapshotId;
     // Check if we need to run over a multicall swapper
-    const multicall = multicalls.find((mc) => mc.match(pendingTrade));
+    const multicall = multicalls.find((mc) => mc.match(enabledTrade));
     if (multicall) {
       console.log('[Multicall] Taking snapshot of fork');
 
@@ -118,7 +110,7 @@ async function main() {
 
       console.log('[Multicall] Getting data');
 
-      bestSetup = await multicall.asyncSwap(pendingTrade);
+      bestSetup = await multicall.asyncSwap(enabledTrade);
 
       console.log('[Multicall] Reverting to snapshot');
       await network.provider.request({
@@ -126,7 +118,13 @@ async function main() {
         params: [snapshotId],
       });
     } else {
-      bestSetup = await new Router().route(pendingTrade);
+      bestSetup = null as any as TradeSetup;
+      // bestSetup = await new Router().route(enabledTrade);
+    }
+
+    if (!bestSetup) {
+      console.log('no best setup, skip');
+      continue;
     }
 
     const currentGas = gasprice.get(gasprice.Confidence.Highest);
@@ -142,7 +140,7 @@ async function main() {
     console.log('[Execution] Executing trade in fork');
 
     // const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
-    //   pendingTrade._id,
+    //   enabledTrade._id,
     //   bestSetup.swapper,
     //   bestSetup.minAmountOut!,
     //   bestSetup.data
@@ -159,7 +157,7 @@ async function main() {
     continue;
 
     // const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
-    //   pendingTrade._id,
+    //   enabledTrade._id,
     //   bestSetup.swapper,
     //   bestSetup.minAmountOut!,
     //   bestSetup.data
@@ -167,7 +165,7 @@ async function main() {
     // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
     // await generateAndSendBundle({
-    //   pendingTrade,
+    //   enabledTrade,
     //   blockProtection,
     //   bestSetup,
     //   wallet: ymech,
@@ -185,7 +183,7 @@ async function main() {
 }
 
 async function generateAndSendBundle(params: {
-  pendingTrade: PendingTrade;
+  enabledTrade: EnabledTrade;
   blockProtection: any;
   bestSetup: TradeSetup;
   wallet: Wallet;
@@ -228,7 +226,7 @@ async function generateAndSendBundle(params: {
   ];
 
   if (await submitBundleForBlock(bundle, targetBlockNumber)) {
-    console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
+    console.log('[Execution] Pending trade for', params.enabledTrade._strategy, 'executed via', params.bestSetup.swapper);
     return true;
   }
   if (!params.retryNumber) params.retryNumber = 0;
