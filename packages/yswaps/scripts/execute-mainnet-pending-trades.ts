@@ -83,7 +83,7 @@ async function main() {
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  const enabledTrades: EnabledTrade[]  = await tradeFactory.enabledTrades();
+  const enabledTrades: EnabledTrade[] = await tradeFactory.enabledTrades();
   console.log('enabledTrades');
   console.log(enabledTrades);
 
@@ -131,7 +131,7 @@ async function main() {
     }
 
     if (!bestSetup) {
-      console.log('no best setup, skip')
+      console.log('no best setup, skip');
       continue;
     }
 
@@ -161,7 +161,7 @@ async function main() {
       params: [snapshotId],
     });
 
-    console.log('skipping execution...')
+    console.log('skipping execution...');
     continue;
 
     // const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](

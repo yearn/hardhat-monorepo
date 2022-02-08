@@ -1,4 +1,4 @@
-import { BigNumber, constants, ethers, PopulatedTransaction, Signer, utils } from 'ethers';
+import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
 import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
@@ -21,10 +21,10 @@ export class ThreePoolCrvMulticall implements IMulticall {
   private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   match(trade: EnabledTrade) {
-    console.log('[ThreePoolCrvMulticall] match')
-    console.log('strategy', trade._strategy == this.strategy)
-    console.log('threeCrv', trade._tokenIn == this.threeCrv)
-    console.log('yveCrv', trade._tokenOut == this.yveCrv)
+    console.log('[ThreePoolCrvMulticall] match');
+    console.log('strategy', trade._strategy == this.strategy);
+    console.log('threeCrv', trade._tokenIn == this.threeCrv);
+    console.log('yveCrv', trade._tokenOut == this.yveCrv);
     return trade._strategy == this.strategy && trade._tokenIn == this.threeCrv && trade._tokenOut == this.yveCrv;
   }
 

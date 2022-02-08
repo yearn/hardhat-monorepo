@@ -82,7 +82,7 @@ export const quote = async (quoteRequest: QuoteRequest): Promise<QuoteResponse> 
       data.minAmountOut = BigNumber.from(`${data.sellAmount}`).mul(rateFromTo).div(BigNumber.from(10).pow(tokenFromDecimals));
     }
   } catch (err: any) {
-    const code = err.response? err.response.data.code : err.code;
+    const code = err.response ? err.response.data.code : err.code;
     throw new Error(`Error code: ${code}. Reason: ${err.response?.data.reason}`);
   }
   return data;
