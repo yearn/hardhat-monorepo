@@ -23,7 +23,7 @@ export class CurveSpellEthMulticall implements IMulticall {
   private crv: string = '0xD533a949740bb3306d119CC777fa900bA034cd52';
   private cvx: string = '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B';
   private weth: string = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  private multicallSwapper: string = '0xA7A778583b2bd529Eae21A9e2965cc5655e3f70B';
+  private multicallSwapper: string = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   async processTrades(): Promise<TradeSetup> {

@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
-import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata } from '@typechained';
+import { BigNumber, PopulatedTransaction, Signer, utils, Wallet } from 'ethers';
+import { IERC20Metadata, TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
@@ -25,6 +25,8 @@ import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
+import { tradeFactoryStrategies } from '../utils/strategies';
+import { impersonate } from './utils';
 
 enum EXECUTION_TYPE {
   PROTECT,
@@ -79,13 +81,21 @@ async function main() {
     ymech // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  const tradeFactory = await ethers.getContract('TradeFactory', ymech);
+  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
+  const strategy = await ethers.getContractAt('', '0xeDB4B647524FC2B9985019190551b197c6AB6C5c');
+  
+  // TODO Remove
+  const strategySigner: Signer = await impersonate('0xeDB4B647524FC2B9985019190551b197c6AB6C5c');
+  const vault = await strategy.vault();
+  const strategyGovernance: Signer = await impersonate(await vault.governance());
+  await strategy.updateTradeFactory(tradeFactory.address);
 
-  const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
+  const enabledTrades = await tradeFactory.enabledTrades();
+  console.log(enabledTrades);
   const pendingTrades: PendingTrade[] = [];
 
-  for (const id of pendingTradesIds) {
-    pendingTrades.push(await tradeFactory.pendingTradesById(id));
+  for (const id of enabledTrades) {
+    // pendingTrades.push(await tradeFactory.pendingTradesById(id));
   }
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
@@ -140,41 +150,44 @@ async function main() {
     // Execute in our fork
     console.log('[Execution] Executing trade in fork');
 
-    const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
-      pendingTrade._id,
-      bestSetup.swapper,
-      bestSetup.minAmountOut!,
-      bestSetup.data
-    );
-    const confirmedTx = await simulatedTx.wait();
-    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+    // const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
+    //   pendingTrade._id,
+    //   bestSetup.swapper,
+    //   bestSetup.minAmountOut!,
+    //   bestSetup.data
+    // );
+    // const confirmedTx = await simulatedTx.wait();
+    // console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
     await network.provider.request({
       method: 'evm_revert',
       params: [snapshotId],
     });
 
-    const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
-      pendingTrade._id,
-      bestSetup.swapper,
-      bestSetup.minAmountOut!,
-      bestSetup.data
-    );
-    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+    console.log('skipping execution...')
+    continue;
 
-    await generateAndSendBundle({
-      pendingTrade,
-      blockProtection,
-      bestSetup,
-      wallet: ymech,
-      executeTx,
-      gasParams: {
-        ...gasPriceParams,
-        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        gasLimit: BigNumber.from(2_000_000),
-      },
-      nonce,
-    });
+    // const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
+    //   pendingTrade._id,
+    //   bestSetup.swapper,
+    //   bestSetup.minAmountOut!,
+    //   bestSetup.data
+    // );
+    // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+
+    // await generateAndSendBundle({
+    //   pendingTrade,
+    //   blockProtection,
+    //   bestSetup,
+    //   wallet: ymech,
+    //   executeTx,
+    //   gasParams: {
+    //     ...gasPriceParams,
+    //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+    //     gasLimit: BigNumber.from(2_000_000),
+    //   },
+    //   nonce,
+    // });
   }
 
   await sleep(DELAY);
