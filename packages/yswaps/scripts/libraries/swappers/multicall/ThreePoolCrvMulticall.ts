@@ -1,4 +1,4 @@
-import { BigNumber, constants, ethers, PopulatedTransaction, Signer, utils } from 'ethers';
+import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
 import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
