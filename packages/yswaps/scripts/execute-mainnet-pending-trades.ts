@@ -41,7 +41,7 @@ type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTrans
 let httpProvider: JsonRpcProvider;
 
 // Multicall swappers
-const multicalls = [new ThreePoolCrvMulticall()];
+const multicalls = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall()];
 
 async function main() {
   await gasprice.start();

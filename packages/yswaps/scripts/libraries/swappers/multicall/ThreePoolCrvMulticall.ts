@@ -21,10 +21,6 @@ export class ThreePoolCrvMulticall implements IMulticall {
   private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   match(trade: EnabledTrade) {
-    console.log('[ThreePoolCrvMulticall] match');
-    console.log('strategy', trade._strategy == this.strategy);
-    console.log('threeCrv', trade._tokenIn == this.threeCrv);
-    console.log('yveCrv', trade._tokenOut == this.yveCrv);
     return trade._strategy == this.strategy && trade._tokenIn == this.threeCrv && trade._tokenOut == this.yveCrv;
   }
 
