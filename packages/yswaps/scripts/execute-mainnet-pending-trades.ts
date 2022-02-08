@@ -61,10 +61,10 @@ async function main() {
   });
 
   // Custom logic to handle fish strat
-  console.log('[HACK] do custom trade for fish strategy for now ...');
-  const curveSpellEth = new CurveSpellEthMulticall();
-  const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
-  console.log('[HACK] tradeSetup: ', tradeSetup);
+  // console.log('[HACK] do custom trade for fish strategy for now ...');
+  // const curveSpellEth = new CurveSpellEthMulticall();
+  // const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
+  // console.log('[HACK] tradeSetup: ', tradeSetup);
 
   // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
 
@@ -82,13 +82,15 @@ async function main() {
   );
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
-  const strategy = await ethers.getContractAt('', '0xeDB4B647524FC2B9985019190551b197c6AB6C5c');
+  
   
   // TODO Remove
-  const strategySigner: Signer = await impersonate('0xeDB4B647524FC2B9985019190551b197c6AB6C5c');
-  const vault = await strategy.vault();
+  const strategy = await ethers.getContractAt('IBaseStrategy', '0xeDB4B647524FC2B9985019190551b197c6AB6C5c');  
+  const vault = await ethers.getContractAt('IVault', await strategy.vault());
   const strategyGovernance: Signer = await impersonate(await vault.governance());
-  await strategy.updateTradeFactory(tradeFactory.address);
+  await strategy.connect(strategyGovernance).updateTradeFactory(tradeFactory.address);
+
+
 
   const enabledTrades = await tradeFactory.enabledTrades();
   console.log(enabledTrades);
