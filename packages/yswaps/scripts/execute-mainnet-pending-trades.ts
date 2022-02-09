@@ -31,14 +31,14 @@ import * as strategistImpersonator from '@libraries/utils/strategist-impersonato
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
-const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 3;
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
 // Provider
-let httpProvider: JsonRpcProvider;
+let mainnetProvider: JsonRpcProvider;
 
 // Multicall swappers
 const multicalls = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall()];
@@ -54,22 +54,16 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
-  // Custom logic to handle fish strat
-  // console.log('[HACK] do custom trade for fish strategy for now ...');
-  // const curveSpellEth = new CurveSpellEthMulticall();
-  // const tradeSetup: TradeSetup = await curveSpellEth.processTrades();
-  // console.log('[HACK] tradeSetup: ', tradeSetup);
-
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
+  mainnetProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
   // console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
-    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    mainnetProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
     ymech // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
@@ -139,44 +133,56 @@ async function main() {
     // Execute in our fork
     console.log('[Execution] Executing trade in fork');
 
-    // const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
-    //   enabledTrade._id,
-    //   bestSetup.swapper,
-    //   bestSetup.minAmountOut!,
-    //   bestSetup.data
-    // );
-    // const confirmedTx = await simulatedTx.wait();
-    // console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
+      [
+        {
+          _strategy: enabledTrade._strategy,
+          _tokenIn: '0xD533a949740bb3306d119CC777fa900bA034cd52',
+          _tokenOut: enabledTrade._tokenOut,
+          _amount: await (
+            await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, '0xD533a949740bb3306d119CC777fa900bA034cd52')
+          ).balanceOf(enabledTrade._strategy),
+          _minAmountOut: 1,
+        },
+        {
+          _strategy: enabledTrade._strategy,
+          _tokenIn: '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B',
+          _tokenOut: enabledTrade._tokenOut,
+          _amount: await (
+            await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B')
+          ).balanceOf(enabledTrade._strategy),
+          _minAmountOut: 1,
+        },
+      ],
+      bestSetup.swapper,
+      bestSetup.data
+    );
+    console.log('tx data', executeTx.data!);
+
+    const simulatedTx = await ymech.sendTransaction(executeTx);
+    const confirmedTx = await simulatedTx.wait();
+    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
 
     await network.provider.request({
       method: 'evm_revert',
       params: [snapshotId],
     });
 
-    console.log('skipping execution...');
-    continue;
+    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-    // const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
-    //   enabledTrade._id,
-    //   bestSetup.swapper,
-    //   bestSetup.minAmountOut!,
-    //   bestSetup.data
-    // );
-    // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
-
-    // await generateAndSendBundle({
-    //   enabledTrade,
-    //   blockProtection,
-    //   bestSetup,
-    //   wallet: ymech,
-    //   executeTx,
-    //   gasParams: {
-    //     ...gasPriceParams,
-    //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-    //     gasLimit: BigNumber.from(2_000_000),
-    //   },
-    //   nonce,
-    // });
+    await generateAndSendBundle({
+      enabledTrade,
+      blockProtection,
+      bestSetup,
+      wallet: ymech,
+      executeTx,
+      gasParams: {
+        ...gasPriceParams,
+        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        gasLimit: BigNumber.from(2_000_000),
+      },
+      nonce,
+    });
   }
 
   await sleep(DELAY);
@@ -196,7 +202,7 @@ async function generateAndSendBundle(params: {
   nonce: number;
   retryNumber?: number;
 }): Promise<boolean> {
-  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
+  const targetBlockNumber = (await mainnetProvider.getBlockNumber()) + 3;
 
   const populatedTx = await params.blockProtection.populateTransaction.callWithBlockProtection(
     params.executeTx.to, // address _to,
@@ -204,7 +210,7 @@ async function generateAndSendBundle(params: {
     targetBlockNumber // uint256 _blockNumber
   );
 
-  const signedTx = await params.wallet.connect(httpProvider).signTransaction({
+  const signedTx = await params.wallet.connect(mainnetProvider).signTransaction({
     ...params.gasParams,
     type: 2,
     to: populatedTx.to!,

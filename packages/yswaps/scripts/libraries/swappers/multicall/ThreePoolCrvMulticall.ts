@@ -2,9 +2,9 @@ import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ether
 import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
-import { impersonate } from '../utils';
 import zrx from '../zrx';
 import { mergeTransactions } from '@scripts/libraries/swappers/multicall';
+import { impersonate } from '@test-utils/wallet';
 
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST

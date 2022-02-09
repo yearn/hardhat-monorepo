@@ -2,9 +2,9 @@ import { BigNumber, constants, PopulatedTransaction, Signer } from 'ethers';
 import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IWETH, IWETH__factory } from '@typechained';
-import { impersonate } from '../utils';
 import zrx from '../zrx';
 import { mergeTransactions } from '@scripts/libraries/swappers/multicall';
+import { impersonate } from '@test-utils/wallet';
 
 type Tx = {
   to: string;
