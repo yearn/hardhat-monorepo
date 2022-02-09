@@ -1,9 +1,8 @@
 import { run, ethers, network } from 'hardhat';
 import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
-import * as accounts from '../../../utils/accounts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { v2FtmHarvestStrategies } from '../../../utils/v2-ftm-strategies';
+import { harvestConfigurations } from '../../../utils/v2-ftm-strategies';
+import { utils } from 'ethers';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'correct address?' });
@@ -17,30 +16,20 @@ async function main() {
 
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
-    const [owner] = await ethers.getSigners();
-    let signer = owner;
-    if (owner.address != accounts.yKeeper) {
-      console.log('on fork mode, impersonating yKeeper');
-      await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [accounts.yKeeper],
-      });
-      const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
-      yKeeper.address = yKeeper._address;
-      signer = yKeeper;
-    }
-
-    console.log('using address:', signer.address);
+    const [signer] = await ethers.getSigners();
+    console.log('Using address:', signer.address);
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom, signer);
+          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom);
 
-          const jobStrategies = await harvestV2DetachedJob.callStatic.strategies();
+          const jobStrategies = (await harvestV2DetachedJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
-          const strategiesAdded = v2FtmHarvestStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address);
+          const strategiesAdded = harvestConfigurations.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
 
-          const strategiesNotYetAdded = v2FtmHarvestStrategies.filter((strategy) => !strategy.added).map((strategy) => strategy.address);
+          const strategiesNotYetAdded = harvestConfigurations
+            .filter((strategy) => !strategy.added)
+            .map((strategy) => strategy.address.toLowerCase());
 
           for (const strategyAdded of strategiesAdded) {
             if (jobStrategies.indexOf(strategyAdded) == -1)
@@ -57,7 +46,7 @@ function promptAndSubmit(): Promise<void | Error> {
               console.log(`strategy: ${jobStrategy} should not be on job, or is missing from config`);
           }
 
-          const strategiesToAdd = v2FtmHarvestStrategies
+          const strategiesToAdd = harvestConfigurations
             .filter((strategy) => !strategy.added)
             .map((strategy) => ({
               name: strategy.name,
@@ -76,13 +65,14 @@ function promptAndSubmit(): Promise<void | Error> {
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
             strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
           );
-          await harvestV2DetachedJob.addStrategies(
+          const tx = await harvestV2DetachedJob.addStrategies(
             strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
             // strategiesToAdd.map(() => 0), // address _requiredAmount,
             strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
-            strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
+            strategiesToAdd.map((strategy) => strategy.costPair), // address _costPair
+            { gasPrice: utils.parseUnits('3000', 'gwei') }
           );
-
+          console.log(`Tx submitted, track it on https://ftmscan.com/tx/${tx.hash}`);
           resolve();
         } catch (err: any) {
           reject(`Error while adding strategies to v2 harvest detached job: ${err.message}`);

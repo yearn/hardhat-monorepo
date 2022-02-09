@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/yearn/hardhat-monorepo/compare/@yearn/yswaps@0.1.0...@yearn/yswaps@0.2.0) (2022-01-12)
+
+
+### Bug Fixes
+
+* **yswaps:** chain id on mainnet execution ([ad351c0](https://github.com/yearn/hardhat-monorepo/commit/ad351c04ccf2fabade07bbbf459838276d3f23b3))
+
+
+### Features
+
+* adds mainnet watcher and executor script ([#4](https://github.com/yearn/hardhat-monorepo/issues/4)) ([03ba1cc](https://github.com/yearn/hardhat-monorepo/commit/03ba1cc6a7d6935036c415ab48cd18fcb8f9088f))
+* improve fantom execution script ([#49](https://github.com/yearn/hardhat-monorepo/issues/49)) ([ec6dbf7](https://github.com/yearn/hardhat-monorepo/commit/ec6dbf7074b3e1f087205cf907453db5e454b0c6))
+* multicall swapper ([002a634](https://github.com/yearn/hardhat-monorepo/commit/002a634b9e958ccf94d827ab8bda4f5a2cd9368f))
+* **yswaps:** adds watcher script for fantom ([2fb7fb8](https://github.com/yearn/hardhat-monorepo/commit/2fb7fb8872260c5fd5e6b441ab9e3994d136c1e6))
+
+
+
+
+
 # 0.1.0 (2021-11-08)
 
 

@@ -1,9 +1,7 @@
-import { run, ethers, network } from 'hardhat';
-import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
+import { run, ethers } from 'hardhat';
+import { ZERO_ADDRESS } from '../../../utils/web3-utils';
 import * as contracts from '../../../utils/contracts';
-import * as accounts from '../../../utils/accounts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { v2FtmTendStrategies } from '../../../utils/v2-ftm-strategies';
+import { tendConfigurations } from '../../../utils/v2-ftm-strategies';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'correct address?' });
@@ -17,30 +15,20 @@ async function main() {
 
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
-    const [owner] = await ethers.getSigners();
-    let signer = owner;
-    if (owner.address != accounts.yKeeper) {
-      console.log('on fork mode, impersonating yKeeper');
-      await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [accounts.yKeeper],
-      });
-      const yKeeper: any = ethers.provider.getUncheckedSigner(accounts.yKeeper) as any as SignerWithAddress;
-      yKeeper.address = yKeeper._address;
-      signer = yKeeper;
-    }
-
-    console.log('using address:', signer.address);
+    const [signer] = await ethers.getSigners();
+    console.log('Using address:', signer.address);
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const tendV2DetachedJob = await ethers.getContractAt('TendV2DetachedJob', contracts.tendV2DetachedJob.fantom, signer);
+          const tendV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.tendV2DetachedJob.fantom);
 
-          const jobStrategies = await tendV2DetachedJob.callStatic.strategies();
+          const jobStrategies = (await tendV2DetachedJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
-          const strategiesAdded = v2FtmTendStrategies.filter((strategy) => strategy.added).map((strategy) => strategy.address);
+          const strategiesAdded = tendConfigurations.filter((strategy) => strategy.added).map((strategy) => strategy.address.toLowerCase());
 
-          const strategiesNotYetAdded = v2FtmTendStrategies.filter((strategy) => !strategy.added).map((strategy) => strategy.address);
+          const strategiesNotYetAdded = tendConfigurations
+            .filter((strategy) => !strategy.added)
+            .map((strategy) => strategy.address.toLowerCase());
 
           for (const strategyAdded of strategiesAdded) {
             if (jobStrategies.indexOf(strategyAdded) == -1)
@@ -57,7 +45,7 @@ function promptAndSubmit(): Promise<void | Error> {
               console.log(`strategy: ${jobStrategy} should not be on job, or is missing from config`);
           }
 
-          const strategiesToAdd = v2FtmTendStrategies
+          const strategiesToAdd = tendConfigurations
             .filter((strategy) => !strategy.added)
             .map((strategy) => ({
               name: strategy.name,

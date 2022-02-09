@@ -5,7 +5,7 @@ import { ethers } from 'hardhat';
 import { behaviours, contracts, erc20, evm, wallet } from '@test-utils';
 import { contract, given, then, when } from '@test-utils/bdd';
 import { constants, utils } from 'ethers';
-import { IERC20, AsyncSwapperMock, AsyncSwapperMock__factory } from '@typechained';
+import { IERC20, AsyncSwapperMock, AsyncSwapperMock__factory, ERC20Mock } from '@typechained';
 import IERC20Data from '@artifacts/@openzeppelin/contracts/token/ERC20/IERC20.sol/IERC20.json';
 import { FakeContract, smock } from '@defi-wonderland/smock';
 
@@ -46,7 +46,7 @@ contract('AsyncSwapper', () => {
   });
 
   describe('swap', () => {
-    let tokenIn: IERC20;
+    let tokenIn: ERC20Mock;
     let tokenOut: FakeContract<IERC20>;
     let receiver = wallet.generateRandomAddress();
     const amount = utils.parseEther('10');

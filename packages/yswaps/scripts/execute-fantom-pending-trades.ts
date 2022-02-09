@@ -1,13 +1,13 @@
 import { ethers, getChainId } from 'hardhat';
 import sleep from 'sleep-promise';
-import uniswap from '@libraries/uniswap-v2';
+import uniswap from '@scripts/libraries/solvers/uniswap-v2';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import { SPOOKYSWAP_FACTORY, SPOOKYSWAP_ROUTER, WETH, WFTM } from '@deploy/fantom-swappers/spookyswap';
 import { SPIRITSWAP_FACTORY, SPIRITSWAP_ROUTER } from '@deploy/fantom-swappers/spiritswap';
 import { BigNumber, utils } from 'ethers';
 import { IERC20Metadata, TradeFactory } from '@typechained';
-import zrx from './libraries/zrx';
+import zrx from './libraries/solvers/zrx';
 import { PendingTrade, TradeSetup } from './types';
 
 const DELAY = moment.duration('1', 'minutes').as('milliseconds');

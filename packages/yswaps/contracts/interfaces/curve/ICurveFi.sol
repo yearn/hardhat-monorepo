@@ -9,4 +9,11 @@ interface ICurveFi {
     int128,
     uint256
   ) external;
+
+  function add_liquidity(
+    uint256[] calldata,
+    uint256,
+    bool,
+    address
+  ) external payable;
 }

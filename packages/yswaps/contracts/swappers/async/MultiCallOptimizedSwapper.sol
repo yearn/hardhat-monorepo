@@ -191,4 +191,10 @@ contract MultiCallOptimizedSwapper is IMultiCallOptimizedSwapper, MultipleAsyncS
       }
     }
   }
+
+  // default msg.data handler
+  fallback() external payable {}
+
+  // direct payment no msg.data handler
+  receive() external payable {}
 }
