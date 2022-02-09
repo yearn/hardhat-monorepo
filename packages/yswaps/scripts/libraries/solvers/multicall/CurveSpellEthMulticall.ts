@@ -1,5 +1,5 @@
 import { BigNumber, constants, PopulatedTransaction, Signer } from 'ethers';
-import { EnabledTrade, TradeSetup } from '@scripts/types';
+import { TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IWETH, IWETH__factory } from '@typechained';
 import zrx from '../zrx';
@@ -26,7 +26,7 @@ export class CurveSpellEthMulticall implements IMulticall {
   private multicallSwapper: string = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async asyncSwap(trade: EnabledTrade): Promise<TradeSetup> {
+  async asyncSwap(): Promise<TradeSetup> {
     const strategySigner = await impersonate(this.strategy);
     const multicallSwapperSigner = await impersonate(this.multicallSwapper);
     const crvStrategy = IERC20__factory.connect(this.crv, strategySigner);

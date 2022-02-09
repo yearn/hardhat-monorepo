@@ -1,6 +1,6 @@
-import { EnabledTrade, TradeSetup } from './types';
+import { TradeSetup } from './types';
 import uniswap from '@scripts/libraries/solvers/uniswap-v2';
-import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER, WETH } from '@deploy/mainnet-swappers/uniswap_v2';
+import { ITradeFactoryPositionsHandler } from '@typechained';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import { IERC20Metadata } from '@typechained';
 import { ethers, getChainId } from 'hardhat';
@@ -8,7 +8,7 @@ import zrx from './libraries/solvers/zrx';
 import { utils } from 'ethers';
 
 export class Router {
-  async route(pendingTrade: EnabledTrade): Promise<TradeSetup> {
+  async route(pendingTrade: ITradeFactoryPositionsHandler.EnabledTradeStruct): Promise<TradeSetup> {
     const chainId = await getChainId();
     const SLIPPAGE_PERCENTAGE = 3;
     const tradesSetup: TradeSetup[] = [];

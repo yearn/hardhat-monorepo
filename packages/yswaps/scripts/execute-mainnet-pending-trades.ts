@@ -1,10 +1,10 @@
 import { ethers, network } from 'hardhat';
-import { BigNumber, PopulatedTransaction, Signer, utils, Wallet } from 'ethers';
-import { IERC20Metadata, TradeFactory } from '@typechained';
+import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
+import { IERC20Metadata, ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
-import * as gasprice from './libraries/gasprice';
+import * as gasprice from './libraries/utils/gasprice';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -16,17 +16,14 @@ import {
   SimulationResponseSuccess,
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
-import { EnabledTrade, TradeSetup } from './types';
+import { TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from '@scripts/libraries/solvers/multicall/ThreePoolCrvMulticall';
 import { CurveSpellEthMulticall } from '@scripts/libraries/solvers/multicall/CurveSpellEthMulticall';
-import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
-import { tradeFactoryStrategies } from '../utils/strategies';
-import * as strategistImpersonator from '@libraries/utils/strategist-impersonator';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -69,7 +66,7 @@ async function main() {
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  const enabledTrades: EnabledTrade[] = await tradeFactory.enabledTrades();
+  const enabledTrades: ITradeFactoryPositionsHandler.EnabledTradeStruct[] = await tradeFactory.enabledTrades();
   for (let i = 0; i < enabledTrades.length; i++) {
     console.log({
       strategy: enabledTrades[i]._strategy,
@@ -189,12 +186,11 @@ async function main() {
       nonce,
     });
   }
-
   await sleep(DELAY);
 }
 
 async function generateAndSendBundle(params: {
-  enabledTrade: EnabledTrade;
+  enabledTrade: ITradeFactoryPositionsHandler.EnabledTradeStruct;
   blockProtection: any;
   bestSetup: TradeSetup;
   wallet: Wallet;
