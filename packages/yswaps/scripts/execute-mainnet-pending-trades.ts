@@ -17,8 +17,8 @@ import {
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
 import { EnabledTrade, TradeSetup } from './types';
-import { ThreePoolCrvMulticall } from '@libraries/swappers/multicall/ThreePoolCrvMulticall';
-import { CurveSpellEthMulticall } from '@libraries/swappers/multicall/CurveSpellEthMulticall';
+import { ThreePoolCrvMulticall } from '@scripts/libraries/solvers/multicall/ThreePoolCrvMulticall';
+import { CurveSpellEthMulticall } from '@scripts/libraries/solvers/multicall/CurveSpellEthMulticall';
 import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
@@ -41,7 +41,7 @@ type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTrans
 let mainnetProvider: JsonRpcProvider;
 
 // Multicall swappers
-const multicalls = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall()];
+const multicallSolvers = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall()];
 
 async function main() {
   await gasprice.start();
@@ -70,8 +70,13 @@ async function main() {
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
   const enabledTrades: EnabledTrade[] = await tradeFactory.enabledTrades();
-  console.log('enabledTrades');
-  console.log(enabledTrades);
+  for (let i = 0; i < enabledTrades.length; i++) {
+    console.log({
+      strategy: enabledTrades[i]._strategy,
+      tokenIn: await (await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrades[i]._tokenIn)).symbol(),
+      tokenOut: await (await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrades[i]._tokenOut)).symbol(),
+    });
+  }
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
@@ -93,8 +98,8 @@ async function main() {
     let bestSetup: TradeSetup;
     let snapshotId;
     // Check if we need to run over a multicall swapper
-    const multicall = multicalls.find((mc) => mc.match(enabledTrade));
-    if (multicall) {
+    const multicallSolver = multicallSolvers.find((solver) => solver.match(enabledTrade));
+    if (multicallSolver) {
       console.log('[Multicall] Taking snapshot of fork');
 
       snapshotId = (await network.provider.request({
@@ -104,7 +109,7 @@ async function main() {
 
       console.log('[Multicall] Getting data');
 
-      bestSetup = await multicall.asyncSwap(enabledTrade);
+      bestSetup = await multicallSolver.asyncSwap(enabledTrade);
 
       console.log('[Multicall] Reverting to snapshot');
       await network.provider.request({

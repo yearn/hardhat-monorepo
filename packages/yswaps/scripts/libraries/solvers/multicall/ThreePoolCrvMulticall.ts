@@ -3,7 +3,7 @@ import { EnabledTrade, TradeSetup } from '@scripts/types';
 import { IMulticall } from './IMulticall';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
 import zrx from '../zrx';
-import { mergeTransactions } from '@scripts/libraries/swappers/multicall';
+import { mergeTransactions } from '@scripts/libraries/solvers/multicall';
 import { impersonate } from '@test-utils/wallet';
 
 // 1) 3pool => [usdc|usdt|dai]

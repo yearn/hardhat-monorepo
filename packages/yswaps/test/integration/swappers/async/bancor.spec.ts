@@ -6,7 +6,7 @@ import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import forkBlockNumber from '@integration/fork-block-numbers';
-import bancor, { SwapResponse } from '@scripts/libraries/swappers/bancor';
+import bancor, { SwapResponse } from '@scripts/libraries/solvers/bancor';
 import * as setup from '../setup';
 
 const AMOUNT_IN = utils.parseEther('69.420');

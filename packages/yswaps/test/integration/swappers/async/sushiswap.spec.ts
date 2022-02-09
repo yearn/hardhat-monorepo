@@ -5,7 +5,7 @@ import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
-import uniswapV2, { SwapResponse } from '@scripts/libraries/swappers/uniswap-v2';
+import uniswapV2, { SwapResponse } from '@scripts/libraries/solvers/uniswap-v2';
 import { WETH, SUSHISWAP_ROUTER, SUSHISWAP_FACTORY } from '@deploy/common-swappers/sushiswap';
 import forkBlockNumber from '@integration/fork-block-numbers';
 import * as setup from '../setup';
