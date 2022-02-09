@@ -8,7 +8,7 @@ import { SPIRITSWAP_FACTORY, SPIRITSWAP_ROUTER } from '@deploy/fantom-swappers/s
 import { BigNumber, utils } from 'ethers';
 import { IERC20Metadata, TradeFactory } from '@typechained';
 import zrx from './libraries/solvers/zrx';
-import { PendingTrade, TradeSetup } from './types';
+import { PendingTrade, TradeSetup } from './libraries/types';
 
 const DELAY = moment.duration('1', 'minutes').as('milliseconds');
 const SPOOKY_TOKEN = '0x841fad6eae12c286d1fd18d1d525dffa75c7effe';

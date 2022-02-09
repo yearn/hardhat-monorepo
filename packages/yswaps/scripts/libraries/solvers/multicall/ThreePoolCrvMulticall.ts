@@ -1,30 +1,25 @@
 import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
-import { EnabledTrade, TradeSetup } from '@scripts/types';
-import { IMulticall } from './IMulticall';
+import { ExtendedEnabledTrade, IMulticallSolver, TradeSetup } from '@scripts/libraries/types';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
 import zrx from '../zrx';
-import { mergeTransactions } from '@scripts/libraries/solvers/multicall';
+import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST
 // 3) yvBOOST withdraw  => yveCRV
 
-export class ThreePoolCrvMulticall implements IMulticall {
-  private threeCrv: string = '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490';
-  private yveCrv: string = '0xc5bDdf9843308380375a611c18B50Fb9341f502A';
-  private yvBoost: string = '0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a';
-  private strategy: string = '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A';
-  private crv3Pool: string = '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7';
-  private usdc: string = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-  private multicallSwapper: string = '0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2';
-  private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
+export class ThreePoolCrvMulticall implements IMulticallSolver {
+  private threeCrv = '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490';
+  private yveCrv = '0xc5bDdf9843308380375a611c18B50Fb9341f502A';
+  private yvBoost = '0x9d409a0A012CFbA9B15F6D4B36Ac57A46966Ab9a';
+  private strategy = '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A';
+  private crv3Pool = '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7';
+  private usdc = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+  private multicallSwapper = '0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2';
+  private zrxContract = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  match(trade: EnabledTrade) {
-    return trade._strategy == this.strategy && trade._tokenIn == this.threeCrv && trade._tokenOut == this.yveCrv;
-  }
-
-  async asyncSwap(trade: EnabledTrade): Promise<TradeSetup> {
+  async solve(_: ExtendedEnabledTrade): Promise<TradeSetup> {
     const strategySigner: Signer = await impersonate(this.strategy);
     const multicallSwapperSigner: Signer = await impersonate(this.multicallSwapper);
     const crv3Pool: ICurveFi = ICurveFi__factory.connect(this.crv3Pool, multicallSwapperSigner);
@@ -40,10 +35,10 @@ export class ThreePoolCrvMulticall implements IMulticall {
 
     // Withdraw usdc from crv3Pool
     console.log('[ThreePoolCrvMulticall] Remove liqudity from curve pool');
-    const usdcBalancePre: BigNumber = await usdc.balanceOf(this.multicallSwapper);
+    const usdcBalancePre = await usdc.balanceOf(this.multicallSwapper);
     await crv3Pool.remove_liquidity_one_coin(amountIn, 1, 0);
-    const usdcBalanceTotal: BigNumber = await usdc.balanceOf(this.multicallSwapper);
-    let usdcBalance: BigNumber = usdcBalanceTotal.sub(usdcBalancePre);
+    const usdcBalanceTotal = await usdc.balanceOf(this.multicallSwapper);
+    let usdcBalance = usdcBalanceTotal.sub(usdcBalancePre);
     if (usdcBalanceTotal.eq(usdcBalance)) {
       // we need to leave at least 1 wei as dust for gas optimizations
       usdcBalance = usdcBalance.sub(1);
@@ -56,7 +51,7 @@ export class ThreePoolCrvMulticall implements IMulticall {
 
     // Trade USDC for yvBOOST in zrx
     const { data: zrxData, allowanceTarget: zrxAllowanceTarget } = await zrx.quote({
-      chainId: Number(1),
+      chainId: 1,
       sellToken: this.usdc,
       buyToken: this.yvBoost,
       sellAmount: usdcBalance,
@@ -112,5 +107,9 @@ export class ThreePoolCrvMulticall implements IMulticall {
       data: data,
       minAmountOut: yveCrvBalance,
     };
+  }
+
+  match(trade: ExtendedEnabledTrade) {
+    return trade._strategy == this.strategy && trade._tokenIn == this.threeCrv && trade._tokenOut == this.yveCrv;
   }
 }

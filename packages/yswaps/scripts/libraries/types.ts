@@ -10,4 +10,14 @@ export type TradeSetup = {
 
 export type ExtendedEnabledTrade = ITradeFactoryPositionsHandler.EnabledTradeStruct & {
   _tokenIn: string | string[];
+  _amount: BigNumber | BigNumber[];
+  _slippage?: number;
 };
+
+export interface IMulticallSolver extends Solver {
+  match(trade: ExtendedEnabledTrade): boolean;
+}
+
+export abstract class Solver {
+  abstract solve(trade: ExtendedEnabledTrade): Promise<TradeSetup>;
+}

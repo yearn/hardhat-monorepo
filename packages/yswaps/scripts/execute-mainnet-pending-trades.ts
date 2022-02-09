@@ -16,7 +16,7 @@ import {
   SimulationResponseSuccess,
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
-import { TradeSetup } from './types';
+import { TradeSetup, ExtendedEnabledTrade } from './libraries/types';
 import { ThreePoolCrvMulticall } from '@scripts/libraries/solvers/multicall/ThreePoolCrvMulticall';
 import { CurveSpellEthMulticall } from '@scripts/libraries/solvers/multicall/CurveSpellEthMulticall';
 import kms from '../../commons/tools/kms';
@@ -106,7 +106,7 @@ async function main() {
 
       console.log('[Multicall] Getting data');
 
-      bestSetup = await multicallSolver.asyncSwap(enabledTrade);
+      bestSetup = await multicallSolver.solve(enabledTrade as ExtendedEnabledTrade);
 
       console.log('[Multicall] Reverting to snapshot');
       await network.provider.request({

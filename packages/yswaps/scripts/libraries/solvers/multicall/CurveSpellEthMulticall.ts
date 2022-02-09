@@ -1,9 +1,9 @@
+import _ from 'lodash';
 import { BigNumber, constants, PopulatedTransaction, Signer } from 'ethers';
-import { TradeSetup } from '@scripts/types';
-import { IMulticall } from './IMulticall';
+import { ExtendedEnabledTrade, IMulticallSolver, TradeSetup } from '@scripts/libraries/types';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IWETH, IWETH__factory } from '@typechained';
 import zrx from '../zrx';
-import { mergeTransactions } from '@scripts/libraries/solvers/multicall';
+import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 
 type Tx = {
@@ -16,7 +16,7 @@ type Tx = {
 // 3) weth => eth with wrapper
 // 4) eth => spell/eth with curve
 
-export class CurveSpellEthMulticall implements IMulticall {
+export class CurveSpellEthMulticall implements IMulticallSolver {
   private crvSpellEth: string = '0x8282BD15dcA2EA2bDf24163E8f2781B30C43A2ef'; // might not be used
   private strategy: string = '0xeDB4B647524FC2B9985019190551b197c6AB6C5c';
   private curveSwap: string = '0x98638FAcf9a3865cd033F36548713183f6996122';
@@ -26,11 +26,11 @@ export class CurveSpellEthMulticall implements IMulticall {
   private multicallSwapper: string = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContract: string = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async asyncSwap(): Promise<TradeSetup> {
+  async solve(_: ExtendedEnabledTrade): Promise<TradeSetup> {
     const strategySigner = await impersonate(this.strategy);
     const multicallSwapperSigner = await impersonate(this.multicallSwapper);
     const crvStrategy = IERC20__factory.connect(this.crv, strategySigner);
-    const cvxStrategy = IERC20__factory.connect(this.cvx, strategySigner); // Hack, there should be a better way
+    const cvxStrategy = IERC20__factory.connect(this.cvx, strategySigner);
     const crv = IERC20__factory.connect(this.crv, multicallSwapperSigner);
     const cvx = IERC20__factory.connect(this.cvx, multicallSwapperSigner);
     const weth = IWETH__factory.connect(this.weth, multicallSwapperSigner);
@@ -39,7 +39,7 @@ export class CurveSpellEthMulticall implements IMulticall {
     const crvBalance = await crv.balanceOf(this.strategy);
     const cvxBalance = await cvx.balanceOf(this.strategy);
 
-    if (crvBalance.lte(0) || cvxBalance.lte(0)) {
+    if (crvBalance.lte(0) && cvxBalance.lte(0)) {
       throw ':shrug:';
     }
 
@@ -116,11 +116,12 @@ export class CurveSpellEthMulticall implements IMulticall {
     };
   }
 
-  match(trade: EnabledTrade) {
-    if (trade._strategy == this.strategy) {
-      return trade._tokenIn == this.crv || trade._tokenIn == this.cvx;
-    }
-
-    return false;
+  match(trade: ExtendedEnabledTrade) {
+    return (
+      trade._strategy == this.strategy &&
+      _.includes(trade._tokenIn, this.crv) &&
+      _.includes(trade._tokenIn, this.cvx) &&
+      trade._tokenOut == this.crvSpellEth
+    );
   }
 }
