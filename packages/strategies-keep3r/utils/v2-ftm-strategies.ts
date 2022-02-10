@@ -190,7 +190,7 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: ['0xe0654C8e6fd4D733349ac7E09f6f23DA256bF475'],
     want: '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
   },
-    {
+  {
     name: 'LevGeist wftm',
     added: false,
     address: '0xdcfFee74ABDCf70453Bb798Be1b41462EDdbC692',
