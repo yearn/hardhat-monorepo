@@ -1,16 +1,14 @@
-import { BigNumber } from 'ethers';
-import { ITradeFactoryPositionsHandler } from '@typechained';
+import { BigNumber, PopulatedTransaction } from 'ethers';
+import { ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 export type TradeSetup = {
-  swapper: string;
   swapperName: string;
-  data: string;
-  minAmountOut: BigNumber | undefined;
+  transaction: PopulatedTransaction;
 };
 
 export type ExtendedEnabledTrade = ITradeFactoryPositionsHandler.EnabledTradeStruct & {
   _tokenIn: string | string[];
-  _amount: BigNumber | BigNumber[];
   _slippage?: number;
 };
 
@@ -19,5 +17,5 @@ export interface IMulticallSolver extends Solver {
 }
 
 export abstract class Solver {
-  abstract solve(trade: ExtendedEnabledTrade): Promise<TradeSetup>;
+  abstract solve(trade: ExtendedEnabledTrade, tradeFactory: TradeFactory): Promise<TradeSetup>;
 }

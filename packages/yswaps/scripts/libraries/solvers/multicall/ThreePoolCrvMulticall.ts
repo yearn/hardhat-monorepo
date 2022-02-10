@@ -1,9 +1,10 @@
 import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
 import { ExtendedEnabledTrade, IMulticallSolver, TradeSetup } from '@scripts/libraries/types';
-import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory } from '@typechained';
-import zrx from '../zrx';
+import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IVault, IVault__factory, TradeFactory } from '@typechained';
+import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST
@@ -19,24 +20,24 @@ export class ThreePoolCrvMulticall implements IMulticallSolver {
   private multicallSwapper = '0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2';
   private zrxContract = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async solve(_: ExtendedEnabledTrade): Promise<TradeSetup> {
-    const strategySigner: Signer = await impersonate(this.strategy);
-    const multicallSwapperSigner: Signer = await impersonate(this.multicallSwapper);
-    const crv3Pool: ICurveFi = ICurveFi__factory.connect(this.crv3Pool, multicallSwapperSigner);
-    const threeCrv: IERC20 = IERC20__factory.connect(this.threeCrv, strategySigner);
-    const usdc: IERC20 = IERC20__factory.connect(this.usdc, multicallSwapperSigner);
-    const yvBoostToken: IERC20 = IERC20__factory.connect(this.yvBoost, multicallSwapperSigner);
-    const yvBoostVault: IVault = IVault__factory.connect(this.yvBoost, multicallSwapperSigner);
-    const yveCrvToken: IERC20 = IERC20__factory.connect(this.yveCrv, multicallSwapperSigner);
+  async solve(trade: ExtendedEnabledTrade, tradeFactory: TradeFactory): Promise<TradeSetup> {
+    const strategySigner = await impersonate(this.strategy);
+    const multicallSwapperSigner = await impersonate(this.multicallSwapper);
+    const crv3Pool = ICurveFi__factory.connect(this.crv3Pool, multicallSwapperSigner);
+    const threeCrv = IERC20__factory.connect(this.threeCrv, strategySigner);
+    const usdc = IERC20__factory.connect(this.usdc, multicallSwapperSigner);
+    const yvBoostToken = IERC20__factory.connect(this.yvBoost, multicallSwapperSigner);
+    const yvBoostVault = IVault__factory.connect(this.yvBoost, multicallSwapperSigner);
+    const yveCrvToken = IERC20__factory.connect(this.yveCrv, multicallSwapperSigner);
 
-    const amountIn = '0'; // TODO FIX use strategy balance of in
+    const amount = await threeCrv.balanceOf(trade._strategy);
     console.log('[ThreePoolCrvMulticall] 3crv transfer to swapper');
-    await threeCrv.transfer(this.multicallSwapper, amountIn);
+    await threeCrv.transfer(this.multicallSwapper, amount);
 
     // Withdraw usdc from crv3Pool
     console.log('[ThreePoolCrvMulticall] Remove liqudity from curve pool');
     const usdcBalancePre = await usdc.balanceOf(this.multicallSwapper);
-    await crv3Pool.remove_liquidity_one_coin(amountIn, 1, 0);
+    await crv3Pool.remove_liquidity_one_coin(amount, 1, 0);
     const usdcBalanceTotal = await usdc.balanceOf(this.multicallSwapper);
     let usdcBalance = usdcBalanceTotal.sub(usdcBalancePre);
     if (usdcBalanceTotal.eq(usdcBalance)) {
@@ -87,7 +88,7 @@ export class ThreePoolCrvMulticall implements IMulticallSolver {
     const transactions: PopulatedTransaction[] = [];
 
     // 1) Withdraw usdc from 3pool
-    transactions.push(await crv3Pool.populateTransaction.remove_liquidity_one_coin(amountIn, 1, 0));
+    transactions.push(await crv3Pool.populateTransaction.remove_liquidity_one_coin(amount, 1, 0));
 
     // 2) Approve usdc in zrx (if neccesary)
     if (approveUsdc) transactions.push(await usdc.populateTransaction.approve(zrxAllowanceTarget, constants.MaxUint256));
@@ -99,13 +100,24 @@ export class ThreePoolCrvMulticall implements IMulticallSolver {
     transactions.push(await yvBoostVault.populateTransaction.withdraw(constants.MaxUint256, this.strategy, BigNumber.from('0')));
 
     const data: string = mergeTransactions(transactions);
+
     console.log('[ThreePoolCrvMulticall] Data after merging transactions:', data);
 
+    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
+      {
+        _strategy: trade._strategy,
+        _tokenIn: trade._tokenIn,
+        _tokenOut: trade._tokenOut,
+        _amount: amount,
+        _minAmountOut: yveCrvBalance,
+      },
+      this.multicallSwapper,
+      data
+    );
+
     return {
-      swapper: this.multicallSwapper,
-      swapperName: 'MultiCallOptimizedSwapper',
-      data: data,
-      minAmountOut: yveCrvBalance,
+      swapperName: 'ThreePoolCrvMulticall',
+      transaction: executeTx,
     };
   }
 
