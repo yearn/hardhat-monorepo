@@ -73,16 +73,16 @@ async function main() {
       const strategyHarvestConfiguration: HarvestConfiguration = harvestConfigurations.find(
         (harvestConfiguration) => harvestConfiguration.address.toLowerCase() === strategy.toLowerCase()
       )!;
-      let isStratOnLiquidityCooldown: boolean = false;
-      strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
-        isStratOnLiquidityCooldown =
-          isStratOnLiquidityCooldown || moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= lastTimeRewardWasDumped[tokenBeingDumped];
-      });
-      if (!workable[i] || isStratOnLiquidityCooldown) {
+      // let isStratOnLiquidityCooldown: boolean = false;
+      // strategyHarvestConfiguration.tokensBeingDumped.forEach((tokenBeingDumped) => {
+      //   isStratOnLiquidityCooldown =
+      //     isStratOnLiquidityCooldown || moment().subtract(REWARD_DUMPED_COOLDOWN).unix() <= lastTimeRewardWasDumped[tokenBeingDumped];
+      // });
+      if (!workable[i]) {
         console.log('[App] Not workable');
         console.log('[App] Harvest trigger status is', harvestTrigger[i]);
         console.log('[App] Is it on work cooldown?', onWorkCooldown[i]);
-        console.log('[App] Is it on liquidity cooldown?', isStratOnLiquidityCooldown);
+        // console.log('[App] Is it on liquidity cooldown?', isStratOnLiquidityCooldown);
         notWorkable.push(strategy);
       } else {
         console.log('[App] Working...');
