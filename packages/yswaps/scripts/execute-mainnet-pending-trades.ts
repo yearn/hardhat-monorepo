@@ -25,6 +25,12 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
 
+enum EXECUTION_TYPE {
+  PROTECT,
+  FLASHBOT,
+}
+
+const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');

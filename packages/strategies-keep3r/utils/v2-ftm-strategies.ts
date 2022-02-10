@@ -86,76 +86,6 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x82f0B8B456c1A451378467398982d4834b6829c1',
   },
   {
-    name: 'ssbeet_staBeetPool_dai',
-    added: true,
-    address: '0xB905eabA7A23424265638bdACFFE55564c7B299B',
-    tokensBeingDumped: [],
-    want: '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
-  },
-  {
-    name: 'ssbeet_staBeetPool_usdc',
-    added: true,
-    address: '0x56aF79e182a7f98ff6d0bF99d589ac2CabA24e2d',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
-    name: 'ssbeet_guqinQiPool_dai',
-    added: true,
-    address: '0x85c307D24da7086c41537b994de9bFc4C21BAEB5',
-    tokensBeingDumped: [],
-    want: '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
-  },
-  {
-    name: 'ssbeet_guqinQiPool_usdc',
-    added: true,
-    address: '0xBd3791F3Dcf9DD5633cd30662381C80a2Cd945bd',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
-    name: 'ssbeet_beetXlpMimUsdcUsdtPool_mim',
-    added: true,
-    address: '0xbBdc83357287a29Aae30cCa520D4ed6C750a2a11',
-    tokensBeingDumped: [],
-    want: '0x82f0B8B456c1A451378467398982d4834b6829c1',
-  },
-  {
-    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdc',
-    added: true,
-    address: '0x4003eE222d44953B0C3eB61318dD211a4A6f109f',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
-    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdt',
-    added: true,
-    address: '0x36E74086C388305CEcdeff83d6cf31a2762A3c91',
-    tokensBeingDumped: [],
-    want: '0x049d68029688eAbF473097a2fC38ef61633A3C7A',
-  },
-  {
-    name: 'ssbeet_mimUsdcUstPool_usdc',
-    added: true,
-    address: '0x1c13C43f8F2fa0CdDEE6DFF6F785757650B8c2BF',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
-    name: 'ssbeet_mimUsdcUstPool_mim',
-    added: true,
-    address: '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
-    tokensBeingDumped: [],
-    want: '0x82f0B8B456c1A451378467398982d4834b6829c1',
-  },
-  {
-    name: 'ssbeet_asUsdcPool_usdc',
-    added: true,
-    address: '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
     name: 'levscream_weth',
     added: true,
     address: '0x9DF9418837281faC4C4c1166f55D35F2799A9107',
@@ -226,13 +156,6 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
   {
-    name: 'SingleSidedBeethoven_USDC',
-    added: true,
-    address: '0xfa9A5C7C27030602F1C03f7377553D1e694e1615',
-    tokensBeingDumped: [],
-    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-  },
-  {
     name: 'levscream_link',
     added: true,
     address: '0x1e0F7D116ffB998EeC879B96698222D1Ee8d87CB',
@@ -269,50 +192,4 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
 ];
 
-export const tendConfigurations: StrategyConfiguration[] = [
-  {
-    name: 'ssbeet_staBeetPool_dai',
-    added: true,
-    address: '0xB905eabA7A23424265638bdACFFE55564c7B299B',
-  },
-  {
-    name: 'ssbeet_staBeetPool_usdc',
-    added: true,
-    address: '0x56aF79e182a7f98ff6d0bF99d589ac2CabA24e2d',
-  },
-  {
-    name: 'ssbeet_guqinQiPool_dai',
-    added: true,
-    address: '0x85c307D24da7086c41537b994de9bFc4C21BAEB5',
-  },
-  {
-    name: 'ssbeet_guqinQiPool_usdc',
-    added: true,
-    address: '0xBd3791F3Dcf9DD5633cd30662381C80a2Cd945bd',
-  },
-  {
-    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdc',
-    added: true,
-    address: '0x4003eE222d44953B0C3eB61318dD211a4A6f109f',
-  },
-  {
-    name: 'ssbeet_beetXlpMimUsdcUsdtPool_usdt',
-    added: true,
-    address: '0x36E74086C388305CEcdeff83d6cf31a2762A3c91',
-  },
-  {
-    name: 'ssbeet_mimUsdcUstPool_usdc',
-    added: true,
-    address: '0x1c13C43f8F2fa0CdDEE6DFF6F785757650B8c2BF',
-  },
-  {
-    name: 'ssbeet_mimUsdcUstPool_mim',
-    added: true,
-    address: '0xfD7E0cCc4dE0E3022F47834d7f0122274c37a0d1',
-  },
-  {
-    name: 'ssbeet_asUsdcPool_usdc',
-    added: true,
-    address: '0x8Bb79E595E1a21d160Ba3f7f6C94efF1484FB4c9',
-  },
-];
+export const tendConfigurations: StrategyConfiguration[] = [];
