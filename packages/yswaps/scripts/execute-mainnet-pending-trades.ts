@@ -19,6 +19,7 @@ import {
 import { TradeSetup } from './types';
 import { ThreePoolCrvMulticall } from '@scripts/libraries/solvers/multicall/ThreePoolCrvMulticall';
 import { CurveSpellEthMulticall } from '@scripts/libraries/solvers/multicall/CurveSpellEthMulticall';
+import { CurveYfiEthMulticall } from './libraries/solvers/multicall/CurveYfiEthMulticall';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -38,7 +39,7 @@ type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTrans
 let mainnetProvider: JsonRpcProvider;
 
 // Multicall swappers
-const multicallSolvers = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall()];
+const multicallSolvers = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall(), new CurveYfiEthMulticall()];
 
 async function main() {
   await gasprice.start();
