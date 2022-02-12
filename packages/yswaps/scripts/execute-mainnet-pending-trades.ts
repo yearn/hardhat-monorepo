@@ -125,7 +125,7 @@ async function main() {
         params: [snapshotId],
       });
 
-      // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+      const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
       // await generateAndSendBundle({
       //   blockProtection,

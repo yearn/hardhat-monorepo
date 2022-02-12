@@ -56,7 +56,7 @@ export class CurveYfiEth implements Solver {
     const crvBalance = (await crv.balanceOf(strategy)).sub(1);
     const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
 
-    console.log('[CurveYfiEth] cvx/crv transfer to swapper for simulations');
+    console.log('[CurveYfiEth] Transfering crv/cvx to multicall swapper for simulations');
     await crvStrategy.transfer(this.multicallSwapperAddress, crvBalance);
     await cvxStrategy.transfer(this.multicallSwapperAddress, cvxBalance);
 
@@ -112,7 +112,7 @@ export class CurveYfiEth implements Solver {
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
     transactions.push(cvxToWethTx);
 
-    console.log('[CurveYfiEth] Convert weth to crvSpellEth');
+    console.log('[CurveYfiEth] Convert weth to crvYfiEth');
     const wethBalance = await weth.balanceOf(this.multicallSwapperAddress);
     await curveSwap.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
     transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress));
