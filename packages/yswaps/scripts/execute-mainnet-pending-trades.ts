@@ -3,7 +3,6 @@ import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
 import { IERC20Metadata, ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
 import * as gasprice from './libraries/utils/gasprice';
 import {
   FlashbotsBundleProvider,
@@ -16,15 +15,12 @@ import {
   SimulationResponseSuccess,
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
-import { TradeSetup } from './types';
-import { ThreePoolCrvMulticall } from '@scripts/libraries/solvers/multicall/ThreePoolCrvMulticall';
-import { CurveSpellEthMulticall } from '@scripts/libraries/solvers/multicall/CurveSpellEthMulticall';
-import { CurveYfiEthMulticall } from './libraries/solvers/multicall/CurveYfiEthMulticall';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
+import { config, solvers } from '@scripts/configs/mainnet';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -37,9 +33,6 @@ type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTrans
 
 // Provider
 let mainnetProvider: JsonRpcProvider;
-
-// Multicall swappers
-const multicallSolvers = [new ThreePoolCrvMulticall(), new CurveSpellEthMulticall(), new CurveYfiEthMulticall()];
 
 async function main() {
   await gasprice.start();
@@ -67,133 +60,92 @@ async function main() {
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  const enabledTrades: ITradeFactoryPositionsHandler.EnabledTradeStruct[] = await tradeFactory.enabledTrades();
-  for (let i = 0; i < enabledTrades.length; i++) {
-    console.log({
-      strategy: enabledTrades[i]._strategy,
-      tokenIn: await (await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrades[i]._tokenIn)).symbol(),
-      tokenOut: await (await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrades[i]._tokenOut)).symbol(),
-    });
-  }
+  const currentGas = gasprice.get(gasprice.Confidence.Highest);
+  const gasPriceParams = {
+    maxFeePerGas: MAX_GAS_PRICE,
+    maxPriorityFeePerGas:
+      currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
+        ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
+        : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
+  };
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
-  for (const enabledTrade of enabledTrades) {
-    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrade._tokenIn);
-    const symbolIn = await tokenIn.symbol();
-    const tokenOut = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, enabledTrade._tokenOut);
-    const symbolOut = await tokenOut.symbol();
+  console.log('[Execution] Taking snapshot of fork');
 
-    console.log(
-      '[Execution] Processing trade of strategy',
-      enabledTrade._strategy, // TODO Add strategy name
-      'for',
-      symbolIn,
-      'to',
-      symbolOut
-    );
+  const snapshotId = (await network.provider.request({
+    method: 'evm_snapshot',
+    params: [],
+  })) as string;
 
-    let bestSetup: TradeSetup;
-    let snapshotId;
-    // Check if we need to run over a multicall swapper
-    const multicallSolver = multicallSolvers.find((solver) => solver.match(enabledTrade));
-    if (multicallSolver) {
-      console.log('[Multicall] Taking snapshot of fork');
+  console.log('------------');
+  for (const strategy in config) {
+    const tradesConfig = config[strategy];
+    console.log('[Execution] Processing trade of strategy', tradesConfig.name);
+    for (const tradeConfig of tradesConfig.tradesConfigurations) {
+      console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      snapshotId = (await network.provider.request({
-        method: 'evm_snapshot',
-        params: [],
-      })) as string;
+      const solver = solvers[tradeConfig.solver]!;
 
-      console.log('[Multicall] Getting data');
+      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
-      bestSetup = await multicallSolver.asyncSwap(enabledTrade);
+      if (!shouldExecute) {
+        console.log('[Execution] Should not execute');
+        continue;
+      }
+      console.log('[Execution] Should execute');
 
-      console.log('[Multicall] Reverting to snapshot');
+      const executeTx = await solvers[tradeConfig.solver]!.solve({
+        strategy,
+        trades: tradeConfig.enabledTrades,
+        tradeFactory,
+      });
+
+      console.log('[Execution] Reverting to snapshot');
+
       await network.provider.request({
         method: 'evm_revert',
         params: [snapshotId],
       });
-    } else {
-      bestSetup = null as any as TradeSetup;
-      // bestSetup = await new Router().route(enabledTrade);
+
+      console.log('[Execution] Executing trade in fork');
+      console.log('[Debug] Tx data', executeTx.data!);
+
+      try {
+        const simulatedTx = await ymech.sendTransaction(executeTx);
+        const confirmedTx = await simulatedTx.wait();
+        console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+      } catch (error: any) {
+        console.error('[Execution] Simulation in fork reverted with:', error.message);
+        continue;
+      }
+
+      await network.provider.request({
+        method: 'evm_revert',
+        params: [snapshotId],
+      });
+
+      // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+
+      // await generateAndSendBundle({
+      //   blockProtection,
+      //   wallet: ymech,
+      //   executeTx,
+      //   gasParams: {
+      //     ...gasPriceParams,
+      //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+      //     gasLimit: BigNumber.from(2_000_000),
+      //   },
+      //   nonce,
+      // });
+      console.log('************');
     }
-
-    if (!bestSetup) {
-      console.log('no best setup, skip');
-      continue;
-    }
-
-    const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    const gasPriceParams = {
-      maxFeePerGas: MAX_GAS_PRICE,
-      maxPriorityFeePerGas:
-        currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
-          ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
-          : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
-    };
-
-    // Execute in our fork
-    console.log('[Execution] Executing trade in fork');
-
-    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
-      [
-        {
-          _strategy: enabledTrade._strategy,
-          _tokenIn: '0xD533a949740bb3306d119CC777fa900bA034cd52',
-          _tokenOut: enabledTrade._tokenOut,
-          _amount: await (
-            await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, '0xD533a949740bb3306d119CC777fa900bA034cd52')
-          ).balanceOf(enabledTrade._strategy),
-          _minAmountOut: 1,
-        },
-        {
-          _strategy: enabledTrade._strategy,
-          _tokenIn: '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B',
-          _tokenOut: enabledTrade._tokenOut,
-          _amount: await (
-            await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B')
-          ).balanceOf(enabledTrade._strategy),
-          _minAmountOut: 1,
-        },
-      ],
-      bestSetup.swapper,
-      bestSetup.data
-    );
-    console.log('tx data', executeTx.data!);
-
-    const simulatedTx = await ymech.sendTransaction(executeTx);
-    const confirmedTx = await simulatedTx.wait();
-    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
-
-    await network.provider.request({
-      method: 'evm_revert',
-      params: [snapshotId],
-    });
-
-    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
-
-    await generateAndSendBundle({
-      enabledTrade,
-      blockProtection,
-      bestSetup,
-      wallet: ymech,
-      executeTx,
-      gasParams: {
-        ...gasPriceParams,
-        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        gasLimit: BigNumber.from(2_000_000),
-      },
-      nonce,
-    });
+    console.log('------------');
   }
-  await sleep(DELAY);
 }
 
 async function generateAndSendBundle(params: {
-  enabledTrade: ITradeFactoryPositionsHandler.EnabledTradeStruct;
   blockProtection: any;
-  bestSetup: TradeSetup;
   wallet: Wallet;
   executeTx: PopulatedTransaction;
   gasParams: {
@@ -204,6 +156,8 @@ async function generateAndSendBundle(params: {
   nonce: number;
   retryNumber?: number;
 }): Promise<boolean> {
+  if (!params.retryNumber) params.retryNumber = 0;
+
   const targetBlockNumber = (await mainnetProvider.getBlockNumber()) + 3;
 
   const populatedTx = await params.blockProtection.populateTransaction.callWithBlockProtection(
@@ -234,10 +188,9 @@ async function generateAndSendBundle(params: {
   ];
 
   if (await submitBundleForBlock(bundle, targetBlockNumber)) {
-    console.log('[Execution] Pending trade for', params.enabledTrade._strategy, 'executed via', params.bestSetup.swapper);
+    console.log('[Execution] Submitted');
     return true;
   }
-  if (!params.retryNumber) params.retryNumber = 0;
   params.retryNumber++;
   if (params.retryNumber! >= RETRIES) {
     console.log('[Execution] Failed after', RETRIES, 'retries');

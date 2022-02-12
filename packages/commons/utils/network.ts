@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import kms from '../tools/kms';
 
-// const DEFAULT_ACCOUNT = '0x0000000000000000000000000000000000000000000000000000000000000bad';
 const MAX_ACCOUNTS = 10;
 
 export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'ropsten' | 'goerli' | 'polygon' | 'fantom';
