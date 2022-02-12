@@ -24,14 +24,13 @@ export class CurveYfiEth implements Solver {
   private wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   private multicallSwapperAddress = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
-  private curveYfiEthAddress = '0x29059568bB40344487d62f7450E78b8E6C74e0e5';
+  private crvYfiEthAddress = '0x29059568bB40344487d62f7450E78b8E6C74e0e5';
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
     const cvx = IERC20__factory.connect(this.cvxAddress, wallet.generateRandom());
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);
     const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    console.log(crvStrategyBalance, cvxStrategyBalance);
     return cvxStrategyBalance.gt(0) && crvStrategyBalance.gt(0);
   }
 
@@ -50,28 +49,23 @@ export class CurveYfiEth implements Solver {
     const cvxStrategy = IERC20__factory.connect(this.cvxAddress, strategySigner); // Hack, there should be a better way
     const crv = IERC20__factory.connect(this.crvAddress, multicallSwapperSigner);
     const cvx = IERC20__factory.connect(this.cvxAddress, multicallSwapperSigner);
+    const crvYfiEth = IERC20__factory.connect(this.crvYfiEthAddress, multicallSwapperSigner);
     const weth = IWETH__factory.connect(this.wethAddress, multicallSwapperSigner);
     const curveSwap = ICurveFi__factory.connect(this.curveSwapAddress, multicallSwapperSigner);
 
-    let crvBalance = await crv.balanceOf(this.strategyAddress);
-    let cvxBalance = await cvx.balanceOf(this.strategyAddress);
+    const crvBalance = (await crv.balanceOf(strategy)).sub(1);
+    const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
 
     console.log('[CurveYfiEth] cvx/crv transfer to swapper for simulations');
     await crvStrategy.transfer(this.multicallSwapperAddress, crvBalance);
     await cvxStrategy.transfer(this.multicallSwapperAddress, cvxBalance);
 
-    // Do gas optimizations
-    const crvSwapperBalance: BigNumber = await crv.balanceOf(this.multicallSwapperAddress);
-    if (crvSwapperBalance.eq(crvBalance)) {
-      crvBalance = crvBalance.sub(1);
-    }
-    const cvxSwapperBalance: BigNumber = await cvx.balanceOf(this.multicallSwapperAddress);
-    if (cvxSwapperBalance.eq(cvxBalance)) {
-      cvxBalance = cvxBalance.sub(1);
-    }
+    // Create txs for multichain swapper
+    const transactions: PopulatedTransaction[] = [];
 
-    console.log('[CurveYfiEth] Trade cvr for weth');
-    const { data: zrxCvrData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
+    // Do gas optimizations
+    console.log('[CurveYfiEth] Getting crv => weth trade information via zrx');
+    const { data: zrxCrvData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
       chainId: 1,
       sellToken: crv.address,
       buyToken: weth.address,
@@ -79,16 +73,22 @@ export class CurveYfiEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCrv = (await crv.allowance(this.multicallSwapperAddress, zrxCrvAllowanceTarget)) < crvBalance;
-    if (approveCrv) await crv.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+    const approveCrv = (await crv.allowance(this.multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
+    if (approveCrv) {
+      console.log('[CurveYfiEth] Approving crv');
+      await crv.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+      transactions.push(await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256));
+    }
 
+    console.log('[CurveYfiEth] Executing crv => weth via zrx');
     const crvToWethTx: Tx = {
       to: this.zrxContractAddress,
-      data: zrxCvrData,
+      data: zrxCrvData,
     };
     await multicallSwapperSigner.sendTransaction(crvToWethTx);
+    transactions.push(crvToWethTx);
 
-    console.log('[CurveYfiEth] Trade cvx for weth');
+    console.log('[CurveYfiEth] Getting cvx => weth trade information via zrx');
     const { data: zrxCvxData, allowanceTarget: zrxCvxAllowanceTarget } = await zrx.quote({
       chainId: 1,
       sellToken: cvx.address,
@@ -97,49 +97,47 @@ export class CurveYfiEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCvx = (await crv.allowance(this.multicallSwapperAddress, zrxCvxAllowanceTarget)) < cvxBalance;
-    if (approveCvx) await cvx.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+    const approveCvx = (await cvx.allowance(this.multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
+    if (approveCvx) {
+      console.log('[CurveYfiEth] Approving cvx');
+      await cvx.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+      transactions.push(await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256));
+    }
 
+    console.log('[CurveYfiEth] Executing cvx => weth via zrx');
     const cvxToWethTx: Tx = {
       to: this.zrxContractAddress,
       data: zrxCvxData,
     };
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
+    transactions.push(cvxToWethTx);
 
     console.log('[CurveYfiEth] Convert weth to crvSpellEth');
     const wethBalance = await weth.balanceOf(this.multicallSwapperAddress);
     await curveSwap.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
-
-    // Create txs for multichain swapper
-    const transactions: PopulatedTransaction[] = [];
-
-    // zrx trades
-    if (approveCrv) transactions.push(await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256));
-    transactions.push(crvToWethTx);
-    if (approveCvx) transactions.push(await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256));
-    transactions.push(cvxToWethTx);
-
-    // eth -> c
     transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress));
 
-    const data: string = mergeTransactions(transactions);
-    console.log('[CurveYfiEth] Data after merging transactions:', data);
+    const amountOut = await crvYfiEth.balanceOf(this.strategyAddress);
+
+    const minAmountOut = amountOut.sub(amountOut.mul(2).div(100)); // 2% slippage
+
+    const data = mergeTransactions(transactions);
 
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
       [
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.crvAddress,
-          _tokenOut: this.curveYfiEthAddress,
+          _tokenOut: this.crvYfiEthAddress,
           _amount: crvBalance,
-          _minAmountOut: BigNumber.from('0'),
+          _minAmountOut: minAmountOut,
         },
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.cvxAddress,
-          _tokenOut: this.curveYfiEthAddress,
+          _tokenOut: this.crvYfiEthAddress,
           _amount: cvxBalance,
-          _minAmountOut: BigNumber.from('0'),
+          _minAmountOut: minAmountOut,
         },
       ],
       this.multicallSwapperAddress,
