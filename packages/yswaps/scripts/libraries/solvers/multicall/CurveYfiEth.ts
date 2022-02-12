@@ -1,4 +1,4 @@
-import { BigNumber, constants, PopulatedTransaction, Signer } from 'ethers';
+import { BigNumber, constants, PopulatedTransaction, Signer, utils } from 'ethers';
 import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IWETH, IWETH__factory, TradeFactory } from '@typechained';
 import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
@@ -54,7 +54,9 @@ export class CurveYfiEth implements Solver {
     const curveSwap = ICurveFi__factory.connect(this.curveSwapAddress, multicallSwapperSigner);
 
     const crvBalance = (await crv.balanceOf(strategy)).sub(1);
+    console.log('[CurveYfiEth] Total CRV balance is', utils.formatEther(crvBalance));
     const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
+    console.log('[CurveYfiEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
     console.log('[CurveYfiEth] Transfering crv/cvx to multicall swapper for simulations');
     await crvStrategy.transfer(this.multicallSwapperAddress, crvBalance);
@@ -112,14 +114,29 @@ export class CurveYfiEth implements Solver {
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
     transactions.push(cvxToWethTx);
 
-    console.log('[CurveYfiEth] Convert weth to crvYfiEth');
     const wethBalance = await weth.balanceOf(this.multicallSwapperAddress);
+    console.log('[CurveYfiEth] Total WETH balance is', utils.formatEther(wethBalance));
+
+    const approveWeth = (await weth.allowance(this.multicallSwapperAddress, this.multicallSwapperAddress)).lt(wethBalance);
+    if (approveWeth) {
+      console.log('[CurveYfiEth] Approving weth');
+      await weth.approve(curveSwap.address, constants.MaxUint256);
+      transactions.push(await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256));
+    }
+
+    console.log('[CurveYfiEth] Converting weth to crvYfiEth');
+
     await curveSwap.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
     transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress));
 
     const amountOut = await crvYfiEth.balanceOf(this.strategyAddress);
+    console.log('[CurveYfiEth] Final crvYFIETH balance is', utils.formatEther(amountOut));
 
-    const minAmountOut = amountOut.sub(amountOut.mul(2).div(100)); // 2% slippage
+    if (amountOut.eq(0)) throw new Error('No crvYfiEth tokens were received');
+
+    const minAmountOut = amountOut.sub(amountOut.mul(5).div(100)); // 5% slippage
+
+    console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(minAmountOut));
 
     const data = mergeTransactions(transactions);
 
