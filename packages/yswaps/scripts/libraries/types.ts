@@ -1,21 +1,39 @@
-import { BigNumber, PopulatedTransaction } from 'ethers';
-import { ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-
-export type TradeSetup = {
-  swapperName: string;
-  transaction: PopulatedTransaction;
-};
-
-export type ExtendedEnabledTrade = ITradeFactoryPositionsHandler.EnabledTradeStruct & {
-  _tokenIn: string | string[];
-  _slippage?: number;
-};
-
-export interface IMulticallSolver extends Solver {
-  match(trade: ExtendedEnabledTrade): boolean;
-}
+import { PopulatedTransaction } from 'ethers';
+import { TradeFactory } from '@typechained';
 
 export abstract class Solver {
-  abstract solve(trade: ExtendedEnabledTrade, tradeFactory: TradeFactory): Promise<TradeSetup>;
+  abstract solve({
+    strategy,
+    trades,
+    tradeFactory,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    tradeFactory: TradeFactory;
+  }): Promise<PopulatedTransaction>;
+
+  abstract shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean>;
 }
+
+export type Solvers = 'CurveSpellEth' | 'ThreePoolCrv' | 'Dexes';
+
+export type SolversMap = {
+  [solver in Solvers]?: Solver;
+};
+
+export type SimpleEnabledTrade = {
+  tokenIn: string;
+  tokenOut: string;
+};
+
+export type TradeConfiguration = {
+  enabledTrades: SimpleEnabledTrade[];
+  solver: Solvers;
+};
+
+export type StrategyConfiguration = {
+  [strategy: string]: {
+    name: string;
+    tradesConfigurations: TradeConfiguration[];
+  };
+};
