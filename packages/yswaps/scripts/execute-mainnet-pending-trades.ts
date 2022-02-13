@@ -116,7 +116,8 @@ async function main() {
         const confirmedTx = await simulatedTx.wait();
         console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
       } catch (error: any) {
-        console.error('[Execution] Simulation in fork reverted with:', error.message);
+        console.error('[Execution] Simulation in fork reverted');
+        console.error(error);
         continue;
       }
 
@@ -125,7 +126,7 @@ async function main() {
         params: [snapshotId],
       });
 
-      // const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+      const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
       // await generateAndSendBundle({
       //   blockProtection,

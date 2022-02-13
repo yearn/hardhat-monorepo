@@ -15,7 +15,7 @@ export abstract class Solver {
   abstract shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean>;
 }
 
-export type Solvers = 'CurveSpellEth' | 'ThreePoolCrv' | 'Dexes';
+export type Solvers = 'CurveSpellEth' | 'CurveYfiEth' | 'ThreePoolCrv' | 'Dexes';
 
 export type SolversMap = {
   [solver in Solvers]?: Solver;
