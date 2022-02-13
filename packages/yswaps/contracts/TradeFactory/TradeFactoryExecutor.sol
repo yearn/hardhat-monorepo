@@ -147,7 +147,7 @@ abstract contract TradeFactoryExecutor is ITradeFactoryExecutor, TradeFactoryPos
     for (uint256 i; i < _tradesExecutionDetails.length; i++) {
       // Balance out holder will now store the total received amount of token out per strat
       _balanceOutHolder[i] = IERC20(_tradesExecutionDetails[i]._tokenOut).balanceOf(_tradesExecutionDetails[i]._strategy) - _balanceOutHolder[i];
-      if (_tradesExecutionDetails[i]._minAmountOut < _balanceOutHolder[i]) revert InvalidAmountOut();
+      if (_balanceOutHolder[i] < _tradesExecutionDetails[i]._minAmountOut) revert InvalidAmountOut();
     }
     emit MultipleAsyncTradeExecuted(_balanceOutHolder, _swapper);
   }
