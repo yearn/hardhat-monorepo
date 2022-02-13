@@ -116,7 +116,8 @@ async function main() {
         const confirmedTx = await simulatedTx.wait();
         console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
       } catch (error: any) {
-        console.error('[Execution] Simulation in fork reverted with:', error.message);
+        console.error('[Execution] Simulation in fork reverted');
+        console.error(error);
         continue;
       }
 
