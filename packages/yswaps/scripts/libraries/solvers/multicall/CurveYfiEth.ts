@@ -6,11 +6,6 @@ import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 
-type Tx = {
-  to: string;
-  data: string;
-};
-
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper
@@ -78,12 +73,13 @@ export class CurveYfiEth implements Solver {
     const approveCrv = (await crv.allowance(this.multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
     if (approveCrv) {
       console.log('[CurveYfiEth] Approving crv');
-      await crv.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
-      transactions.push(await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256));
+      const approveCrvTx = await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveCrvTx);
+      transactions.push(approveCrvTx);
     }
 
     console.log('[CurveYfiEth] Executing crv => weth via zrx');
-    const crvToWethTx: Tx = {
+    const crvToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCrvData,
     };
@@ -102,12 +98,13 @@ export class CurveYfiEth implements Solver {
     const approveCvx = (await cvx.allowance(this.multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
     if (approveCvx) {
       console.log('[CurveYfiEth] Approving cvx');
-      await cvx.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
-      transactions.push(await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256));
+      const approveCvxTx = await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveCvxTx);
+      transactions.push(approveCvxTx);
     }
 
     console.log('[CurveYfiEth] Executing cvx => weth via zrx');
-    const cvxToWethTx: Tx = {
+    const cvxToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCvxData,
     };
@@ -120,14 +117,16 @@ export class CurveYfiEth implements Solver {
     const approveWeth = (await weth.allowance(this.multicallSwapperAddress, this.multicallSwapperAddress)).lt(wethBalance);
     if (approveWeth) {
       console.log('[CurveYfiEth] Approving weth');
-      await weth.approve(curveSwap.address, constants.MaxUint256);
-      transactions.push(await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256));
+      const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveWethTx);
+      transactions.push(approveWethTx);
     }
 
     console.log('[CurveYfiEth] Converting weth to crvYfiEth');
 
-    await curveSwap.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
-    transactions.push(await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress));
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
+    await multicallSwapperSigner.sendTransaction(addLiquidityTx);
+    transactions.push(addLiquidityTx);
 
     const amountOut = await crvYfiEth.balanceOf(this.strategyAddress);
     console.log('[CurveYfiEth] Final crvYFIETH balance is', utils.formatEther(amountOut));
