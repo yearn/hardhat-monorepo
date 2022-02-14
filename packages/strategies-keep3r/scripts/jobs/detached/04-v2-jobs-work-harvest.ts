@@ -10,6 +10,8 @@ const worked: string[] = [];
 const notWorkable: string[] = [];
 const errorWhileWorked: string[] = [];
 
+const MAX_GAS_PRICE = utils.parseUnits('1000', 'gwei');
+
 async function main() {
   const [harvester] = await ethers.getSigners();
   const networkName = 'fantom';
@@ -60,6 +62,11 @@ async function main() {
       } else {
         console.log('[App] Working...');
         const gasLimit = await harvestV2DetachedJob.estimateGas.work(strategy);
+        const gasPrice = utils.parseUnits(`${gasprice.get()}`, 'gwei');
+        if (gasPrice.gt(MAX_GAS_PRICE)) {
+          console.log('[App] Skipping because gas price is', gasprice.get());
+          continue;
+        }
         await harvestV2DetachedJob.callStatic.work(strategy, {
           gasLimit: gasLimit.mul(110).div(100),
           gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
@@ -69,7 +76,7 @@ async function main() {
           gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
         });
         worked.push(strategy);
-        console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash} at ${moment()} (${moment().unix()})`);
+        console.log(`[App] Check work tx at https://ftmscan.com/tx/${tx.hash} sent ${moment()} (${moment().unix()})`);
       }
     } catch (error: any) {
       console.log('[App] Error while working:', error.message);
