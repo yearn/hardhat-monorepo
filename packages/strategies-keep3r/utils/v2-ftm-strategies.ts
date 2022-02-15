@@ -190,6 +190,48 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: ['0xe0654C8e6fd4D733349ac7E09f6f23DA256bF475'],
     want: '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
   },
+  {
+    name: 'LevGeist wftm',
+    added: true,
+    address: '0xdcfFee74ABDCf70453Bb798Be1b41462EDdbC692',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'LevGeist wbtc',
+    added: true,
+    address: '0x0683B5B75bD0514B5604D3c79A61647d83A02A3f',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x321162Cd933E2Be498Cd2267a90534A804051b11',
+  },
+  {
+    name: 'LevGeist weth',
+    added: true,
+    address: '0x108383E62992b9a90eD3A43c2c9FA26cA052D99b',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x74b23882a30290451A17c44f4F05243b6b58C76d',
+  },
+  {
+    name: 'LevGeist usdc',
+    added: true,
+    address: '0xA01Fa67B1681CDa1148E19a65D42Cc6c2D4215e1',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
+  },
+  {
+    name: 'LevGeist mim',
+    added: true,
+    address: '0x2d960e1E1098681c124C111b206316772Fe023d8',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x82f0B8B456c1A451378467398982d4834b6829c1',
+  },
+  {
+    name: 'LevGeist dai',
+    added: true,
+    address: '0x9e856E75Fe2F95e9907DFe5F98EA9Bd819B6ED93',
+    tokensBeingDumped: ['0xd8321AA83Fb0a4ECd6348D4577431310A6E0814d'],
+    want: '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];

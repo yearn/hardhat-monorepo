@@ -1,8 +1,7 @@
-import { run, ethers, network } from 'hardhat';
-import { e18, ZERO_ADDRESS } from '../../../utils/web3-utils';
-import * as contracts from '../../../utils/contracts';
+import { run, ethers } from 'hardhat';
+import { ZERO_ADDRESS } from '../../../utils/web3-utils';
 import { harvestConfigurations } from '../../../utils/v2-ftm-strategies';
-import { utils } from 'ethers';
+import { HarvestV2DetachedGaslessJob } from '@typechained';
 
 const { Confirm } = require('enquirer');
 const prompt = new Confirm({ message: 'correct address?' });
@@ -21,7 +20,7 @@ function promptAndSubmit(): Promise<void | Error> {
     prompt.run().then(async (answer: any) => {
       if (answer) {
         try {
-          const harvestV2DetachedJob = await ethers.getContractAt('IV2DetachedJobDeprecated', contracts.harvestV2DetachedJob.fantom);
+          const harvestV2DetachedJob = await ethers.getContract<HarvestV2DetachedGaslessJob>('HarvestV2DetachedGaslessJob');
 
           const jobStrategies = (await harvestV2DetachedJob.callStatic.strategies()).map((strategy: string) => strategy.toLowerCase());
 
@@ -51,8 +50,6 @@ function promptAndSubmit(): Promise<void | Error> {
             .map((strategy) => ({
               name: strategy.name,
               address: strategy.address,
-              costToken: strategy.costToken ? strategy.costToken : ZERO_ADDRESS,
-              costPair: strategy.costPair ? strategy.costPair : ZERO_ADDRESS,
             }));
 
           console.log('strategiesToAdd');
@@ -60,17 +57,10 @@ function promptAndSubmit(): Promise<void | Error> {
           if (!(await confirm.run())) return;
 
           await harvestV2DetachedJob.callStatic.addStrategies(
-            strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
-            // strategiesToAdd.map(() => 0), // address _requiredAmount,
-            strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
-            strategiesToAdd.map((strategy) => strategy.costPair) // address _costPair
+            strategiesToAdd.map((strategy) => strategy.address) // address _strategy,
           );
           const tx = await harvestV2DetachedJob.addStrategies(
-            strategiesToAdd.map((strategy) => strategy.address), // address _strategy,
-            // strategiesToAdd.map(() => 0), // address _requiredAmount,
-            strategiesToAdd.map((strategy) => strategy.costToken), // address _costToken,
-            strategiesToAdd.map((strategy) => strategy.costPair), // address _costPair
-            { gasPrice: utils.parseUnits('3000', 'gwei') }
+            strategiesToAdd.map((strategy) => strategy.address) // address _strategy,
           );
           console.log(`Tx submitted, track it on https://ftmscan.com/tx/${tx.hash}`);
           resolve();
