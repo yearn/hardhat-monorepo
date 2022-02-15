@@ -1,6 +1,9 @@
 import hardhatConfig from '../commons/hardhat.config';
 
 const config = hardhatConfig({
+  namedAccounts: {
+    deployer: 0, // yMECH Alice
+  },
   networks: ['mainnet', 'fantom'],
   solidity: {
     compilers: [

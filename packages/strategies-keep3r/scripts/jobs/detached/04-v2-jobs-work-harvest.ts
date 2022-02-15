@@ -1,11 +1,10 @@
 import moment from 'moment';
-import { HarvestV2DetachedJob, HarvestV2DetachedJob__factory, IBaseStrategy__factory } from '@typechained';
+import { HarvestV2DetachedGaslessJob, IBaseStrategy__factory } from '@typechained';
 import { ethers } from 'hardhat';
-import * as contracts from '../../../utils/contracts';
 import * as gasprice from '../../../utils/ftm-gas-price';
 import { utils } from 'ethers';
 
-let harvestV2DetachedJob: HarvestV2DetachedJob;
+let harvestV2DetachedJob: HarvestV2DetachedGaslessJob;
 const worked: string[] = [];
 const notWorkable: string[] = [];
 const errorWhileWorked: string[] = [];
@@ -14,19 +13,22 @@ const MAX_GAS_PRICE = utils.parseUnits('1000', 'gwei');
 
 async function main() {
   const [harvester] = await ethers.getSigners();
-  const networkName = 'fantom';
   await gasprice.start();
   console.time('[App] Executed in');
   console.log('[App] Using address', harvester.address, 'on fantom');
   console.log('[App] Block', await ethers.provider.getBlockNumber());
 
-  harvestV2DetachedJob = await HarvestV2DetachedJob__factory.connect(contracts.harvestV2DetachedJob[networkName], harvester);
+  harvestV2DetachedJob = await ethers.getContract<HarvestV2DetachedGaslessJob>('HarvestV2DetachedGaslessJob');
 
   const now = moment().unix();
 
   const workCooldown = (await harvestV2DetachedJob.workCooldown()).toNumber();
 
   console.log('[App] Work cooldown', moment.duration(workCooldown, 'seconds').humanize());
+
+  const callCost = await harvestV2DetachedJob.callCost();
+
+  console.log('[App] Call cost', utils.formatEther(callCost), 'ether');
 
   const strategies = await harvestV2DetachedJob.strategies();
 
