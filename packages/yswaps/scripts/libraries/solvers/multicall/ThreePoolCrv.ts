@@ -5,6 +5,7 @@ import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
+import { ethers } from 'hardhat';
 
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST
@@ -17,7 +18,6 @@ export class ThreePoolCrv implements Solver {
   private strategyAddress = '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A';
   private crv3PoolAddress = '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7';
   private usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
-  private multicallSwapperAddress = '0xceB202F25B50e8fAF212dE3CA6C53512C37a01D2';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
@@ -39,9 +39,9 @@ export class ThreePoolCrv implements Solver {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
     // TODO: Check token in == threeCrv and token out == yvBoose
-
+    const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
     const strategySigner = await impersonate(this.strategyAddress);
-    const multicallSwapperSigner = await impersonate(this.multicallSwapperAddress);
+    const multicallSwapperSigner = await impersonate(multicallSwapperAddress);
     const crv3Pool = ICurveFi__factory.connect(this.crv3PoolAddress, multicallSwapperSigner);
     const threeCrv = IERC20__factory.connect(this.threeCrvAddress, strategySigner);
     const usdc = IERC20__factory.connect(this.usdcAddress, multicallSwapperSigner);
@@ -51,13 +51,13 @@ export class ThreePoolCrv implements Solver {
 
     const amount = await threeCrv.balanceOf(strategy);
     console.log('[ThreePoolCrv] 3crv transfer to swapper');
-    await threeCrv.transfer(this.multicallSwapperAddress, amount);
+    await threeCrv.transfer(multicallSwapperAddress, amount);
 
     // Withdraw usdc from crv3Pool
     console.log('[ThreePoolCrv] Remove liqudity from curve pool');
-    const usdcBalancePre = await usdc.balanceOf(this.multicallSwapperAddress);
+    const usdcBalancePre = await usdc.balanceOf(multicallSwapperAddress);
     await crv3Pool.remove_liquidity_one_coin(amount, 1, 0);
-    const usdcBalanceTotal = await usdc.balanceOf(this.multicallSwapperAddress);
+    const usdcBalanceTotal = await usdc.balanceOf(multicallSwapperAddress);
     let usdcBalance = usdcBalanceTotal.sub(usdcBalancePre);
     if (usdcBalanceTotal.eq(usdcBalance)) {
       // we need to leave at least 1 wei as dust for gas optimizations
@@ -85,7 +85,7 @@ export class ThreePoolCrv implements Solver {
       data: zrxData,
     };
 
-    const approveUsdc = (await usdc.allowance(this.multicallSwapperAddress, zrxAllowanceTarget)) < usdcBalance;
+    const approveUsdc = (await usdc.allowance(multicallSwapperAddress, zrxAllowanceTarget)) < usdcBalance;
     if (approveUsdc) {
       console.log('[ThreePoolCrv] Approving usdc');
       await usdc.approve(zrxAllowanceTarget, constants.MaxUint256);
@@ -94,13 +94,13 @@ export class ThreePoolCrv implements Solver {
     console.log('[ThreePoolCrv] Executing ZRX swap');
     await multicallSwapperSigner.sendTransaction(tx);
 
-    const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(this.multicallSwapperAddress);
+    const yvBoostBalance: BigNumber = await yvBoostToken.balanceOf(multicallSwapperAddress);
     console.log('[ThreePoolCrv] yvBOOST after swap: ', utils.formatEther(yvBoostBalance), `(raw: ${yvBoostBalance.toString()})`);
 
     console.log('[ThreePoolCrv] Withdrawing yvBOOST');
-    await yvBoostVault.withdraw(constants.MaxUint256, this.multicallSwapperAddress, 0);
+    await yvBoostVault.withdraw(constants.MaxUint256, multicallSwapperAddress, 0);
 
-    const yveCrvBalance: BigNumber = await yveCrvToken.balanceOf(this.multicallSwapperAddress);
+    const yveCrvBalance: BigNumber = await yveCrvToken.balanceOf(multicallSwapperAddress);
     console.log('[ThreePoolCrv] yveCRV after withdraw', utils.formatEther(yveCrvBalance), `(raw: ${yveCrvBalance.toString()})`);
 
     // Create txs for multichain swapper
@@ -130,7 +130,7 @@ export class ThreePoolCrv implements Solver {
         _amount: amount,
         _minAmountOut: yveCrvBalance,
       },
-      this.multicallSwapperAddress,
+      multicallSwapperAddress,
       data
     );
 

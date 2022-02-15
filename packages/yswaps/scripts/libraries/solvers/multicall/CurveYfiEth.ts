@@ -5,6 +5,7 @@ import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
+import { ethers } from 'hardhat';
 
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
@@ -17,7 +18,6 @@ export class CurveYfiEth implements Solver {
   private crvAddress = '0xD533a949740bb3306d119CC777fa900bA034cd52';
   private cvxAddress = '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B';
   private wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  private multicallSwapperAddress = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
   private crvYfiEthAddress = '0x29059568bB40344487d62f7450E78b8E6C74e0e5';
 
@@ -38,8 +38,9 @@ export class CurveYfiEth implements Solver {
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
+    const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
     const strategySigner = await impersonate(this.strategyAddress);
-    const multicallSwapperSigner = await impersonate(this.multicallSwapperAddress);
+    const multicallSwapperSigner = await impersonate(multicallSwapperAddress);
     const crvStrategy = IERC20__factory.connect(this.crvAddress, strategySigner);
     const cvxStrategy = IERC20__factory.connect(this.cvxAddress, strategySigner); // Hack, there should be a better way
     const crv = IERC20__factory.connect(this.crvAddress, multicallSwapperSigner);
@@ -54,8 +55,8 @@ export class CurveYfiEth implements Solver {
     console.log('[CurveYfiEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
     console.log('[CurveYfiEth] Transfering crv/cvx to multicall swapper for simulations');
-    await crvStrategy.transfer(this.multicallSwapperAddress, crvBalance);
-    await cvxStrategy.transfer(this.multicallSwapperAddress, cvxBalance);
+    await crvStrategy.transfer(multicallSwapperAddress, crvBalance);
+    await cvxStrategy.transfer(multicallSwapperAddress, cvxBalance);
 
     // Create txs for multichain swapper
     const transactions: PopulatedTransaction[] = [];
@@ -70,7 +71,7 @@ export class CurveYfiEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCrv = (await crv.allowance(this.multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
+    const approveCrv = (await crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
     if (approveCrv) {
       console.log('[CurveYfiEth] Approving crv');
       const approveCrvTx = await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
@@ -95,7 +96,7 @@ export class CurveYfiEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCvx = (await cvx.allowance(this.multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
+    const approveCvx = (await cvx.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
     if (approveCvx) {
       console.log('[CurveYfiEth] Approving cvx');
       const approveCvxTx = await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
@@ -111,10 +112,10 @@ export class CurveYfiEth implements Solver {
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
     transactions.push(cvxToWethTx);
 
-    const wethBalance = await weth.balanceOf(this.multicallSwapperAddress);
+    const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveYfiEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    const approveWeth = (await weth.allowance(this.multicallSwapperAddress, this.multicallSwapperAddress)).lt(wethBalance);
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, multicallSwapperAddress)).lt(wethBalance);
     if (approveWeth) {
       console.log('[CurveYfiEth] Approving weth');
       const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
@@ -156,7 +157,7 @@ export class CurveYfiEth implements Solver {
           _minAmountOut: minAmountOut,
         },
       ],
-      this.multicallSwapperAddress,
+      multicallSwapperAddress,
       data
     );
 

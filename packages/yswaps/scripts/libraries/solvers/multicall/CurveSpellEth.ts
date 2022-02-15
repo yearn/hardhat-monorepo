@@ -6,6 +6,7 @@ import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
+import { ethers } from 'hardhat';
 
 type Tx = {
   to: string;
@@ -24,7 +25,6 @@ export class CurveSpellEth implements Solver {
   private crvAddress = '0xD533a949740bb3306d119CC777fa900bA034cd52';
   private cvxAddress = '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B';
   private wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
-  private multicallSwapperAddress = '0x7F036fa7B01E7c0286AFd4c7f756dd367E90a5f8';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
@@ -44,8 +44,9 @@ export class CurveSpellEth implements Solver {
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
+    const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
     const strategySigner = await impersonate(this.strategyAddress);
-    const multicallSwapperSigner = await impersonate(this.multicallSwapperAddress);
+    const multicallSwapperSigner = await impersonate(multicallSwapperAddress);
     const crvStrategy = IERC20__factory.connect(this.crvAddress, strategySigner);
     const cvxStrategy = IERC20__factory.connect(this.cvxAddress, strategySigner);
     const crv = IERC20__factory.connect(this.crvAddress, multicallSwapperSigner);
@@ -57,8 +58,8 @@ export class CurveSpellEth implements Solver {
     const cvxBalance = await cvx.balanceOf(this.strategyAddress);
 
     console.log('[CurveSpellEth] cvx/crv transfer to swapper for simulations');
-    await crvStrategy.transfer(this.multicallSwapperAddress, crvBalance);
-    await cvxStrategy.transfer(this.multicallSwapperAddress, cvxBalance);
+    await crvStrategy.transfer(multicallSwapperAddress, crvBalance);
+    await cvxStrategy.transfer(multicallSwapperAddress, cvxBalance);
 
     console.log('[CurveSpellEth] Trade cvr for weth');
     const { data: zrxCvrData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
@@ -69,7 +70,7 @@ export class CurveSpellEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCrv = (await crv.allowance(this.multicallSwapperAddress, zrxCrvAllowanceTarget)) < crvBalance;
+    const approveCrv = (await crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)) < crvBalance;
     if (approveCrv) await crv.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
 
     const crvToWethTx: Tx = {
@@ -87,7 +88,7 @@ export class CurveSpellEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCvx = (await crv.allowance(this.multicallSwapperAddress, zrxCvxAllowanceTarget)) < cvxBalance;
+    const approveCvx = (await crv.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)) < cvxBalance;
     if (approveCvx) await cvx.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
 
     const cvxToWethTx: Tx = {
@@ -97,7 +98,7 @@ export class CurveSpellEth implements Solver {
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
 
     console.log('[CurveSpellEth] Convert weth to eth');
-    const wethBalance = await weth.balanceOf(this.multicallSwapperAddress);
+    const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     await weth.withdraw(wethBalance);
 
     console.log('[CurveSpellEth] Convert weth to crvSpellEth');
@@ -140,7 +141,7 @@ export class CurveSpellEth implements Solver {
           _minAmountOut: BigNumber.from('0'),
         },
       ],
-      this.multicallSwapperAddress,
+      multicallSwapperAddress,
       data
     );
 

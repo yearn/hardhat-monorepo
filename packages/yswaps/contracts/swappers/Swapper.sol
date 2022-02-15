@@ -10,31 +10,40 @@ import '@yearn/contract-utils/contracts/utils/CollectableDust.sol';
 import '../libraries/CommonErrors.sol';
 
 interface ISwapper {
+  event TradeFactorySet(address _tradeFactory);
+
   enum SwapperType {
     ASYNC,
     SYNC
   }
 
   // solhint-disable-next-line func-name-mixedcase
-  function TRADE_FACTORY() external view returns (address);
-
-  // solhint-disable-next-line func-name-mixedcase
   function SWAPPER_TYPE() external view returns (SwapperType);
+
+  function tradeFactory() external view returns (address);
+
+  function setTradeFactory(address _tradeFactory) external;
 }
 
 abstract contract Swapper is ISwapper, Governable, CollectableDust {
   using SafeERC20 for IERC20;
 
   // solhint-disable-next-line var-name-mixedcase
-  address public immutable override TRADE_FACTORY;
+  address public override tradeFactory;
 
   constructor(address _tradeFactory) {
     if (_tradeFactory == address(0)) revert CommonErrors.ZeroAddress();
-    TRADE_FACTORY = _tradeFactory;
+    tradeFactory = _tradeFactory;
+  }
+
+  function setTradeFactory(address _tradeFactory) external override onlyGovernor {
+    if (_tradeFactory == address(0)) revert CommonErrors.ZeroAddress();
+    tradeFactory = _tradeFactory;
+    emit TradeFactorySet(_tradeFactory);
   }
 
   modifier onlyTradeFactory() {
-    if (msg.sender != TRADE_FACTORY) revert CommonErrors.NotAuthorized();
+    if (msg.sender != tradeFactory) revert CommonErrors.NotAuthorized();
     _;
   }
 
