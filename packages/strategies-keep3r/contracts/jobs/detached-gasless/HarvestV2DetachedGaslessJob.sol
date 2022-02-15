@@ -2,16 +2,18 @@
 
 pragma solidity >=0.8.4 <0.9.0;
 
+import '../../interfaces/yearn/IBaseStrategy.sol';
 import './V2DetachedGaslessJob.sol';
 
 contract HarvestV2DetachedGaslessJob is V2DetachedGaslessJob {
   constructor(
+    address _WETH,
     address _mechanicsRegistry,
-    address _yOracle,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    uint256 _callCost
   )
-    V2DetachedGaslessJob(_mechanicsRegistry, _yOracle, _v2Keeper, _workCooldown) // solhint-disable-next-line no-empty-blocks
+    V2DetachedGaslessJob(_WETH, _mechanicsRegistry, _v2Keeper, _workCooldown, _callCost) // solhint-disable-next-line no-empty-blocks
   {}
 
   function workable(address _strategy) external view override returns (bool) {
@@ -20,7 +22,7 @@ contract HarvestV2DetachedGaslessJob is V2DetachedGaslessJob {
 
   function _workable(address _strategy) internal view override returns (bool) {
     if (!super._workable(_strategy)) return false;
-    return IBaseStrategy(_strategy).harvestTrigger(1);
+    return IBaseStrategy(_strategy).harvestTrigger(callCost);
   }
 
   function _work(address _strategy) internal override {
