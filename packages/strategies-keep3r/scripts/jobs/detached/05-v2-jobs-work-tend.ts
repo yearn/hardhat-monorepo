@@ -1,3 +1,4 @@
+import { TendV2DetachedGaslessJob } from '@typechained';
 import { run, ethers, network } from 'hardhat';
 import * as contracts from '../../../utils/contracts';
 
@@ -9,13 +10,12 @@ async function main() {
 function promptAndSubmit(): Promise<void | Error> {
   return new Promise(async (resolve, reject) => {
     const [, tender] = await ethers.getSigners();
-    const networkName = 'fantom';
     let worked = [];
     let notWorkable = [];
     let errorWhileWorked = [];
     console.log('Using address:', tender.address, 'on fantom');
     try {
-      const tendV2DetachedJob = await ethers.getContractAt('TendV2DetachedJob', contracts.tendV2DetachedJob[networkName], tender);
+      const tendV2DetachedJob = await ethers.getContract<TendV2DetachedGaslessJob>('TendV2DetachedGaslessJob');
       const strategies = await tendV2DetachedJob.callStatic.strategies();
       for (const strategy of strategies) {
         console.log('Checking strategy', strategy);
