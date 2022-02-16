@@ -129,7 +129,7 @@ export class CurveSpellEth implements Solver {
     }
 
     console.log('[CurveSpellEth] Converting eth to crvSpellEth');
-    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategyAddress);
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
     await multicallSwapperSigner.sendTransaction(addLiquidityTx);
     transactions.push(addLiquidityTx);
 
