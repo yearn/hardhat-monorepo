@@ -55,8 +55,10 @@ export class CurveSpellEth implements Solver {
     const crvSpellEth = IERC20__factory.connect(this.crvSpellEthAddress, multicallSwapperSigner);
     const curveSwap = ICurveFi__factory.connect(this.curveSwapAddress, multicallSwapperSigner);
 
-    const crvBalance = await crv.balanceOf(this.strategyAddress);
-    const cvxBalance = await cvx.balanceOf(this.strategyAddress);
+    const crvBalance = (await crv.balanceOf(strategy)).sub(1);
+    console.log('[CurveYfiEth] Total CRV balance is', utils.formatEther(crvBalance));
+    const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
+    console.log('[CurveYfiEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
     console.log('[CurveSpellEth] Transfering crv/cvx to multicall swapper for simulations');
     await crvStrategy.transfer(multicallSwapperAddress, crvBalance);
