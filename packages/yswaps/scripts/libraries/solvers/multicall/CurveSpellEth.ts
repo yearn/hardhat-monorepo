@@ -120,7 +120,7 @@ export class CurveSpellEth implements Solver {
     const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveSpellEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    const approveWeth = (await weth.allowance(multicallSwapperAddress, multicallSwapperAddress)).lt(wethBalance);
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, curveSwap.address)).lt(wethBalance);
     if (approveWeth) {
       console.log('[CurveSpellEth] Approving weth');
       const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
