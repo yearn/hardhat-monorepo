@@ -124,7 +124,14 @@ export class CurveYfiEth implements Solver {
     }
 
     console.log('[CurveYfiEth] Converting weth to crvYfiEth');
-    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
+    const curveCalculatedTokenAmountOut = await curveSwap.calc_token_amount([wethBalance, 0]);
+    const curveCalculatedTokenMinAmountOut = curveCalculatedTokenAmountOut.sub(curveCalculatedTokenAmountOut.mul(3).div(100)); // 3% slippage
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity(
+      [wethBalance, 0],
+      curveCalculatedTokenMinAmountOut,
+      false,
+      this.strategyAddress
+    );
     await multicallSwapperSigner.sendTransaction(addLiquidityTx);
     transactions.push(addLiquidityTx);
 
@@ -133,7 +140,7 @@ export class CurveYfiEth implements Solver {
 
     if (amountOut.eq(0)) throw new Error('No crvYfiEth tokens were received');
 
-    const minAmountOut = amountOut.sub(amountOut.mul(5).div(100)); // 5% slippage
+    const minAmountOut = amountOut.sub(amountOut.mul(3).div(100)); // 3% slippage
 
     console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(minAmountOut));
 
