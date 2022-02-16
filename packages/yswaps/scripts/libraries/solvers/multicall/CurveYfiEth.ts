@@ -124,7 +124,6 @@ export class CurveYfiEth implements Solver {
     }
 
     console.log('[CurveYfiEth] Converting weth to crvYfiEth');
-
     const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
     await multicallSwapperSigner.sendTransaction(addLiquidityTx);
     transactions.push(addLiquidityTx);

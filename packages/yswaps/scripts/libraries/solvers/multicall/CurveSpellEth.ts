@@ -118,16 +118,16 @@ export class CurveSpellEth implements Solver {
     const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveSpellEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    console.log('[CurveSpellEth] Withdrawing WETH to ETH');
-    const wethToEthTx = await weth.populateTransaction.withdraw(wethBalance);
-    await multicallSwapperSigner.sendTransaction(wethToEthTx);
-    transactions.push(wethToEthTx);
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, multicallSwapperAddress)).lt(wethBalance);
+    if (approveWeth) {
+      console.log('[CurveSpellEth] Approving weth');
+      const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveWethTx);
+      transactions.push(approveWethTx);
+    }
 
     console.log('[CurveSpellEth] Converting eth to crvSpellEth');
-
-    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategyAddress, {
-      value: wethBalance,
-    });
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategyAddress);
     await multicallSwapperSigner.sendTransaction(addLiquidityTx);
     transactions.push(addLiquidityTx);
 
