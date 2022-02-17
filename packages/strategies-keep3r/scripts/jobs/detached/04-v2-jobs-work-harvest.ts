@@ -47,7 +47,7 @@ async function main() {
   const harvestTrigger = await Promise.all(
     strategies.map(async (strategy) => {
       const strategyContract = IBaseStrategy__factory.connect(strategy, harvester);
-      return strategyContract.harvestTrigger(1);
+      return strategyContract.harvestTrigger(callCost);
     })
   );
 
