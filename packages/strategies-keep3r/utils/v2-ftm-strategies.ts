@@ -234,7 +234,7 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
   {
     name: 'Boo Xboo Hec',
-    added: false,
+    added: true,
     address: '0x76821Cdcad8Cae7aff53680e215E63EB54d6e6ca',
     tokensBeingDumped: ['0x5C4FDfc5233f935f20D2aDbA572F770c2E377Ab0'],
     want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
