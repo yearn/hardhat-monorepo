@@ -115,7 +115,7 @@ export class CurveYfiEth implements Solver {
     const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveYfiEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    const approveWeth = (await weth.allowance(multicallSwapperAddress, multicallSwapperAddress)).lt(wethBalance);
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, curveSwap.address)).lt(wethBalance);
     if (approveWeth) {
       console.log('[CurveYfiEth] Approving weth');
       const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
@@ -140,9 +140,7 @@ export class CurveYfiEth implements Solver {
 
     if (amountOut.eq(0)) throw new Error('No crvYfiEth tokens were received');
 
-    const minAmountOut = amountOut.sub(amountOut.mul(3).div(100)); // 3% slippage
-
-    console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(minAmountOut));
+    console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(curveCalculatedTokenMinAmountOut));
 
     const data = mergeTransactions(transactions);
 
@@ -153,14 +151,14 @@ export class CurveYfiEth implements Solver {
           _tokenIn: this.crvAddress,
           _tokenOut: this.crvYfiEthAddress,
           _amount: crvBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.cvxAddress,
           _tokenOut: this.crvYfiEthAddress,
           _amount: cvxBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
       ],
       multicallSwapperAddress,

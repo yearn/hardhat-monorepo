@@ -128,7 +128,7 @@ export class CurveSpellEth implements Solver {
       transactions.push(approveWethTx);
     }
 
-    console.log('[CurveSpellEth] Converting eth to crvSpellEth');
+    console.log('[CurveSpellEth] Converting weth to crvSpellEth');
     const curveCalculatedTokenAmountOut = await curveSwap.calc_token_amount([wethBalance, 0]);
     const curveCalculatedTokenMinAmountOut = curveCalculatedTokenAmountOut.sub(curveCalculatedTokenAmountOut.mul(3).div(100)); // 3% slippage
     const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity(
@@ -145,9 +145,7 @@ export class CurveSpellEth implements Solver {
 
     if (amountOut.eq(0)) throw new Error('No crvSpellEth tokens were received');
 
-    const minAmountOut = amountOut.sub(amountOut.mul(3).div(100)); // 3% slippage
-
-    console.log('[CurveSpellEth] Min crvSPELLETH amount out will be', utils.formatEther(minAmountOut));
+    console.log('[CurveSpellEth] Min crvSPELLETH amount out will be', utils.formatEther(curveCalculatedTokenMinAmountOut));
 
     const data = mergeTransactions(transactions);
 
@@ -158,14 +156,14 @@ export class CurveSpellEth implements Solver {
           _tokenIn: this.crvAddress,
           _tokenOut: this.crvSpellEthAddress,
           _amount: crvBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.cvxAddress,
           _tokenOut: this.crvSpellEthAddress,
           _amount: cvxBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
       ],
       multicallSwapperAddress,
