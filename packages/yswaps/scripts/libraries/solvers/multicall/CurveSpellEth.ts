@@ -8,10 +8,7 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
-type Tx = {
-  to: string;
-  data: string;
-};
+const DUST_THRESHOLD = utils.parseEther('1');
 
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
@@ -32,7 +29,7 @@ export class CurveSpellEth implements Solver {
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);
     const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(0) && crvStrategyBalance.gt(0);
+    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
   }
 
   async solve({
@@ -56,9 +53,9 @@ export class CurveSpellEth implements Solver {
     const curveSwap = ICurveFi__factory.connect(this.curveSwapAddress, multicallSwapperSigner);
 
     const crvBalance = (await crv.balanceOf(strategy)).sub(1);
-    console.log('[CurveYfiEth] Total CRV balance is', utils.formatEther(crvBalance));
+    console.log('[CurveSpellEth] Total CRV balance is', utils.formatEther(crvBalance));
     const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
-    console.log('[CurveYfiEth] Total CVX balance is', utils.formatEther(cvxBalance));
+    console.log('[CurveSpellEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
     console.log('[CurveSpellEth] Transfering crv/cvx to multicall swapper for simulations');
     await crvStrategy.transfer(multicallSwapperAddress, crvBalance);
@@ -85,7 +82,7 @@ export class CurveSpellEth implements Solver {
     }
 
     console.log('[CurveSpellEth] Executing crv => weth via zrx');
-    const crvToWethTx: Tx = {
+    const crvToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCvrData,
     };
@@ -110,7 +107,7 @@ export class CurveSpellEth implements Solver {
     }
 
     console.log('[CurveSpellEth] Executing cvx => weth via zrx');
-    const cvxToWethTx: Tx = {
+    const cvxToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCvxData,
     };

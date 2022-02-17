@@ -7,6 +7,8 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
+const DUST_THRESHOLD = utils.parseEther('1');
+
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper
@@ -26,7 +28,7 @@ export class CurveYfiEth implements Solver {
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);
     const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(0) && crvStrategyBalance.gt(0);
+    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
   }
 
   async solve({
