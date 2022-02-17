@@ -21,7 +21,7 @@ export const v2Strategies = [
     //   amount:0,
     // },
     harvest: {
-      added: false,
+      added: true,
       amount: 2_000_000,
     },
     address: '0xa04947059831783C561e59A43B93dCB5bEE7cab2',
