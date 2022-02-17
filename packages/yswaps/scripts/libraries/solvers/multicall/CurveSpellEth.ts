@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { BigNumber, constants, PopulatedTransaction } from 'ethers';
+import { utils, BigNumber, constants, PopulatedTransaction } from 'ethers';
 import { ICurveFi__factory, IERC20__factory, IWETH__factory, TradeFactory } from '@typechained';
 import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
@@ -8,10 +8,7 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
-type Tx = {
-  to: string;
-  data: string;
-};
+const DUST_THRESHOLD = utils.parseEther('1');
 
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
@@ -32,7 +29,7 @@ export class CurveSpellEth implements Solver {
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);
     const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(0) && crvStrategyBalance.gt(0);
+    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
   }
 
   async solve({
@@ -52,16 +49,22 @@ export class CurveSpellEth implements Solver {
     const crv = IERC20__factory.connect(this.crvAddress, multicallSwapperSigner);
     const cvx = IERC20__factory.connect(this.cvxAddress, multicallSwapperSigner);
     const weth = IWETH__factory.connect(this.wethAddress, multicallSwapperSigner);
+    const crvSpellEth = IERC20__factory.connect(this.crvSpellEthAddress, multicallSwapperSigner);
     const curveSwap = ICurveFi__factory.connect(this.curveSwapAddress, multicallSwapperSigner);
 
-    const crvBalance = await crv.balanceOf(this.strategyAddress);
-    const cvxBalance = await cvx.balanceOf(this.strategyAddress);
+    const crvBalance = (await crv.balanceOf(strategy)).sub(1);
+    console.log('[CurveSpellEth] Total CRV balance is', utils.formatEther(crvBalance));
+    const cvxBalance = (await cvx.balanceOf(strategy)).sub(1);
+    console.log('[CurveSpellEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
-    console.log('[CurveSpellEth] cvx/crv transfer to swapper for simulations');
+    console.log('[CurveSpellEth] Transfering crv/cvx to multicall swapper for simulations');
     await crvStrategy.transfer(multicallSwapperAddress, crvBalance);
     await cvxStrategy.transfer(multicallSwapperAddress, cvxBalance);
 
-    console.log('[CurveSpellEth] Trade cvr for weth');
+    // Create txs for multichain swapper
+    const transactions: PopulatedTransaction[] = [];
+
+    console.log('[CurveSpellEth] Getting crv => weth trade information via zrx');
     const { data: zrxCvrData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
       chainId: 1,
       sellToken: crv.address,
@@ -70,16 +73,23 @@ export class CurveSpellEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCrv = (await crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)) < crvBalance;
-    if (approveCrv) await crv.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+    const approveCrv = (await crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
+    if (approveCrv) {
+      console.log('[CurveSpellEth] Approving crv');
+      const approveCrvTx = await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveCrvTx);
+      transactions.push(approveCrvTx);
+    }
 
-    const crvToWethTx: Tx = {
+    console.log('[CurveSpellEth] Executing crv => weth via zrx');
+    const crvToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCvrData,
     };
     await multicallSwapperSigner.sendTransaction(crvToWethTx);
+    transactions.push(crvToWethTx);
 
-    console.log('[CurveSpellEth] Trade cvx for weth');
+    console.log('[CurveSpellEth] Getting cvx => weth trade information via zrx');
     const { data: zrxCvxData, allowanceTarget: zrxCvxAllowanceTarget } = await zrx.quote({
       chainId: 1,
       sellToken: cvx.address,
@@ -88,41 +98,53 @@ export class CurveSpellEth implements Solver {
       slippagePercentage: 10 / 100,
     });
 
-    const approveCvx = (await crv.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)) < cvxBalance;
-    if (approveCvx) await cvx.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+    const approveCvx = (await cvx.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
+    if (approveCvx) {
+      console.log('[CurveSpellEth] Approving cvx');
+      const approveCvxTx = await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveCvxTx);
+      transactions.push(approveCvxTx);
+    }
 
-    const cvxToWethTx: Tx = {
+    console.log('[CurveSpellEth] Executing cvx => weth via zrx');
+    const cvxToWethTx = {
       to: this.zrxContractAddress,
       data: zrxCvxData,
     };
     await multicallSwapperSigner.sendTransaction(cvxToWethTx);
-
-    console.log('[CurveSpellEth] Convert weth to eth');
-    const wethBalance = await weth.balanceOf(multicallSwapperAddress);
-    await weth.withdraw(wethBalance);
-
-    console.log('[CurveSpellEth] Convert weth to crvSpellEth');
-    await curveSwap.add_liquidity([wethBalance, 0], 0, true, this.strategyAddress, { value: wethBalance });
-
-    // Create txs for multichain swapper
-    const transactions: PopulatedTransaction[] = [];
-
-    // zrx trades
-    if (approveCrv) transactions.push(await crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256));
-    transactions.push(crvToWethTx);
-    if (approveCvx) transactions.push(await cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256));
     transactions.push(cvxToWethTx);
 
-    // Withdraw eth
-    transactions.push(await weth.populateTransaction.withdraw(wethBalance));
+    const wethBalance = await weth.balanceOf(multicallSwapperAddress);
+    console.log('[CurveSpellEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    // eth -> crvSpellEth
-    transactions.push(
-      await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, true, this.strategyAddress, { value: wethBalance })
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, curveSwap.address)).lt(wethBalance);
+    if (approveWeth) {
+      console.log('[CurveSpellEth] Approving weth');
+      const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveWethTx);
+      transactions.push(approveWethTx);
+    }
+
+    console.log('[CurveSpellEth] Converting weth to crvSpellEth');
+    const curveCalculatedTokenAmountOut = await curveSwap.calc_token_amount([wethBalance, 0]);
+    const curveCalculatedTokenMinAmountOut = curveCalculatedTokenAmountOut.sub(curveCalculatedTokenAmountOut.mul(3).div(100)); // 3% slippage
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity(
+      [wethBalance, 0],
+      curveCalculatedTokenMinAmountOut,
+      false,
+      this.strategyAddress
     );
+    await multicallSwapperSigner.sendTransaction(addLiquidityTx);
+    transactions.push(addLiquidityTx);
+
+    const amountOut = await crvSpellEth.balanceOf(this.strategyAddress);
+    console.log('[CurveSpellEth] Final crvSpellEth balance is', utils.formatEther(amountOut));
+
+    if (amountOut.eq(0)) throw new Error('No crvSpellEth tokens were received');
+
+    console.log('[CurveSpellEth] Min crvSPELLETH amount out will be', utils.formatEther(curveCalculatedTokenMinAmountOut));
 
     const data = mergeTransactions(transactions);
-    console.log('[CurveSpellEth] Data after merging transactions:', data);
 
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
       [
@@ -131,14 +153,14 @@ export class CurveSpellEth implements Solver {
           _tokenIn: this.crvAddress,
           _tokenOut: this.crvSpellEthAddress,
           _amount: crvBalance,
-          _minAmountOut: BigNumber.from('0'),
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.cvxAddress,
           _tokenOut: this.crvSpellEthAddress,
           _amount: cvxBalance,
-          _minAmountOut: BigNumber.from('0'),
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
       ],
       multicallSwapperAddress,

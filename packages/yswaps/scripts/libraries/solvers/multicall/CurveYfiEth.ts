@@ -7,6 +7,8 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
+const DUST_THRESHOLD = utils.parseEther('1');
+
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper
@@ -26,7 +28,7 @@ export class CurveYfiEth implements Solver {
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);
     const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(0) && crvStrategyBalance.gt(0);
+    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
   }
 
   async solve({
@@ -115,7 +117,7 @@ export class CurveYfiEth implements Solver {
     const wethBalance = await weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveYfiEth] Total WETH balance is', utils.formatEther(wethBalance));
 
-    const approveWeth = (await weth.allowance(multicallSwapperAddress, multicallSwapperAddress)).lt(wethBalance);
+    const approveWeth = (await weth.allowance(multicallSwapperAddress, curveSwap.address)).lt(wethBalance);
     if (approveWeth) {
       console.log('[CurveYfiEth] Approving weth');
       const approveWethTx = await weth.populateTransaction.approve(curveSwap.address, constants.MaxUint256);
@@ -124,8 +126,14 @@ export class CurveYfiEth implements Solver {
     }
 
     console.log('[CurveYfiEth] Converting weth to crvYfiEth');
-
-    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity([wethBalance, 0], 0, false, this.strategyAddress);
+    const curveCalculatedTokenAmountOut = await curveSwap.calc_token_amount([wethBalance, 0]);
+    const curveCalculatedTokenMinAmountOut = curveCalculatedTokenAmountOut.sub(curveCalculatedTokenAmountOut.mul(3).div(100)); // 3% slippage
+    const addLiquidityTx = await curveSwap.populateTransaction.add_liquidity(
+      [wethBalance, 0],
+      curveCalculatedTokenMinAmountOut,
+      false,
+      this.strategyAddress
+    );
     await multicallSwapperSigner.sendTransaction(addLiquidityTx);
     transactions.push(addLiquidityTx);
 
@@ -134,9 +142,7 @@ export class CurveYfiEth implements Solver {
 
     if (amountOut.eq(0)) throw new Error('No crvYfiEth tokens were received');
 
-    const minAmountOut = amountOut.sub(amountOut.mul(5).div(100)); // 5% slippage
-
-    console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(minAmountOut));
+    console.log('[CurveYfiEth] Min crvYFIETH amount out will be', utils.formatEther(curveCalculatedTokenMinAmountOut));
 
     const data = mergeTransactions(transactions);
 
@@ -147,14 +153,14 @@ export class CurveYfiEth implements Solver {
           _tokenIn: this.crvAddress,
           _tokenOut: this.crvYfiEthAddress,
           _amount: crvBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
         {
           _strategy: this.strategyAddress,
           _tokenIn: this.cvxAddress,
           _tokenOut: this.crvYfiEthAddress,
           _amount: cvxBalance,
-          _minAmountOut: minAmountOut,
+          _minAmountOut: curveCalculatedTokenMinAmountOut,
         },
       ],
       multicallSwapperAddress,

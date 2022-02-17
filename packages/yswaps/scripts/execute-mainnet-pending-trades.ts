@@ -89,56 +89,56 @@ async function main() {
 
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
-      if (!shouldExecute) {
+      if (shouldExecute) {
+        console.log('[Execution] Should execute');
+
+        const executeTx = await solvers[tradeConfig.solver]!.solve({
+          strategy,
+          trades: tradeConfig.enabledTrades,
+          tradeFactory,
+        });
+
+        console.log('[Execution] Reverting to snapshot');
+
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        console.log('[Execution] Executing trade in fork');
+        console.log('[Debug] Tx data', executeTx.data!);
+
+        try {
+          const simulatedTx = await ymech.sendTransaction(executeTx);
+          const confirmedTx = await simulatedTx.wait();
+          console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+        } catch (error: any) {
+          console.error('[Execution] Simulation in fork reverted');
+          console.error(error);
+          continue;
+        }
+
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+
+        // await generateAndSendBundle({
+        //   blockProtection,
+        //   wallet: ymech,
+        //   executeTx,
+        //   gasParams: {
+        //     ...gasPriceParams,
+        //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        //     gasLimit: BigNumber.from(2_000_000),
+        //   },
+        //   nonce,
+        // });
+      } else {
         console.log('[Execution] Should not execute');
-        continue;
       }
-      console.log('[Execution] Should execute');
-
-      const executeTx = await solvers[tradeConfig.solver]!.solve({
-        strategy,
-        trades: tradeConfig.enabledTrades,
-        tradeFactory,
-      });
-
-      console.log('[Execution] Reverting to snapshot');
-
-      await network.provider.request({
-        method: 'evm_revert',
-        params: [snapshotId],
-      });
-
-      console.log('[Execution] Executing trade in fork');
-      console.log('[Debug] Tx data', executeTx.data!);
-
-      try {
-        const simulatedTx = await ymech.sendTransaction(executeTx);
-        const confirmedTx = await simulatedTx.wait();
-        console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
-      } catch (error: any) {
-        console.error('[Execution] Simulation in fork reverted');
-        console.error(error);
-        continue;
-      }
-
-      await network.provider.request({
-        method: 'evm_revert',
-        params: [snapshotId],
-      });
-
-      const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
-
-      // await generateAndSendBundle({
-      //   blockProtection,
-      //   wallet: ymech,
-      //   executeTx,
-      //   gasParams: {
-      //     ...gasPriceParams,
-      //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-      //     gasLimit: BigNumber.from(2_000_000),
-      //   },
-      //   nonce,
-      // });
       console.log('************');
     }
     console.log('------------');
