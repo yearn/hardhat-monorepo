@@ -20,7 +20,7 @@ import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
-import { config, mainnetSolversMap } from '@scripts/configs/mainnet';
+import { mainnetConfig, mainnetSolversMap } from '@scripts/configs/mainnet';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -79,8 +79,8 @@ async function main() {
   })) as string;
 
   console.log('------------');
-  for (const strategy in config) {
-    const tradesConfig = config[strategy];
+  for (const strategy in mainnetConfig) {
+    const tradesConfig = mainnetConfig[strategy];
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);

@@ -13,7 +13,7 @@ const mainnetSolversMap: SolversMap<"MAINNET"> = {
   Dexes: new Dexes(),
 };
 
-const config: StrategyConfiguration<"MAINNET"> = {
+const mainnetConfig: StrategyConfiguration<"MAINNET"> = {
   // '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A': {
   //   name: 'Strategy that uses 3poolCRV Solver',
   //   tradesConfigurations: [
@@ -66,4 +66,4 @@ const config: StrategyConfiguration<"MAINNET"> = {
   },
 };
 
-export { config, mainnetSolversMap };
+export { mainnetConfig, mainnetSolversMap };
