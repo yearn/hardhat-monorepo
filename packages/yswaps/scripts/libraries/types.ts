@@ -1,5 +1,6 @@
 import { PopulatedTransaction } from 'ethers';
 import { TradeFactory } from '@typechained';
+import { MainnetSolvers } from '../configs/mainnet';
 
 export abstract class Solver {
   abstract solve({
@@ -15,25 +16,31 @@ export abstract class Solver {
   abstract shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean>;
 }
 
-export type Solvers = 'CurveSpellEth' | 'CurveYfiEth' | 'ThreePoolCrv' | 'Dexes';
-
-export type SolversMap = {
-  [solver in Solvers]?: Solver;
-};
-
 export type SimpleEnabledTrade = {
   tokenIn: string;
   tokenOut: string;
 };
 
-export type TradeConfiguration = {
-  enabledTrades: SimpleEnabledTrade[];
-  solver: Solvers;
+export type SolversMap<T extends Network> = {
+  [solver in SolversNetworksMap[T]]: Solver;
+}
+
+
+export type SolversNetworksMap = {
+  MAINNET: MainnetSolvers;
+  // FANTOM: FantomSolvers
 };
 
-export type StrategyConfiguration = {
+export type Network = keyof SolversNetworksMap;
+
+export type TradeConfiguration<T extends Network> = {
+  enabledTrades: SimpleEnabledTrade[];
+  solver: SolversNetworksMap[T];
+}
+
+export type StrategyConfiguration<T extends Network> = {
   [strategy: string]: {
     name: string;
-    tradesConfigurations: TradeConfiguration[];
+    tradesConfigurations: TradeConfiguration<T>[];
   };
 };
