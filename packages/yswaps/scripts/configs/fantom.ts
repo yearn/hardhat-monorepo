@@ -1,4 +1,3 @@
-
 // import { SolversMap, StrategyConfiguration } from '@libraries/types';
 
 // export type FantomSolvers = 'add_solvers_name_here';

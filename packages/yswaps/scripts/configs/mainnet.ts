@@ -6,14 +6,14 @@ import { ThreePoolCrv } from '@scripts/libraries/solvers/multicall/ThreePoolCrv'
 
 export type MainnetSolvers = 'CurveSpellEth' | 'CurveYfiEth' | 'ThreePoolCrv' | 'Dexes';
 
-const mainnetSolversMap: SolversMap<"MAINNET"> = {
+const mainnetSolversMap: SolversMap<'MAINNET'> = {
   CurveSpellEth: new CurveSpellEth(),
   CurveYfiEth: new CurveYfiEth(),
   ThreePoolCrv: new ThreePoolCrv(),
   Dexes: new Dexes(),
 };
 
-const mainnetConfig: StrategyConfiguration<"MAINNET"> = {
+const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   // '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A': {
   //   name: 'Strategy that uses 3poolCRV Solver',
   //   tradesConfigurations: [
