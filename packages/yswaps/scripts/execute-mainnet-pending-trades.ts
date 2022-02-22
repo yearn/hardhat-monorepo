@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata, ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
+import { TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
 import * as gasprice from './libraries/utils/gasprice';
@@ -20,7 +20,7 @@ import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
-import { mainnetConfig, mainnetSolversMap } from '@scripts/configs/mainnet';
+import { getMainnetSolversMap, mainnetConfig } from '@scripts/configs/mainnet';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -36,6 +36,9 @@ let mainnetProvider: JsonRpcProvider;
 
 async function main() {
   await gasprice.start();
+
+  console.log('[Setup] Getting solvers map');
+  const mainnetSolversMap = await getMainnetSolversMap();
 
   console.log('[Setup] Forking mainnet');
 

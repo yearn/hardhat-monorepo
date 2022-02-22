@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { utils, BigNumber, constants, PopulatedTransaction } from 'ethers';
-import { ICurveFi__factory, IERC20__factory, IWETH__factory, TradeFactory } from '@typechained';
+import { ICurveFi, ICurveFi__factory, IERC20, IERC20__factory, IWETH__factory, TradeFactory } from '@typechained';
 import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
