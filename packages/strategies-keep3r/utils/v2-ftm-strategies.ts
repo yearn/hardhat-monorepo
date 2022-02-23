@@ -149,13 +149,6 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
   {
-    name: 'StrategyMPH_FTM',
-    added: true,
-    address: '0xC395e256BDf89F2e9189dc67c9215e1949A22562',
-    tokensBeingDumped: [],
-    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
-  },
-  {
     name: 'levscream_link',
     added: true,
     address: '0x1e0F7D116ffB998EeC879B96698222D1Ee8d87CB',
