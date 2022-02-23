@@ -38,17 +38,17 @@ contract UniswapV2Swapper is IUniswapV2Swapper, AsyncSwapper {
     address _tokenOut,
     uint256 _amountIn,
     bytes calldata _data
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     address[] memory _path = abi.decode(_data, (address[]));
     if (_tokenIn != _path[0] || _tokenOut != _path[_path.length - 1]) revert CommonErrors.IncorrectSwapInformation();
     IERC20(_path[0]).approve(ROUTER, 0);
     IERC20(_path[0]).approve(ROUTER, _amountIn);
-    _receivedAmount = IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
+    IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
       _amountIn,
       0, // Slippage protection is done in AsyncSwapper abstract
       _path,
       _receiver,
       block.timestamp
-    )[_path.length - 1];
+    );
   }
 }

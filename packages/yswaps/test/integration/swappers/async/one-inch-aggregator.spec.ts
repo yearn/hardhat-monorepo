@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { utils, Wallet } from 'ethers';
+import { BigNumber, utils, Wallet } from 'ethers';
 import { evm, wallet } from '@test-utils';
 import { then } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
-import oneinch, { SwapResponse } from '@scripts/libraries/oneinch';
+import oneinch, { SwapResponse } from '@scripts/libraries/solvers/oneinch';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 import * as setup from '../setup';
 
@@ -69,7 +69,6 @@ describe('OneInchAggregator', function () {
         fromTokenAddress: CRV_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: CRV_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -81,16 +80,27 @@ describe('OneInchAggregator', function () {
     });
 
     describe('swap', () => {
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(yMech)
-          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, oneInchApiResponse.minAmountOut!, oneInchApiResponse.tx.data, {
+        preSwapBalance = await CRV.balanceOf(strategy.address);
+        await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+          {
+            _strategy: strategy.address,
+            _tokenIn: CRV_ADDRESS,
+            _tokenOut: DAI_ADDRESS,
+            _amount: AMOUNT_IN,
+            _minAmountOut: oneInchApiResponse.minAmountOut!,
+          },
+          swapper.address,
+          oneInchApiResponse.tx.data,
+          {
             gasLimit: GAS_LIMIT + GAS_LIMIT * 0.25,
-          });
+          }
+        );
       });
 
       then('CRV gets taken from strategy', async () => {
-        expect(await CRV.balanceOf(strategy.address)).to.equal(0);
+        expect(await CRV.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
 
       then('DAI gets airdropped to strategy', async () => {
@@ -148,7 +158,6 @@ describe('OneInchAggregator', function () {
         fromTokenAddress: WMATIC_ADDRESS,
         toTokenAddress: DAI_ADDRESS,
         fromTokenWhaleAddress: WMATIC_WHALE_ADDRESS,
-        amountIn: AMOUNT_IN,
         strategy,
       }));
 
@@ -160,16 +169,27 @@ describe('OneInchAggregator', function () {
     });
 
     describe('swap', () => {
+      let preSwapBalance: BigNumber;
       beforeEach(async () => {
-        await tradeFactory
-          .connect(yMech)
-          ['execute(uint256,address,uint256,bytes)'](1, swapper.address, oneInchApiResponse.minAmountOut!, oneInchApiResponse.tx.data, {
+        preSwapBalance = await WMATIC.balanceOf(strategy.address);
+        await tradeFactory.connect(yMech)['execute((address,address,address,uint256,uint256),address,bytes)'](
+          {
+            _strategy: strategy.address,
+            _tokenIn: WMATIC_ADDRESS,
+            _tokenOut: DAI_ADDRESS,
+            _amount: AMOUNT_IN,
+            _minAmountOut: oneInchApiResponse.minAmountOut!,
+          },
+          swapper.address,
+          oneInchApiResponse.tx.data,
+          {
             gasLimit: GAS_LIMIT + GAS_LIMIT * 0.25,
-          });
+          }
+        );
       });
 
       then('WMATIC gets taken from strategy and DAI gets airdropped to strategy', async () => {
-        expect(await WMATIC.balanceOf(strategy.address)).to.equal(0);
+        expect(await WMATIC.balanceOf(strategy.address)).to.equal(preSwapBalance.sub(AMOUNT_IN));
       });
 
       then('DAI gets airdropped to strategy', async () => {

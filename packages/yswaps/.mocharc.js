@@ -6,4 +6,5 @@ module.exports = {
   extension: ['.ts'],
   ignore: ['./test/utils/**'],
   recursive: true,
+  timeout: process.env.MOCHA_TIMEOUT || 300000,
 };

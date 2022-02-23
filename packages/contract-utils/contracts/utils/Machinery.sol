@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import '../interfaces/utils/IMachinery.sol';
 import '../interfaces/mechanics/IMechanicsRegistry.sol';
 
-contract Machinery is IMachinery {
+abstract contract Machinery is IMachinery {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   IMechanicsRegistry internal _mechanicsRegistry;
@@ -19,9 +19,7 @@ contract Machinery is IMachinery {
     _;
   }
 
-  function setMechanicsRegistry(address __mechanicsRegistry) external virtual override {
-    _setMechanicsRegistry(__mechanicsRegistry);
-  }
+  function setMechanicsRegistry(address __mechanicsRegistry) external virtual override;
 
   function _setMechanicsRegistry(address __mechanicsRegistry) internal {
     _mechanicsRegistry = IMechanicsRegistry(__mechanicsRegistry);

@@ -42,7 +42,7 @@
     "lint:check": "solhint 'contracts/**/*.sol' 'interfaces/**/*.sol' && prettier --check './**'",
     "lint:fix": "sort-package-json && prettier --write './**' && solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'",
     "sizer": "TEST=true hardhat compile && TEST=true npx hardhat size-contracts",
-    "test": "TEST=true npx hardhat compile && TEST=true npx hardhat test",
+    "test": "TEST=true npx hardhat compile && TEST=true mocha",
     "test:all": "yarn test ./test/e2e/**/*.spec.ts test/integration/**/*.spec.ts test/unit/**/*.spec.ts",
     "test:e2e": "yarn test ./test/e2e/**/*.spec.ts",
     "test:gas": "yarn test ./test/e2e/**/*.spec.ts test/unit/**/*.spec.ts",

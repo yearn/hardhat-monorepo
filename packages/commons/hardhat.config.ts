@@ -9,7 +9,7 @@ import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 import 'solidity-coverage';
 import { HardhatUserConfig, MultiSolcUserConfig, NetworksUserConfig, SolcUserConfig } from 'hardhat/types';
-import { getAccounts, getNodeUrl } from './utils/network';
+import { getAccounts, getNodeUrl, SUPPORTED_NETWORKS } from './utils/network';
 import 'tsconfig-paths/register';
 
 type NamedAccounts = {
@@ -21,10 +21,10 @@ type NamedAccounts = {
 
 const encrypted = !!process.env.ENCRYPTED_CREDENTIALS && process.env.ENCRYPTED_CREDENTIALS === 'true';
 
-const getNetworks = (networksName: string[]): NetworksUserConfig => {
+const getNetworks = (networksName: SUPPORTED_NETWORKS[]): NetworksUserConfig => {
   if (!!process.env.TEST || process.argv[process.argv.length - 1] == 'compile') return {};
   const networks: NetworksUserConfig = {};
-  networksName.forEach((network: string) => {
+  networksName.forEach((network: SUPPORTED_NETWORKS) => {
     networks[network] = {
       url: getNodeUrl(network),
       accounts: getAccounts({ typeOfAccount: 'privateKey', networkName: network, encrypted }),
@@ -61,7 +61,7 @@ const getConfig = ({
   namedAccounts,
   solidity, 
 }: { 
-  networks?: string[],
+  networks?: SUPPORTED_NETWORKS[],
   solidity: SolcUserConfig | MultiSolcUserConfig,
   namedAccounts?: NamedAccounts
 }): HardhatUserConfig => {

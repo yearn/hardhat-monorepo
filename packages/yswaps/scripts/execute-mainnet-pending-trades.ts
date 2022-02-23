@@ -1,10 +1,9 @@
 import { ethers, network } from 'hardhat';
 import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
-import { IERC20Metadata } from '@typechained';
+import { IERC20Metadata, ITradeFactoryPositionsHandler, TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
 import moment from 'moment';
-import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
-import * as gasprice from './libraries/gasprice';
+import * as gasprice from './libraries/utils/gasprice';
 import {
   FlashbotsBundleProvider,
   FlashbotsBundleRawTransaction,
@@ -16,35 +15,24 @@ import {
   SimulationResponseSuccess,
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
-import { PendingTrade, TradeSetup } from './types';
-import { ThreePoolCrvMulticall } from './multicall/ThreePoolCrvMulticall';
-import { Router } from './Router';
 import kms from '../../commons/tools/kms';
 import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
+import { mainnetConfig, mainnetSolversMap } from '@scripts/configs/mainnet';
 
-enum EXECUTION_TYPE {
-  PROTECT,
-  FLASHBOT,
-}
-
-const EXECUTION = EXECUTION_TYPE.PROTECT;
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('300', 'gwei');
-const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 4;
+const FLASHBOT_MAX_PRIORITY_FEE_PER_GAS = 3;
 
 // Flashbot
 let flashbotsProvider: FlashbotsBundleProvider;
 type FlashbotBundle = Array<FlashbotsBundleTransaction | FlashbotsBundleRawTransaction>;
 
 // Provider
-let httpProvider: JsonRpcProvider;
-
-// Multicall swappers
-const multicalls = [new ThreePoolCrvMulticall()];
+let mainnetProvider: JsonRpcProvider;
 
 async function main() {
   await gasprice.start();
@@ -57,125 +45,107 @@ async function main() {
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
 
-  // const protect = new ethers.providers.JsonRpcProvider('https://rpc.flashbots.net');
-
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  httpProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
+  mainnetProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
 
   // console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
-    httpProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
+    mainnetProvider, // a normal ethers.js provider, to perform gas estimiations and nonce lookups
     ymech // ethers.js signer wallet, only for signing request payloads, not transactions
   );
 
-  const tradeFactory = await ethers.getContract('TradeFactory', ymech);
-  const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
-  const pendingTrades: PendingTrade[] = [];
+  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  for (const id of pendingTradesIds) {
-    pendingTrades.push(await tradeFactory.pendingTradesById(id));
-  }
+  const currentGas = gasprice.get(gasprice.Confidence.Highest);
+  const gasPriceParams = {
+    maxFeePerGas: MAX_GAS_PRICE,
+    maxPriorityFeePerGas:
+      currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
+        ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
+        : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
+  };
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
-  for (const pendingTrade of pendingTrades) {
-    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
-    const decimalsIn = await tokenIn.decimals();
-    const symbolIn = await tokenIn.symbol();
+  console.log('[Execution] Taking snapshot of fork');
 
-    console.log(
-      '[Execution] Executing trade with id',
-      pendingTrade._id.toNumber(),
-      'of',
-      utils.formatUnits(pendingTrade._amountIn, decimalsIn),
-      symbolIn
-    );
+  const snapshotId = (await network.provider.request({
+    method: 'evm_snapshot',
+    params: [],
+  })) as string;
 
-    let bestSetup: TradeSetup;
-    let snapshotId;
-    // Check if we need to run over a multicall swapper
-    const multicall = multicalls.find((mc) => mc.match(pendingTrade));
-    if (multicall) {
-      console.log('[Multicall] Taking snapshot of fork');
+  console.log('------------');
+  for (const strategy in mainnetConfig) {
+    const tradesConfig = mainnetConfig[strategy];
+    console.log('[Execution] Processing trade of strategy', tradesConfig.name);
+    for (const tradeConfig of tradesConfig.tradesConfigurations) {
+      console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      snapshotId = (await network.provider.request({
-        method: 'evm_snapshot',
-        params: [],
-      })) as string;
+      const solver = mainnetSolversMap[tradeConfig.solver];
+      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
-      console.log('[Multicall] Getting data');
+      if (shouldExecute) {
+        console.log('[Execution] Should execute');
 
-      bestSetup = await multicall.asyncSwap(pendingTrade);
+        const executeTx = await solver.solve({
+          strategy,
+          trades: tradeConfig.enabledTrades,
+          tradeFactory,
+        });
 
-      console.log('[Multicall] Reverting to snapshot');
-      await network.provider.request({
-        method: 'evm_revert',
-        params: [snapshotId],
-      });
-    } else {
-      bestSetup = await new Router().route(pendingTrade);
+        console.log('[Execution] Reverting to snapshot');
+
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        console.log('[Execution] Executing trade in fork');
+        console.log('[Debug] Tx data', executeTx.data!);
+
+        try {
+          const simulatedTx = await ymech.sendTransaction(executeTx);
+          const confirmedTx = await simulatedTx.wait();
+          console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+        } catch (error: any) {
+          console.error('[Execution] Simulation in fork reverted');
+          console.error(error);
+          continue;
+        }
+
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
+
+        // await generateAndSendBundle({
+        //   blockProtection,
+        //   wallet: ymech,
+        //   executeTx,
+        //   gasParams: {
+        //     ...gasPriceParams,
+        //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+        //     gasLimit: BigNumber.from(2_000_000),
+        //   },
+        //   nonce,
+        // });
+      } else {
+        console.log('[Execution] Should not execute');
+      }
+      console.log('************');
     }
-
-    const currentGas = gasprice.get(gasprice.Confidence.Highest);
-    const gasPriceParams = {
-      maxFeePerGas: MAX_GAS_PRICE,
-      maxPriorityFeePerGas:
-        currentGas.maxPriorityFeePerGas > FLASHBOT_MAX_PRIORITY_FEE_PER_GAS
-          ? utils.parseUnits(`${currentGas.maxPriorityFeePerGas}`, 'gwei')
-          : utils.parseUnits(`${FLASHBOT_MAX_PRIORITY_FEE_PER_GAS}`, 'gwei'),
-    };
-
-    // Execute in our fork
-    console.log('[Execution] Executing trade in fork');
-
-    const simulatedTx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
-      pendingTrade._id,
-      bestSetup.swapper,
-      bestSetup.minAmountOut!,
-      bestSetup.data
-    );
-    const confirmedTx = await simulatedTx.wait();
-    console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
-
-    await network.provider.request({
-      method: 'evm_revert',
-      params: [snapshotId],
-    });
-
-    const executeTx = await tradeFactory.populateTransaction['execute(uint256,address,uint256,bytes)'](
-      pendingTrade._id,
-      bestSetup.swapper,
-      bestSetup.minAmountOut!,
-      bestSetup.data
-    );
-    const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
-
-    await generateAndSendBundle({
-      pendingTrade,
-      blockProtection,
-      bestSetup,
-      wallet: ymech,
-      executeTx,
-      gasParams: {
-        ...gasPriceParams,
-        // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        gasLimit: BigNumber.from(2_000_000),
-      },
-      nonce,
-    });
+    console.log('------------');
   }
-
-  await sleep(DELAY);
 }
 
 async function generateAndSendBundle(params: {
-  pendingTrade: PendingTrade;
   blockProtection: any;
-  bestSetup: TradeSetup;
   wallet: Wallet;
   executeTx: PopulatedTransaction;
   gasParams: {
@@ -186,7 +156,9 @@ async function generateAndSendBundle(params: {
   nonce: number;
   retryNumber?: number;
 }): Promise<boolean> {
-  const targetBlockNumber = (await httpProvider.getBlockNumber()) + 3;
+  if (!params.retryNumber) params.retryNumber = 0;
+
+  const targetBlockNumber = (await mainnetProvider.getBlockNumber()) + 3;
 
   const populatedTx = await params.blockProtection.populateTransaction.callWithBlockProtection(
     params.executeTx.to, // address _to,
@@ -194,7 +166,7 @@ async function generateAndSendBundle(params: {
     targetBlockNumber // uint256 _blockNumber
   );
 
-  const signedTx = await params.wallet.connect(httpProvider).signTransaction({
+  const signedTx = await params.wallet.connect(mainnetProvider).signTransaction({
     ...params.gasParams,
     type: 2,
     to: populatedTx.to!,
@@ -216,10 +188,9 @@ async function generateAndSendBundle(params: {
   ];
 
   if (await submitBundleForBlock(bundle, targetBlockNumber)) {
-    console.log('[Execution] Pending trade', params.pendingTrade._id, 'executed via', params.bestSetup.swapper);
+    console.log('[Execution] Submitted');
     return true;
   }
-  if (!params.retryNumber) params.retryNumber = 0;
   params.retryNumber++;
   if (params.retryNumber! >= RETRIES) {
     console.log('[Execution] Failed after', RETRIES, 'retries');

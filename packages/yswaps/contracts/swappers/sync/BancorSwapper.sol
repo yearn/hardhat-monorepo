@@ -30,13 +30,17 @@ interface IBancorNetwork {
   ) external payable returns (uint256 returnAmount);
 }
 
-interface IBancorSwapper is ISyncSwapper {}
+interface IBancorSwapper is ISyncSwapper {
+  function contractRegistry() external returns (IContractRegistry);
+
+  function bancorNetworkName() external returns (bytes32);
+}
 
 contract BancorSwapper is IBancorSwapper, SyncSwapper {
   using SafeERC20 for IERC20;
 
-  IContractRegistry public contractRegistry;
-  bytes32 public bancorNetworkName;
+  IContractRegistry public immutable override contractRegistry;
+  bytes32 public immutable override bancorNetworkName;
 
   constructor(
     address _governor,
@@ -48,18 +52,6 @@ contract BancorSwapper is IBancorSwapper, SyncSwapper {
     bancorNetworkName = _bancorNetworkName;
   }
 
-  // path and minReturn generated on chain
-  function trade(
-    address _sourceToken,
-    address _targetToken,
-    uint256 _amount
-  ) external payable returns (uint256 returnAmount) {
-    IBancorNetwork bancorNetwork = IBancorNetwork(contractRegistry.addressOf(bancorNetworkName));
-    address[] memory path = bancorNetwork.conversionPath(_sourceToken, _targetToken);
-    uint256 minReturn = bancorNetwork.rateByPath(path, _amount);
-    returnAmount = bancorNetwork.convertByPath{value: msg.value}(path, _amount, minReturn, address(0x0), address(0x0), 0);
-  }
-
   function _executeSwap(
     address _receiver,
     address _tokenIn,
@@ -67,14 +59,13 @@ contract BancorSwapper is IBancorSwapper, SyncSwapper {
     uint256 _amountIn,
     uint256 _maxSlippage,
     bytes calldata
-  ) internal override returns (uint256 _receivedAmount) {
+  ) internal override {
     IBancorNetwork _bancorNetwork = IBancorNetwork(contractRegistry.addressOf(bancorNetworkName));
     address[] memory _path = _bancorNetwork.conversionPath(_tokenIn, _tokenOut);
     uint256 _minReturn = _bancorNetwork.rateByPath(_path, _amountIn);
     _minReturn = _minReturn - ((_minReturn * _maxSlippage) / SLIPPAGE_PRECISION / 100); // slippage calcs
     IERC20(_tokenIn).approve(address(_bancorNetwork), 0);
     IERC20(_tokenIn).approve(address(_bancorNetwork), _amountIn);
-    _receivedAmount = _bancorNetwork.convert(_path, _amountIn, _minReturn);
-    IERC20(_tokenOut).safeTransfer(_receiver, _receivedAmount);
+    IERC20(_tokenOut).safeTransfer(_receiver, _bancorNetwork.convert(_path, _amountIn, _minReturn));
   }
 }

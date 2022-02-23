@@ -13,15 +13,13 @@ contract TradeFactory is TradeFactoryExecutor, CollectableDust, ITradeFactory {
     address _masterAdmin,
     address _swapperAdder,
     address _swapperSetter,
-    address _strategyAdder,
-    address _tradesModifier,
-    address _tradesSettler,
+    address _strategyModifier,
     address _mechanicsRegistry
   )
     TradeFactoryAccessManager(_masterAdmin)
-    TradeFactoryPositionsHandler(_strategyAdder, _tradesModifier)
+    TradeFactoryPositionsHandler(_strategyModifier)
     TradeFactorySwapperHandler(_swapperAdder, _swapperSetter)
-    TradeFactoryExecutor(_tradesSettler, _mechanicsRegistry)
+    TradeFactoryExecutor(_mechanicsRegistry)
   {}
 
   // Collectable Dust

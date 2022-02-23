@@ -29,6 +29,7 @@ export const shouldVerifyContract = async (deploy: DeployResult): Promise<boolea
   if (process.env.FORK || process.env.TEST) return false;
   const txReceipt = await ethers.provider.getTransaction(deploy.receipt!.transactionHash);
   if (!deploy.newlyDeployed) return false;
+  console.log('Waiting for confirmations so we can verify contract');
   await txReceipt.wait(10);
   return true;
 };
