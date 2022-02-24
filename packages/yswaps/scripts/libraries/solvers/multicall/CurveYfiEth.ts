@@ -5,6 +5,7 @@ import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import { ethers } from 'hardhat';
+import { ITradeFactoryExecutor } from '../../../../typechained/ITradeFactory';
 
 const DUST_THRESHOLD = utils.parseEther('1');
 
@@ -40,7 +41,7 @@ export class CurveYfiEth implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
     const crvStrategyBalance = await this._crv.balanceOf(strategy);
     const cvxStrategyBalance = await this._cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
+    return cvxStrategyBalance.gt(DUST_THRESHOLD) || crvStrategyBalance.gt(DUST_THRESHOLD);
   }
 
   async solve({
@@ -61,64 +62,100 @@ export class CurveYfiEth implements Solver {
     const cvxBalance = (await this._cvx.balanceOf(strategy)).sub(1);
     console.log('[CurveYfiEth] Total CVX balance is', utils.formatEther(cvxBalance));
 
-    console.log('[CurveYfiEth] Transfering crv/cvx to multicall swapper for simulations');
-    await this._crv.connect(strategySigner).transfer(multicallSwapperAddress, crvBalance);
-    await this._cvx.connect(strategySigner).transfer(multicallSwapperAddress, cvxBalance);
-
     // Create txs for multichain swapper
     const transactions: PopulatedTransaction[] = [];
 
-    // Do gas optimizations
-    console.log('[CurveYfiEth] Getting crv => weth trade information via zrx');
-    const { data: zrxCrvData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
-      chainId: 1,
-      sellToken: this._crv.address,
-      buyToken: this._weth.address,
-      sellAmount: crvBalance,
-      slippagePercentage: 10 / 100,
-    });
+    // Create list of trades details to be executed
+    const asyncTradesExecutionDetails: ITradeFactoryExecutor.AsyncTradeExecutionDetailsStruct[] = [];
 
-    const approveCrv = (await this._crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
-    if (approveCrv) {
-      console.log('[CurveYfiEth] Approving crv');
-      const approveCrvTx = await this._crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
-      await multicallSwapperSigner.sendTransaction(approveCrvTx);
-      transactions.push(approveCrvTx);
+    console.log('[CurveYfiEth] CRV management');
+    const shouldExecuteCrvTrade = (await this._crv.balanceOf(strategy)).gt(DUST_THRESHOLD);
+
+    if (shouldExecuteCrvTrade) {
+      console.log('[CurveYfiEth] Transfering crv to multicall swapper for simulations');
+      await this._crv.connect(strategySigner).transfer(multicallSwapperAddress, crvBalance);
+
+      // Do gas optimizations
+      console.log('[CurveYfiEth] Getting crv => weth trade information via zrx');
+      const { data: zrxCrvData, allowanceTarget: zrxCrvAllowanceTarget } = await zrx.quote({
+        chainId: 1,
+        sellToken: this._crv.address,
+        buyToken: this._weth.address,
+        sellAmount: crvBalance,
+        slippagePercentage: 10 / 100,
+      });
+
+      const approveCrv = (await this._crv.allowance(multicallSwapperAddress, zrxCrvAllowanceTarget)).lt(crvBalance);
+      if (approveCrv) {
+        console.log('[CurveYfiEth] Approving crv');
+        const approveCrvTx = await this._crv.populateTransaction.approve(zrxCrvAllowanceTarget, constants.MaxUint256);
+        await multicallSwapperSigner.sendTransaction(approveCrvTx);
+        transactions.push(approveCrvTx);
+      }
+
+      console.log('[CurveYfiEth] Executing crv => weth via zrx');
+      const crvToWethTx = {
+        to: this.zrxContractAddress,
+        data: zrxCrvData,
+      };
+      await multicallSwapperSigner.sendTransaction(crvToWethTx);
+      transactions.push(crvToWethTx);
+
+      asyncTradesExecutionDetails.push({
+        _strategy: this.strategyAddress,
+        _tokenIn: this._crv.address,
+        _tokenOut: this._crvYfiEth.address,
+        _amount: crvBalance,
+        _minAmountOut: BigNumber.from('0'), // populated later when minAmountOut calculated.
+      });
+    } else {
+      console.log('[CurveYfiEth] Should NOT execute CRV trade');
     }
 
-    console.log('[CurveYfiEth] Executing crv => weth via zrx');
-    const crvToWethTx = {
-      to: this.zrxContractAddress,
-      data: zrxCrvData,
-    };
-    await multicallSwapperSigner.sendTransaction(crvToWethTx);
-    transactions.push(crvToWethTx);
+    console.log('[CurveYfiEth] CVX management');
+    const shouldExecuteCvxTrade = (await this._cvx.balanceOf(strategy)).gt(DUST_THRESHOLD);
 
-    console.log('[CurveYfiEth] Getting cvx => weth trade information via zrx');
-    const { data: zrxCvxData, allowanceTarget: zrxCvxAllowanceTarget } = await zrx.quote({
-      chainId: 1,
-      sellToken: this._cvx.address,
-      buyToken: this._weth.address,
-      sellAmount: cvxBalance,
-      slippagePercentage: 10 / 100,
-    });
+    if (shouldExecuteCvxTrade) {
+      console.log('[CurveYfiEth] Transfering cvx to multicall swapper for simulations');
+      await this._cvx.connect(strategySigner).transfer(multicallSwapperAddress, cvxBalance);
 
-    const approveCvx = (await this._cvx.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
-    if (approveCvx) {
-      console.log('[CurveYfiEth] Approving cvx');
-      const approveCvxTx = await this._cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
-      await multicallSwapperSigner.sendTransaction(approveCvxTx);
-      transactions.push(approveCvxTx);
+      console.log('[CurveYfiEth] Getting cvx => weth trade information via zrx');
+      const { data: zrxCvxData, allowanceTarget: zrxCvxAllowanceTarget } = await zrx.quote({
+        chainId: 1,
+        sellToken: this._cvx.address,
+        buyToken: this._weth.address,
+        sellAmount: cvxBalance,
+        slippagePercentage: 10 / 100,
+      });
+
+      const approveCvx = (await this._cvx.allowance(multicallSwapperAddress, zrxCvxAllowanceTarget)).lt(cvxBalance);
+      if (approveCvx) {
+        console.log('[CurveYfiEth] Approving cvx');
+        const approveCvxTx = await this._cvx.populateTransaction.approve(zrxCvxAllowanceTarget, constants.MaxUint256);
+        await multicallSwapperSigner.sendTransaction(approveCvxTx);
+        transactions.push(approveCvxTx);
+      }
+
+      console.log('[CurveYfiEth] Executing cvx => weth via zrx');
+      const cvxToWethTx = {
+        to: this.zrxContractAddress,
+        data: zrxCvxData,
+      };
+      await multicallSwapperSigner.sendTransaction(cvxToWethTx);
+      transactions.push(cvxToWethTx);
+
+      asyncTradesExecutionDetails.push({
+        _strategy: this.strategyAddress,
+        _tokenIn: this._cvx.address,
+        _tokenOut: this._crvYfiEth.address,
+        _amount: cvxBalance,
+        _minAmountOut: BigNumber.from('0'), // populated later when minAmountOut calculated.
+      });
+    } else {
+      console.log('[CurveYfiEth] Should NOT execute CVX trade');
     }
 
-    console.log('[CurveYfiEth] Executing cvx => weth via zrx');
-    const cvxToWethTx = {
-      to: this.zrxContractAddress,
-      data: zrxCvxData,
-    };
-    await multicallSwapperSigner.sendTransaction(cvxToWethTx);
-    transactions.push(cvxToWethTx);
-
+    // WETH management
     const wethBalance = await this._weth.balanceOf(multicallSwapperAddress);
     console.log('[CurveYfiEth] Total WETH balance is', utils.formatEther(wethBalance));
 
@@ -151,27 +188,40 @@ export class CurveYfiEth implements Solver {
 
     const data = mergeTransactions(transactions);
 
-    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
-      [
-        {
-          _strategy: this.strategyAddress,
-          _tokenIn: this._crv.address,
-          _tokenOut: this._crvYfiEth.address,
-          _amount: crvBalance,
-          _minAmountOut: curveCalculatedTokenMinAmountOut,
-        },
-        {
-          _strategy: this.strategyAddress,
-          _tokenIn: this._cvx.address,
-          _tokenOut: this._crvYfiEth.address,
-          _amount: cvxBalance,
-          _minAmountOut: curveCalculatedTokenMinAmountOut,
-        },
-      ],
-      multicallSwapperAddress,
+    // Populate every trade detail with minAmountOut
+    asyncTradesExecutionDetails.forEach((tradeDetails) => tradeDetails._minAmountOut == curveCalculatedTokenMinAmountOut);
+
+    return await this.getExecuteTx({
+      tradeFactory,
+      asyncTradesExecutionDetails,
+      swapperAddress: multicallSwapperAddress,
+      data,
+    });
+  }
+
+  private async getExecuteTx({tradeFactory, asyncTradesExecutionDetails, swapperAddress, data}: {
+    tradeFactory: TradeFactory,
+    asyncTradesExecutionDetails: ITradeFactoryExecutor.AsyncTradeExecutionDetailsStruct[],
+    swapperAddress: string,
+    data: string,
+  }): Promise<PopulatedTransaction> {
+
+    if (!asyncTradesExecutionDetails.length) throw new Error('None trades should be execute');
+
+    if (asyncTradesExecutionDetails.length == 1) {
+      console.log('[CurveYfiEth] Execute one trade');
+      return await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
+        asyncTradesExecutionDetails[0],
+        swapperAddress,
+        data
+      );
+    }
+
+    console.log('[CurveYfiEth] Execute multiple trades');
+    return await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
+      asyncTradesExecutionDetails,
+      swapperAddress,
       data
     );
-
-    return executeTx;
   }
 }
