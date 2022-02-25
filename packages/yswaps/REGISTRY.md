@@ -10,6 +10,7 @@
 ### Swappers
 
 - MultiCallOptimizedSwapper: [0x711d1D8E8B2b468c92c202127A2BBFEFC14bf105](https://etherscan.io/address/0x711d1D8E8B2b468c92c202127A2BBFEFC14bf105)
+- ZRX [0xE32dd1F66365289b7fe14e503CBB336cD5D13F09](https://etherscan.io/address/0xE32dd1F66365289b7fe14e503CBB336cD5D13F09)
 
 ## 👻 Fantom
 
