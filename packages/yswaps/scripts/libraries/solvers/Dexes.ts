@@ -49,7 +49,6 @@ export default class Dexes implements Solver {
       slippagePercentage: 3 / 100,
     });
 
-
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
