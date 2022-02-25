@@ -5,6 +5,7 @@ import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction } from 'ethers';
 import * as wallet from '@test-utils/wallet';
+import zrx from '../dexes/zrx';
 
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
@@ -26,27 +27,39 @@ export default class Dexes implements Solver {
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
-    const uniswapSwapper = await ethers.getContract('AsyncUniswapV2');
+    // const uniswapSwapper = await ethers.getContract('UniswapV2Swapper');
+    const zrxSwapper = await ethers.getContract('ZRX');
     const tokenIn = await IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer);
     const amount = await tokenIn.balanceOf(strategy);
-    const swapperResponse = await uniswapV2Library.getBestPathEncoded({
-      tokenIn: tokenInAddress,
-      tokenOut: tokenOutAddress,
-      amountIn: amount,
-      uniswapV2Router: UNISWAP_V2_ROUTER,
-      uniswapV2Factory: UNISWAP_V2_FACTORY,
-      slippage: 3,
+
+    // const swapperResponse = await uniswapV2Library.getBestPathEncoded({
+    //   tokenIn: tokenInAddress,
+    //   tokenOut: tokenOutAddress,
+    //   amountIn: amount,
+    //   uniswapV2Router: UNISWAP_V2_ROUTER,
+    //   uniswapV2Factory: UNISWAP_V2_FACTORY,
+    //   slippage: 3,
+    // });
+
+    const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
+      chainId: 1,
+      sellToken: tokenInAddress,
+      buyToken: tokenOutAddress,
+      sellAmount: amount,
+      slippagePercentage: 3 / 100,
     });
+
+
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
         _tokenIn: tokenInAddress,
         _tokenOut: tokenOutAddress,
         _amount: amount,
-        _minAmountOut: swapperResponse.minAmountOut!,
+        _minAmountOut: zrxMinAmountOut!,
       },
-      uniswapSwapper.address,
-      swapperResponse.data
+      zrxSwapper.address,
+      zrxData
     );
     return executeTx;
   }
