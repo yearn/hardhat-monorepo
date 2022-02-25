@@ -57,6 +57,20 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
       },
     ],
   },
+  '0x2EFB43C8C9AFe71d98B3093C3FD4dEB7Ce543C6D': {
+    name: 'Tokemak strategy',
+    tradesConfigurations: [
+      {
+        enabledTrades: [
+          {
+            tokenIn: '0x2e9d63788249371f1dfc918a52f8d799f4a38c94', // TOKE
+            tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+          },
+        ],
+        solver: 'Dexes',
+      },
+    ],
+  },
 };
 
 const getMainnetSolversMap = async (): Promise<SolversMap<'MAINNET'>> => {
