@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat';
 import { SimpleEnabledTrade, Solver } from '../types';
 import * as uniswapV2Library from '@libraries/dexes/uniswap-v2';
+import zrx from '@libraries/dexes/zrx';
 import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/uniswap_v2';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction } from 'ethers';
 import * as wallet from '@test-utils/wallet';
-import zrx from '../dexes/zrx';
 
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
