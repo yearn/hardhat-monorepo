@@ -198,7 +198,7 @@ export class CurveYfiEth implements Solver {
     const data = mergeTransactions(transactions);
 
     // Populate every trade detail with minAmountOut
-    asyncTradesExecutionDetails.forEach((tradeDetails) => tradeDetails._minAmountOut == curveCalculatedTokenMinAmountOut);
+    asyncTradesExecutionDetails.forEach((tradeDetails) => tradeDetails._minAmountOut = curveCalculatedTokenMinAmountOut);
 
     return await this.getExecuteTx({
       tradeFactory,
