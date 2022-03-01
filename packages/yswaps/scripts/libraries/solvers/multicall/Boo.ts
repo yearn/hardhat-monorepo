@@ -88,16 +88,14 @@ export class Boo implements Solver {
 
     const data = mergeTransactions(transactions);
 
-    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256)[],address,bytes)'](
-      [
-        {
-          _strategy: this.strategyAddress,
-          _tokenIn: this.solidAddress,
-          _tokenOut: this.booAddress,
-          _amount: solidBalance,
-          _minAmountOut: curveCalculatedTokenMinAmountOut,
-        },
-      ],
+    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
+      {
+        _strategy: this.strategyAddress,
+        _tokenIn: this.solidAddress,
+        _tokenOut: this.booAddress,
+        _amount: solidBalance,
+        _minAmountOut: curveCalculatedTokenMinAmountOut,
+      },
       multicallSwapperAddress,
       data
     );
