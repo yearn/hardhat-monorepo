@@ -9,6 +9,7 @@ import { getNodeUrl } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { getFantomSolversMap, fantomConfig } from '@scripts/configs/fantom';
+import { Solver } from './libraries/types';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -40,7 +41,7 @@ async function main() {
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-  const currentGas = gasprice.get();
+  let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
   console.log('[Execution] Taking snapshot of fork');
 
@@ -56,7 +57,7 @@ async function main() {
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      const solver = fantomSolversMap[tradeConfig.solver];
+      const solver = fantomSolversMap[tradeConfig.solver] as Solver;
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
@@ -93,7 +94,30 @@ async function main() {
           params: [snapshotId],
         });
 
-        // await fantomProvider.sendTransaction(executeTx.data!);
+        const gasParams = {
+          gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
+          gasLimit: 1_000_000,
+        };
+
+        const signedTx = await ymech.signTransaction({
+          ...gasParams,
+          to: executeTx.to!,
+          data: executeTx.data!,
+          chainId: 250,
+          nonce: nonce,
+        });
+
+        const tx = await fantomProvider.sendTransaction(signedTx);
+
+        console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
+
+        try {
+          await tx.wait(1);
+          console.log('[Execution] Transaction confirmed');
+        } catch (err) {
+          console.error('[Execution] Transaction reverted');
+        }
+        nonce++;
       } else {
         console.log('[Execution] Should not execute');
       }
