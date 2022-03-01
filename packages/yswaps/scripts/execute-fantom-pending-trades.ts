@@ -1,130 +1,105 @@
-import { ethers, getChainId } from 'hardhat';
+import { ethers, network } from 'hardhat';
+import { BigNumber, PopulatedTransaction, utils, Wallet } from 'ethers';
+import { TradeFactory } from '@typechained';
 import sleep from 'sleep-promise';
-import uniswap from '@scripts/libraries/solvers/uniswap-v2';
 import moment from 'moment';
-import { abi as IERC20_ABI } from '@openzeppelin/contracts/build/contracts/IERC20Metadata.json';
-import { SPOOKYSWAP_FACTORY, SPOOKYSWAP_ROUTER, WETH, WFTM } from '@deploy/fantom-swappers/spookyswap';
-import { SPIRITSWAP_FACTORY, SPIRITSWAP_ROUTER } from '@deploy/fantom-swappers/spiritswap';
-import { BigNumber, utils } from 'ethers';
-import { IERC20Metadata, TradeFactory } from '@typechained';
-import zrx from './libraries/solvers/zrx';
-import { PendingTrade, TradeSetup } from './libraries/types';
+import * as gasprice from './libraries/utils/ftm-gas-price';
+import kms from '../../commons/tools/kms';
+import { getNodeUrl } from '@utils/network';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import * as evm from '@test-utils/evm';
+import { getFantomSolversMap, fantomConfig } from '@scripts/configs/fantom';
 
-const DELAY = moment.duration('1', 'minutes').as('milliseconds');
-const SPOOKY_TOKEN = '0x841fad6eae12c286d1fd18d1d525dffa75c7effe';
-const SPIRIT_TOKEN = '0x5cc61a78f164885776aa610fb0fe1257df78e59b';
-const SLIPPAGE_PERCENTAGE = 3;
+const DELAY = moment.duration('8', 'minutes').as('milliseconds');
+const RETRIES = 10;
+const MAX_GAS_PRICE = utils.parseUnits('1500', 'gwei');
+
+// Provider
+let fantomProvider: JsonRpcProvider;
 
 async function main() {
-  const chainId = await getChainId();
-  console.log('Chain ID:', chainId);
-  const tradeFactory = await ethers.getContract<TradeFactory>('TradeFactory');
-  const pendingTradesIds = await tradeFactory['pendingTradesIds()']();
-  const pendingTrades: PendingTrade[] = [];
-  const tradesSetup: TradeSetup[] = [];
+  await gasprice.start();
 
-  console.log('Pending trades:', pendingTradesIds.length);
+  console.log('[Setup] Getting solvers map');
+  const fantomSolversMap = await getFantomSolversMap();
 
-  for (const id of pendingTradesIds) {
-    pendingTrades.push(await tradeFactory.pendingTradesById(id));
-  }
+  console.log('[Setup] Forking fantom');
 
-  for (const pendingTrade of pendingTrades) {
-    const tokenIn = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenIn);
-    const tokenOut = await ethers.getContractAt<IERC20Metadata>(IERC20_ABI, pendingTrade._tokenOut);
-    const decimalsOut = await tokenOut.decimals();
-    const symbolOut = await tokenOut.symbol();
+  // We set this so hardhat-deploys uses the correct deployment addresses.
+  process.env.HARDHAT_DEPLOY_FORK = 'fantom';
+  await evm.reset({
+    jsonRpcUrl: getNodeUrl('fantom'),
+  });
 
-    // TODO change to cancel trade
-    // if (pendingTrade._deadline.lt(moment().unix())) {
-    //   console.log(`Expiring trade ${pendingTrade._id.toString()}`);
-    //   await tradeFactory.expire(pendingTrade._id);
-    //   continue;
-    // }
+  const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
+  await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
+  console.log('[Setup] Executing with address', ymech.address);
 
-    const { data: spookyData, minAmountOut: spookyMinAmountOut } = await uniswap.getBestPathEncoded({
-      tokenIn: pendingTrade._tokenIn,
-      tokenOut: pendingTrade._tokenOut,
-      amountIn: pendingTrade._amountIn,
-      uniswapV2Router: SPOOKYSWAP_ROUTER,
-      uniswapV2Factory: SPOOKYSWAP_FACTORY,
-      hopTokensToTest: [SPOOKY_TOKEN, WFTM, WETH],
-      slippage: SLIPPAGE_PERCENTAGE,
-    });
+  // We create a provider thats connected to a real network, hardhat provider will be connected to fork
+  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'));
 
-    tradesSetup.push({
-      swapper: (await ethers.getContract('AsyncSpookyswap')).address,
-      swapperName: 'AsyncSpookyswap',
-      data: spookyData,
-      minAmountOut: spookyMinAmountOut,
-    });
+  const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
-    console.log('spooky:', utils.formatUnits(spookyMinAmountOut!, decimalsOut), symbolOut);
+  const currentGas = gasprice.get();
 
-    const { data: spiritData, minAmountOut: spiritMinAmountOut } = await uniswap.getBestPathEncoded({
-      tokenIn: pendingTrade._tokenIn,
-      tokenOut: pendingTrade._tokenOut,
-      amountIn: pendingTrade._amountIn,
-      uniswapV2Router: SPIRITSWAP_ROUTER,
-      uniswapV2Factory: SPIRITSWAP_FACTORY,
-      hopTokensToTest: [SPIRIT_TOKEN, WFTM, WETH],
-      slippage: SLIPPAGE_PERCENTAGE,
-    });
+  console.log('[Execution] Taking snapshot of fork');
 
-    tradesSetup.push({
-      swapper: (await ethers.getContract('AsyncSpiritswap')).address,
-      swapperName: 'AsyncSpiritswap',
-      data: spiritData,
-      minAmountOut: spiritMinAmountOut,
-    });
+  const snapshotId = (await network.provider.request({
+    method: 'evm_snapshot',
+    params: [],
+  })) as string;
 
-    console.log('spirit:', utils.formatUnits(spiritMinAmountOut!, decimalsOut!), symbolOut);
+  console.log('------------');
+  for (const strategy in fantomConfig) {
+    const tradesConfig = fantomConfig[strategy];
+    console.log('[Execution] Processing trade of strategy', tradesConfig.name);
+    for (const tradeConfig of tradesConfig.tradesConfigurations) {
+      console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-    const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: Number(chainId),
-      sellToken: pendingTrade._tokenIn,
-      buyToken: pendingTrade._tokenOut,
-      sellAmount: pendingTrade._amountIn,
-      slippagePercentage: SLIPPAGE_PERCENTAGE / 100,
-    });
+      const solver = fantomSolversMap[tradeConfig.solver];
+      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
-    tradesSetup.push({
-      swapper: (await ethers.getContract('ZRX')).address,
-      swapperName: 'ZRX',
-      data: zrxData,
-      minAmountOut: zrxMinAmountOut,
-    });
+      if (shouldExecute) {
+        console.log('[Execution] Should execute');
 
-    console.log('zrx:', utils.formatUnits(zrxMinAmountOut!, decimalsOut), symbolOut);
+        const executeTx = await solver.solve({
+          strategy,
+          trades: tradeConfig.enabledTrades,
+          tradeFactory,
+        });
 
-    let bestSetup: TradeSetup = tradesSetup[0];
+        console.log('[Execution] Reverting to snapshot');
 
-    for (let i = 1; i < tradesSetup.length; i++) {
-      if (tradesSetup[i].minAmountOut!.gt(bestSetup.minAmountOut!)) {
-        bestSetup = tradesSetup[i];
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        console.log('[Execution] Executing trade in fork');
+        console.log('[Debug] Tx data', executeTx.data!);
+
+        try {
+          const simulatedTx = await ymech.sendTransaction(executeTx);
+          const confirmedTx = await simulatedTx.wait();
+          console.log('[Execution] Simulation in fork succeeded used', confirmedTx.gasUsed.toString(), 'gas');
+        } catch (error: any) {
+          console.error('[Execution] Simulation in fork reverted');
+          console.error(error);
+          continue;
+        }
+
+        await network.provider.request({
+          method: 'evm_revert',
+          params: [snapshotId],
+        });
+
+        // await fantomProvider.sendTransaction(executeTx.data!);
+      } else {
+        console.log('[Execution] Should not execute');
       }
+      console.log('************');
     }
-
-    const tx = await tradeFactory['execute(uint256,address,uint256,bytes)'](
-      pendingTrade._id,
-      bestSetup.swapper,
-      bestSetup.minAmountOut!,
-      bestSetup.data,
-      {
-        gasLimit: 8_000_000, // TODO why are we hardcoding gas here? (either use estimateGas of leave empty)
-      }
-    );
-
-    console.log(
-      'Converting',
-      utils.formatUnits(pendingTrade._amountIn, await tokenIn.decimals()).toString(),
-      await tokenIn.symbol(),
-      'to',
-      utils.formatUnits(bestSetup.minAmountOut!, decimalsOut).toString(),
-      symbolOut
-    );
-    console.log('Pending trade', pendingTrade._id.toString(), 'executed via', bestSetup.swapperName, 'with tx', tx.hash);
-    await sleep(DELAY);
+    console.log('------------');
   }
 }
 
