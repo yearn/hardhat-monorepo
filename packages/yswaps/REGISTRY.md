@@ -17,7 +17,7 @@
 ### Base Protocol
 
 - yMechs multisig: [0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803](https://ftmscan.com/address/0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803)
-- TradeFactory: [0xD3f89C21719Ec5961a3E6B0f9bBf9F9b4180E9e9](https://ftmscan.io/address/0xD3f89C21719Ec5961a3E6B0f9bBf9F9b4180E9e9)
+- TradeFactory: [0xD3f89C21719Ec5961a3E6B0f9bBf9F9b4180E9e9](https://ftmscan.com/address/0xD3f89C21719Ec5961a3E6B0f9bBf9F9b4180E9e9)
 
 ### Swappers
 
