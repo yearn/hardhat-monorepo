@@ -1,6 +1,7 @@
 import { PopulatedTransaction } from 'ethers';
 import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
+import { FantomSolvers } from '@scripts/configs/fantom';
 
 export abstract class Solver {
   abstract solve({
@@ -27,7 +28,7 @@ export type SolversMap<T extends Network> = {
 
 export type SolversNetworksMap = {
   MAINNET: MainnetSolvers;
-  // FANTOM: FantomSolvers
+  FANTOM: FantomSolvers;
 };
 
 export type Network = keyof SolversNetworksMap;
