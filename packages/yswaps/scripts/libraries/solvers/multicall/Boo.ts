@@ -10,10 +10,7 @@ import { ethers } from 'hardhat';
 
 const DUST_THRESHOLD = utils.parseEther('1');
 
-// 1) crv => weth with zrx
-// 2) cvx => weth with zrx
-// 3) weth => eth with wrapper
-// 4) eth => spell/eth with curve
+// 1) solid => boo with spookyswap
 
 export class BooSolver implements Solver {
   
