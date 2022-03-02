@@ -37,9 +37,6 @@ let mainnetProvider: JsonRpcProvider;
 async function main() {
   await gasprice.start();
 
-  console.log('[Setup] Getting solvers map');
-  const mainnetSolversMap = await getMainnetSolversMap();
-
   console.log('[Setup] Forking mainnet');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
@@ -47,6 +44,9 @@ async function main() {
   await evm.reset({
     jsonRpcUrl: getNodeUrl('mainnet'),
   });
+
+  console.log('[Setup] Getting solvers map');
+  const mainnetSolversMap = await getMainnetSolversMap();
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
