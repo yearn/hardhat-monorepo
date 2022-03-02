@@ -225,6 +225,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: ['0x5C4FDfc5233f935f20D2aDbA572F770c2E377Ab0'],
     want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
   },
+  {
+    name: 'Boo Xboo Solidex',
+    added: false,
+    address: '0xADE3BaC94177295329474aAd6A253Bae979BFA68',
+    tokensBeingDumped: [], //only yswaps
+    want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];
