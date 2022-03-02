@@ -112,7 +112,7 @@ async function main() {
         console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
 
         try {
-          await tx.wait(1);
+          await tx.wait(20);
           console.log('[Execution] Transaction confirmed');
         } catch (err) {
           console.error('[Execution] Transaction reverted');
