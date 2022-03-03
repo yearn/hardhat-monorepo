@@ -32,12 +32,14 @@ async function main() {
     jsonRpcUrl: getNodeUrl('fantom'),
   });
 
-  const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
+  const ymech = new ethers.Wallet((process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'));
+  // fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'), 250);
+  fantomProvider = new ethers.providers.JsonRpcProvider('https://holy-still-dawn.fantom.quiknode.pro/cb7dce90a9949069a52a87631ec5de798b211221/');
+  // fantomProvider = new ethers.providers.JsonRpcProvider('https://rpc.ftm.tools/');
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
@@ -107,16 +109,16 @@ async function main() {
           nonce: nonce,
         });
 
-        const tx = await fantomProvider.sendTransaction(signedTx);
+        // const tx = await fantomProvider.sendTransaction(signedTx);
 
-        console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
+        // console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
 
-        try {
-          await tx.wait(20);
-          console.log('[Execution] Transaction confirmed');
-        } catch (err) {
-          console.error('[Execution] Transaction reverted');
-        }
+        // try {
+        //   await tx.wait(20);
+        //   console.log('[Execution] Transaction confirmed');
+        // } catch (err) {
+        //   console.error('[Execution] Transaction reverted');
+        // }
         nonce++;
       } else {
         console.log('[Execution] Should not execute');

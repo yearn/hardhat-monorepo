@@ -47,9 +47,9 @@ export class BooSexSeller implements Solver {
     const solidlyRouter = ISolidlyRouter__factory.connect(this.solidlyRouter, multicallSwapperSigner);
 
     const sexBalance = (await sex.balanceOf(strategy)).sub(1);
-    console.log('[BooSexSeller] Total balance is', utils.formatEther(sexBalance), 'solid');
+    console.log('[BooSexSeller] Total balance is', utils.formatEther(sexBalance), 'sex');
 
-    console.log('[BooSexSeller] Transfering solid to multicall swapper for simulations');
+    console.log('[BooSexSeller] Transfering sex to multicall swapper for simulations');
     await sexFromStrat.transfer(multicallSwapperAddress, sexBalance);
 
     // Create txs for multichain swapper
@@ -61,10 +61,10 @@ export class BooSexSeller implements Solver {
         stable: false,
     }];
 
-    console.log('[BooSexSeller] Getting sex => boo trade information');
+    console.log('[BooSexSeller] Getting sex => wftm trade information');
     const calculatedAmount = (await solidlyRouter.getAmountsOut(sexBalance, path))[1];
 
-    console.log('[BooSexSeller] Expected boo out', utils.formatEther(calculatedAmount));
+    console.log('[BooSexSeller] Expected wftm out', utils.formatEther(calculatedAmount));
 
     const approveSex= (await sex.allowance(multicallSwapperAddress, this.solidlyRouter)).lt(sexBalance);
     if (approveSex) {
