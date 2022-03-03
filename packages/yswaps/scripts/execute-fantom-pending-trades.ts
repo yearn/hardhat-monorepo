@@ -32,7 +32,7 @@ async function main() {
     jsonRpcUrl: getNodeUrl('fantom'),
   });
 
-  const ymech = new ethers.Wallet((process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
+  const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
 
