@@ -48,8 +48,8 @@
     "test:gas": "yarn test ./test/e2e/**/*.spec.ts test/unit/**/*.spec.ts",
     "test:integration": "yarn test ./test/integration/**/**/*.spec.ts",
     "test:unit": "yarn test test/unit/*.spec.ts test/unit/**/*.spec.ts",
-    "trades:mainnet": "npx hardhat run scripts/execute-mainnet-pending-trades.ts",
     "trades:fantom": "npx hardhat run scripts/execute-fantom-pending-trades.ts",
+    "trades:mainnet": "npx hardhat run scripts/execute-mainnet-pending-trades.ts",
     "watch:fantom": "pm2 start 'npx hardhat run scripts/execute-fantom-pending-trades.ts --network fantom' --cron '*/5 * * * *' --no-autorestart",
     "watch:mainnet": "pm2 start 'npx hardhat run scripts/execute-mainnet-pending-trades.ts' --cron '*/5 * * * *' --no-autorestart"
   },

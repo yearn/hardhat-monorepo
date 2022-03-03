@@ -45,18 +45,18 @@ async function main() {
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
-  console.log('[Execution] Taking snapshot of fork');
-
-  const snapshotId = (await network.provider.request({
-    method: 'evm_snapshot',
-    params: [],
-  })) as string;
-
   console.log('------------');
   for (const strategy in fantomConfig) {
     const tradesConfig = fantomConfig[strategy];
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
+      console.log('[Execution] Taking snapshot of fork');
+      console.time('[Execution] Total trade execution time');
+      const snapshotId = (await network.provider.request({
+        method: 'evm_snapshot',
+        params: [],
+      })) as string;
+
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
       const solver = fantomSolversMap[tradeConfig.solver] as Solver;
@@ -112,6 +112,8 @@ async function main() {
         // const tx = await fantomProvider.sendTransaction(signedTx);
 
         // console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
+
+        console.timeEnd('[Execution] Total trade execution time');
 
         // try {
         //   await tx.wait(20);
