@@ -52,9 +52,9 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Transfering sex to multicall swapper for simulations');
     await sexFromStrat.transfer(multicallSwapperAddress, sexBalance);
 
-    // Create txs for multichain swapper
     const transactions: PopulatedTransaction[] = [];
 
+    console.log('[BooSexSeller] Getting sex => wftm trade information');
     const path = [
       {
         from: sex.address,
@@ -62,11 +62,8 @@ export class BooSexSeller implements Solver {
         stable: false,
       },
     ];
-
-    console.log('[BooSexSeller] Getting sex => wftm trade information');
-    const calculatedAmount = (await solidlyRouter.getAmountsOut(sexBalance, path))[1];
-
-    console.log('[BooSexSeller] Expected wftm out', utils.formatEther(calculatedAmount));
+    const calculatedWftmAmount = (await solidlyRouter.getAmountsOut(sexBalance, path))[1];
+    console.log('[BooSexSeller] Expected wftm', utils.formatEther(calculatedWftmAmount), 'from sex => wft trade');
 
     const approveSex = (await sex.allowance(multicallSwapperAddress, this.solidlyRouter)).lt(sexBalance);
     if (approveSex) {
@@ -75,18 +72,11 @@ export class BooSexSeller implements Solver {
       await multicallSwapperSigner.sendTransaction(approveSexTx);
       transactions.push(approveSexTx);
     }
-    const approveWftmSpooky = (await wftm.allowance(multicallSwapperAddress, this.spookyRouter)).lt(calculatedAmount);
-    if (approveWftmSpooky) {
-      console.log('[BooSexSeller] Approving wftm to spooky');
-      const approveWftmTx = await wftm.populateTransaction.approve(this.spookyRouter, constants.MaxUint256);
-      await multicallSwapperSigner.sendTransaction(approveWftmTx);
-      transactions.push(approveWftmTx);
-    }
 
-    console.log('[BooSexSeller] Executing sex => wftm');
+    console.log('[BooSexSeller] Executing sex => wftm through solidly');
     const sellSexToWftmTx = await solidlyRouter.populateTransaction.swapExactTokensForTokens(
       sexBalance,
-      calculatedAmount,
+      calculatedWftmAmount.sub(1),
       path,
       multicallSwapperAddress,
       constants.MaxUint256
@@ -94,13 +84,23 @@ export class BooSexSeller implements Solver {
     await multicallSwapperSigner.sendTransaction(sellSexToWftmTx);
     transactions.push(sellSexToWftmTx);
 
+    console.log('[BooSexSeller] Getting wftm => boo trade information');
     const pathSpooky = [wftm.address, this.booAddress];
-    const calculatedAmountBoo = (await spookyRouter.getAmountsOut(calculatedAmount, pathSpooky))[1];
+    const calculatedBooAmount = (await spookyRouter.getAmountsOut(calculatedWftmAmount, pathSpooky))[1];
+    console.log('[BooSexSeller] Expected boo', utils.formatEther(calculatedBooAmount), 'from wftm => boo trade');
 
-    console.log('[BooSexSeller] Executing wftm => boo');
+    const approveWftmSpooky = (await wftm.allowance(multicallSwapperAddress, this.spookyRouter)).lt(calculatedWftmAmount);
+    if (approveWftmSpooky) {
+      console.log('[BooSexSeller] Approving wftm to spooky');
+      const approveWftmTx = await wftm.populateTransaction.approve(this.spookyRouter, constants.MaxUint256);
+      await multicallSwapperSigner.sendTransaction(approveWftmTx);
+      transactions.push(approveWftmTx);
+    }
+
+    console.log('[BooSexSeller] Executing wftm => boo through spooky');
     const sellWftmToBooTx = await spookyRouter.populateTransaction.swapExactTokensForTokens(
-      calculatedAmount,
-      calculatedAmountBoo,
+      calculatedWftmAmount,
+      calculatedBooAmount,
       pathSpooky,
       this.strategyAddress,
       constants.MaxUint256
@@ -121,7 +121,7 @@ export class BooSexSeller implements Solver {
         _tokenIn: this.sexAddress,
         _tokenOut: this.booAddress,
         _amount: sexBalance,
-        _minAmountOut: calculatedAmountBoo,
+        _minAmountOut: calculatedBooAmount,
       },
       multicallSwapperAddress,
       data
