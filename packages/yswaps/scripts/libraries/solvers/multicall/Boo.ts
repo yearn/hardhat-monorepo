@@ -73,7 +73,7 @@ export class Boo implements Solver {
     console.log('[Boo] Executing solid => boo');
     const sellSolidTx = await spookyRouter.populateTransaction.swapExactTokensForTokens(
       solidBalance,
-      calculatedAmount,
+      curveCalculatedTokenMinAmountOut,
       path,
       this.strategyAddress,
       constants.MaxUint256
