@@ -7,7 +7,7 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
-const DUST_THRESHOLD = utils.parseEther('1');
+const DUST_THRESHOLD = utils.parseEther('250');
 
 // 1) solid => boo with spookyswap
 

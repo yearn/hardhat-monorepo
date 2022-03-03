@@ -49,7 +49,6 @@ async function main() {
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Taking snapshot of fork');
-      console.time('[Execution] Total trade execution time');
       const snapshotId = (await network.provider.request({
         method: 'evm_snapshot',
         params: [],
@@ -61,6 +60,13 @@ async function main() {
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
+        console.time('[Execution] Total trade execution time');
+
+        console.log('[Execution] Setting fork up to speed with mainnet');
+        await evm.reset({
+          jsonRpcUrl: getNodeUrl('fantom'),
+        });
+
         console.log('[Execution] Should execute');
 
         const executeTx = await solver.solve({
@@ -88,11 +94,6 @@ async function main() {
           console.error(error);
           continue;
         }
-
-        await network.provider.request({
-          method: 'evm_revert',
-          params: [snapshotId],
-        });
 
         const gasParams = {
           gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
