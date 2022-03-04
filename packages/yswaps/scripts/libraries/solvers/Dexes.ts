@@ -4,7 +4,7 @@ import * as uniswapV2Library from '@libraries/dexes/uniswap-v2';
 import zrx from '@libraries/dexes/zrx';
 import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/uniswap_v2';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
-import { PopulatedTransaction } from 'ethers';
+import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 
 export default class Dexes implements Solver {
@@ -27,28 +27,25 @@ export default class Dexes implements Solver {
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
-    // const uniswapSwapper = await ethers.getContract('UniswapV2Swapper');
     const zrxSwapper = await ethers.getContract('ZRX');
     const tokenIn = await IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer);
+    const inSymbol = await tokenIn.symbol();
+    const tokenOut = await IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer);
+    const outSymbol = await tokenOut.symbol();
     const amount = await tokenIn.balanceOf(strategy);
 
-    // const swapperResponse = await uniswapV2Library.getBestPathEncoded({
-    //   tokenIn: tokenInAddress,
-    //   tokenOut: tokenOutAddress,
-    //   amountIn: amount,
-    //   uniswapV2Router: UNISWAP_V2_ROUTER,
-    //   uniswapV2Factory: UNISWAP_V2_FACTORY,
-    //   slippage: 3,
-    // });
-
+    console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: 1,
+      chainId: 250,
       sellToken: tokenInAddress,
       buyToken: tokenOutAddress,
       sellAmount: amount,
-      slippagePercentage: 3 / 100,
+      slippagePercentage: 1 / 100,
+      skipValidation: true,
+      takerAddress: strategy,
     });
 
+    console.log('[Dexes] Calculated min amount', utils.formatEther(zrxMinAmountOut!), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
@@ -60,6 +57,9 @@ export default class Dexes implements Solver {
       zrxSwapper.address,
       zrxData
     );
+
+    if (zrxMinAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
+
     return executeTx;
   }
 }
