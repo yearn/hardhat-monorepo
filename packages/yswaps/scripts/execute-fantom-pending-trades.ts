@@ -37,30 +37,36 @@ async function main() {
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'));
+  fantomProvider = new ethers.providers.JsonRpcProvider('https://holy-still-dawn.fantom.quiknode.pro/cb7dce90a9949069a52a87631ec5de798b211221/');
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
-
-  console.log('[Execution] Taking snapshot of fork');
-
-  const snapshotId = (await network.provider.request({
-    method: 'evm_snapshot',
-    params: [],
-  })) as string;
 
   console.log('------------');
   for (const strategy in fantomConfig) {
     const tradesConfig = fantomConfig[strategy];
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
+      console.log('[Execution] Taking snapshot of fork');
+      const snapshotId = (await network.provider.request({
+        method: 'evm_snapshot',
+        params: [],
+      })) as string;
+
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
       const solver = fantomSolversMap[tradeConfig.solver] as Solver;
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
+        console.time('[Execution] Total trade execution time');
+
+        console.log('[Execution] Setting fork up to speed with mainnet');
+        await evm.reset({
+          jsonRpcUrl: getNodeUrl('fantom'),
+        });
+
         console.log('[Execution] Should execute');
 
         const executeTx = await solver.solve({
@@ -89,11 +95,6 @@ async function main() {
           continue;
         }
 
-        await network.provider.request({
-          method: 'evm_revert',
-          params: [snapshotId],
-        });
-
         const gasParams = {
           gasPrice: utils.parseUnits(`${gasprice.get()}`, 'gwei'),
           gasLimit: 1_000_000,
@@ -107,17 +108,21 @@ async function main() {
           nonce: nonce,
         });
 
-        const tx = await fantomProvider.sendTransaction(signedTx);
-
-        console.log(`[Execution] Transaction set, check at https://ftmscan.com/tx/${tx.hash}`);
+        console.timeEnd('[Execution] Total trade execution time');
 
         try {
-          await tx.wait(20);
-          console.log('[Execution] Transaction confirmed');
-        } catch (err) {
-          console.error('[Execution] Transaction reverted');
+          const tx = await fantomProvider.sendTransaction(signedTx);
+          console.log(`[Execution] Transaction sent, check at https://ftmscan.com/tx/${tx.hash}`);
+          try {
+            await tx.wait(20);
+            console.log('[Execution] Transaction confirmed');
+          } catch (err) {
+            console.error('[Execution] Transaction reverted');
+          }
+          nonce++;
+        } catch (err: any) {
+          console.error('[Execution] Error while sending transaction', err.message);
         }
-        nonce++;
       } else {
         console.log('[Execution] Should not execute');
       }
