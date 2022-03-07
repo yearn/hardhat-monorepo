@@ -1,4 +1,4 @@
-import { PopulatedTransaction } from 'ethers';
+import { BigNumber, PopulatedTransaction } from 'ethers';
 import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
 import { FantomSolvers } from '@scripts/configs/fantom';
@@ -20,6 +20,7 @@ export abstract class Solver {
 export type SimpleEnabledTrade = {
   tokenIn: string;
   tokenOut: string;
+  threshold: BigNumber;
 };
 
 export type SolversMap<T extends Network> = {

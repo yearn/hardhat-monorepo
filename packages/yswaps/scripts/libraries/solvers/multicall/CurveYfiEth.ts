@@ -5,6 +5,7 @@ import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
+import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { ethers } from 'hardhat';
 import { AsyncTradeExecutionDetailsStruct } from '@typechained/ITradeFactoryExecutor';
 
@@ -50,9 +51,7 @@ export class CurveYfiEth implements Solver {
   }
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
-    const crvStrategyBalance = await this._crv.balanceOf(strategy);
-    const cvxStrategyBalance = await this._cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(DUST_THRESHOLD) || crvStrategyBalance.gt(DUST_THRESHOLD);
+    return shouldExecuteTrade({ strategy, trades, checkType: 'partial' });
   }
 
   async solve({

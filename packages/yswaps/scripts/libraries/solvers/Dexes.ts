@@ -3,6 +3,7 @@ import { SimpleEnabledTrade, Solver } from '../types';
 import * as uniswapV2Library from '@libraries/dexes/uniswap-v2';
 import zrx from '@libraries/dexes/zrx';
 import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/uniswap_v2';
+import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
@@ -10,10 +11,7 @@ import * as wallet from '@test-utils/wallet';
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
     if (trades.length != 1) return false;
-    const { tokenIn: tokenInAddress } = trades[0];
-    const tokenIn = IERC20Metadata__factory.connect(tokenInAddress, wallet.generateRandom());
-    const strategyBalance = await tokenIn.balanceOf(strategy);
-    return strategyBalance.gt(0);
+    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
   }
 
   async solve({
