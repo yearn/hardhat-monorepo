@@ -37,7 +37,7 @@ async function main() {
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider('https://holy-still-dawn.fantom.quiknode.pro/cb7dce90a9949069a52a87631ec5de798b211221/');
+  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'), { name: 'fantom', chainId: 250 });
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
