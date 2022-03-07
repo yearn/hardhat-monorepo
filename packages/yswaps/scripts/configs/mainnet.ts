@@ -3,6 +3,7 @@ import Dexes from '@scripts/libraries/solvers/Dexes';
 import { CurveSpellEth } from '@scripts/libraries/solvers/multicall/CurveSpellEth';
 import { CurveYfiEth } from '@scripts/libraries/solvers/multicall/CurveYfiEth';
 import { ThreePoolCrv } from '@scripts/libraries/solvers/multicall/ThreePoolCrv';
+import { utils } from 'ethers';
 
 export type MainnetSolvers = 'CurveSpellEth' | 'CurveYfiEth' | 'ThreePoolCrv' | 'Dexes';
 
@@ -18,6 +19,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //         },
   //       ],
   //       solver: 'ThreePoolCrv',
+  //       dustThreshold: utils.parseEther('1')
   //     },
   //   ],
   // },
@@ -36,6 +38,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //         },
   //       ],
   //       solver: 'CurveSpellEth',
+  //       dustThreshold: utils.parseEther('1')
   //     },
   //   ],
   // },
@@ -54,6 +57,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           },
         ],
         solver: 'CurveYfiEth',
+        dustThreshold: utils.parseEther('1')
       },
     ],
   },
@@ -68,6 +72,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           },
         ],
         solver: 'Dexes',
+        dustThreshold: utils.parseEther('1')
       },
     ],
   },

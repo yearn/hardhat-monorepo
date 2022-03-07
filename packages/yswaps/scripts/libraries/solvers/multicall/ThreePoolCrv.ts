@@ -22,21 +22,23 @@ export class ThreePoolCrv implements Solver {
   private usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
+  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
     if (trades.length != 1) return false;
     const threeCrv = IERC20__factory.connect(this.threeCrvAddress, wallet.generateRandom());
     const strategyBalance = await threeCrv.balanceOf(strategy);
-    return strategyBalance.gt(DUST_THRESHOLD);
+    return strategyBalance.gt(dustThreshold);
   }
 
   async solve({
     strategy,
     trades,
     tradeFactory,
+    dustThreshold,
   }: {
     strategy: string;
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
+    dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];

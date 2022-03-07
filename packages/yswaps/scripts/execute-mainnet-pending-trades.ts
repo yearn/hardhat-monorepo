@@ -89,15 +89,17 @@ async function main() {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
       const solver = mainnetSolversMap[tradeConfig.solver];
-      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
+      const { enabledTrades, dustThreshold } = tradeConfig;
+      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: enabledTrades, dustThreshold });
 
       if (shouldExecute) {
         console.log('[Execution] Should execute');
 
         const executeTx = await solver.solve({
           strategy,
-          trades: tradeConfig.enabledTrades,
+          trades: enabledTrades,
           tradeFactory,
+          dustThreshold
         });
 
         console.log('[Execution] Reverting to snapshot');

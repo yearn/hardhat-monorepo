@@ -1,5 +1,6 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
+import { utils } from 'ethers';
 import { BooSexSeller } from '../libraries/solvers/multicall/BooSexSeller';
 
 export type FantomSolvers = 'BooSexSeller' | 'Dexes';
@@ -16,6 +17,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           },
         ],
         solver: 'Dexes',
+        dustThreshold: utils.parseEther('250')
       },
       {
         enabledTrades: [
@@ -25,6 +27,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           },
         ],
         solver: 'BooSexSeller',
+        dustThreshold: utils.parseEther('250')
       },
     ],
   },

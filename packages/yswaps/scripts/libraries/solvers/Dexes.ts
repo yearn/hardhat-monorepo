@@ -4,11 +4,11 @@ import * as uniswapV2Library from '@libraries/dexes/uniswap-v2';
 import zrx from '@libraries/dexes/zrx';
 import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/uniswap_v2';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
-import { PopulatedTransaction, utils } from 'ethers';
+import { BigNumber, PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 
 export default class Dexes implements Solver {
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
+  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
     if (trades.length != 1) return false;
     const { tokenIn: tokenInAddress } = trades[0];
     const tokenIn = IERC20Metadata__factory.connect(tokenInAddress, wallet.generateRandom());
@@ -20,10 +20,12 @@ export default class Dexes implements Solver {
     strategy,
     trades,
     tradeFactory,
+    dustThreshold,
   }: {
     strategy: string;
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
+    dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];

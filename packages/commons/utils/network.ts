@@ -14,6 +14,15 @@ export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   250: 'fantom',
 };
 
+export const NETWORK_NAME_IDS: { [netowrk in SUPPORTED_NETWORKS]: number } = {
+  'mainnet': 1,
+  'ropsten': 3,
+  'rinkeby': 4,
+  'goerli': 5,
+  'polygon': 137,
+  'fantom': 250,
+};
+
 export const DEFAULT_NETWORK_RPC: { [network in SUPPORTED_NETWORKS]: string } = {
   'mainnet': '',
   'rinkeby': '',
@@ -29,7 +38,7 @@ export function getNodeUrl(networkName: SUPPORTED_NETWORKS): string {
   if (!uri && DEFAULT_NETWORK_RPC[networkName] == '') {
     console.warn(`No uri for network ${networkName}`);
     return '';
-  } 
+  }
 
   return uri || DEFAULT_NETWORK_RPC[networkName];
 }

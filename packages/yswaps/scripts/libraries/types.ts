@@ -1,4 +1,4 @@
-import { PopulatedTransaction } from 'ethers';
+import { BigNumber, PopulatedTransaction } from 'ethers';
 import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
 import { FantomSolvers } from '@scripts/configs/fantom';
@@ -7,14 +7,16 @@ export abstract class Solver {
   abstract solve({
     strategy,
     trades,
+    dustThreshold,
     tradeFactory,
   }: {
     strategy: string;
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
+    dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction>;
 
-  abstract shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean>;
+  abstract shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean>;
 }
 
 export type SimpleEnabledTrade = {
@@ -36,6 +38,7 @@ export type Network = keyof SolversNetworksMap;
 export type TradeConfiguration<T extends Network> = {
   enabledTrades: SimpleEnabledTrade[];
   solver: SolversNetworksMap[T];
+  dustThreshold: BigNumber;
 };
 
 export type StrategyConfiguration<T extends Network> = {

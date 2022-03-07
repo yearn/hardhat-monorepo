@@ -19,20 +19,22 @@ export class BooSexSeller implements Solver {
   private booAddress = '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE';
   private wftmAddress = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83';
 
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
+  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
     const sex = IERC20__factory.connect(this.sexAddress, wallet.generateRandom());
     const sexStrategyBalance = await sex.balanceOf(strategy);
-    return sexStrategyBalance.gt(DUST_THRESHOLD);
+    return sexStrategyBalance.gt(dustThreshold);
   }
 
   async solve({
     strategy,
     trades,
     tradeFactory,
+    dustThreshold,
   }: {
     strategy: string;
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
+    dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction> {
     const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
     const strategySigner = await impersonate(this.strategyAddress);

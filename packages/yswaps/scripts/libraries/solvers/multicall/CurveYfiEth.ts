@@ -49,20 +49,22 @@ export class CurveYfiEth implements Solver {
     );
   }
 
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
+  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
     const crvStrategyBalance = await this._crv.balanceOf(strategy);
     const cvxStrategyBalance = await this._cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(DUST_THRESHOLD) || crvStrategyBalance.gt(DUST_THRESHOLD);
+    return cvxStrategyBalance.gt(dustThreshold) || crvStrategyBalance.gt(dustThreshold);
   }
 
   async solve({
     strategy,
     trades,
     tradeFactory,
+    dustThreshold,
   }: {
     strategy: string;
     trades: SimpleEnabledTrade[];
     tradeFactory: TradeFactory;
+    dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction> {
     const strategySigner = await impersonate(strategy);
 
@@ -78,7 +80,7 @@ export class CurveYfiEth implements Solver {
     const asyncTradesExecutionDetails: AsyncTradeExecutionDetailsStruct[] = [];
 
     console.log('[CurveYfiEth] CRV management');
-    const shouldExecuteCrvTrade = crvBalance.gt(DUST_THRESHOLD);
+    const shouldExecuteCrvTrade = crvBalance.gt(dustThreshold);
 
     if (shouldExecuteCrvTrade) {
       console.log('[CurveYfiEth] Transfering crv to multicall swapper for simulations');
@@ -122,7 +124,7 @@ export class CurveYfiEth implements Solver {
     }
 
     console.log('[CurveYfiEth] CVX management');
-    const shouldExecuteCvxTrade = cvxBalance.gt(DUST_THRESHOLD);
+    const shouldExecuteCvxTrade = cvxBalance.gt(dustThreshold);
 
     if (shouldExecuteCvxTrade) {
       console.log('[CurveYfiEth] Transfering cvx to multicall swapper for simulations');
