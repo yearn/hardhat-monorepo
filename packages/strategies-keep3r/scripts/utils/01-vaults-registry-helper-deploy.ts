@@ -9,6 +9,9 @@ async function main() {
   await promptAndSubmit();
 }
 
+//  npx hardhat run scripts/ftm/01-vaults-registry-helper-deploy.ts --network arbitrum
+const NETWORK = 'arbitrum';
+
 function promptAndSubmit() {
   return new Promise<void>(async (resolve, reject) => {
     try {
@@ -28,10 +31,10 @@ function promptAndSubmit() {
       }
 
       const VaultsRegistryHelper: ContractFactory = await ethers.getContractFactory('VaultsRegistryHelper');
-      console.log(contracts.vaultsRegistry.fantom);
-      const vaultsRegistryHelper = await VaultsRegistryHelper.deploy(contracts.vaultsRegistry.fantom);
+      console.log('using vaultsRegistry:', contracts.vaultsRegistry[NETWORK]);
+      const vaultsRegistryHelper = await VaultsRegistryHelper.deploy(contracts.vaultsRegistry[NETWORK]);
       console.log('VaultsRegistryHelper address:', vaultsRegistryHelper.address);
-      console.log('PLEASE: change .contracts.ts vaultsRegistryHelper.fantom address to:', vaultsRegistryHelper.address);
+      console.log(`PLEASE: change .contracts.ts vaultsRegistryHelper.${NETWORK} address to:`, vaultsRegistryHelper.address);
 
       resolve();
     } catch (err) {
