@@ -9,8 +9,8 @@ async function main() {
   await promptAndSubmit();
 }
 
-//  npx hardhat run scripts/ftm/01-vaults-registry-helper-deploy.ts --network arbitrum
-const NETWORK = 'arbitrum';
+//  npx hardhat run scripts/ftm/01-vaults-registry-helper-deploy.ts --network arbitrumOne
+const NETWORK = 'arbitrumOne';
 
 function promptAndSubmit() {
   return new Promise<void>(async (resolve, reject) => {

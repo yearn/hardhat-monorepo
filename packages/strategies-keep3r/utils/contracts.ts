@@ -55,14 +55,14 @@ export const vaultsRegistry: ContractChainAddress = {
   mainnet: '0x50c1a2eA0a861A967D9d0FFE2AE4012c2E053804',
   polygon: '',
   fantom: '0x727fe1759430df13655ddb0731dE0D0FDE929b04',
-  arbitrum: '0x3199437193625DCcD6F9C9e98BDf93582200Eb1f',
+  arbitrumOne: '0x3199437193625DCcD6F9C9e98BDf93582200Eb1f',
 };
 
 export const vaultsRegistryHelper: ContractChainAddress = {
   mainnet: '',
   polygon: '',
   fantom: '0x8CC45f739104b3Bdb98BFfFaF2423cC0f817ccc1',
-  arbitrum: '0x237C3623bed7D115Fc77fEB08Dd27E16982d972B',
+  arbitrumOne: '0x237C3623bed7D115Fc77fEB08Dd27E16982d972B',
 };
 
 export const tendV2Keep3rJob: ContractChainAddress = {

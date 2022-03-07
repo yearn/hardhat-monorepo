@@ -3,7 +3,7 @@ import kms from '../tools/kms';
 
 const MAX_ACCOUNTS = 10;
 
-export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'ropsten' | 'goerli' | 'polygon' | 'fantom' | 'arbitrum';
+export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'ropsten' | 'goerli' | 'polygon' | 'fantom' | 'arbitrumOne';
 
 export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   1: 'mainnet',
@@ -12,7 +12,7 @@ export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   5: 'goerli',
   137: 'polygon',
   250: 'fantom',
-  42161: 'arbitrum',
+  42161: 'arbitrumOne',
 };
 
 export const DEFAULT_NETWORK_RPC: { [network in SUPPORTED_NETWORKS]: string } = {
@@ -22,7 +22,7 @@ export const DEFAULT_NETWORK_RPC: { [network in SUPPORTED_NETWORKS]: string } = 
   'goerli': '',
   'polygon': 'https://polygon-rpc.com/',
   'fantom': 'https://rpc.ftm.tools/',
-  'arbitrum': 'https://arb1.arbitrum.io/rpc',
+  'arbitrumOne': 'https://arb1.arbitrum.io/rpc',
 };
 
 export function getNodeUrl(networkName: SUPPORTED_NETWORKS): string {

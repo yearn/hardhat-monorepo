@@ -4,7 +4,7 @@ const config = hardhatConfig({
   namedAccounts: {
     deployer: 0, // yMECH Alice
   },
-  networks: ['mainnet', 'fantom', 'arbitrum'],
+  networks: ['mainnet', 'fantom', 'arbitrumOne'],
   solidity: {
     compilers: [
       {
