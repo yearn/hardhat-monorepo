@@ -76,7 +76,7 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Executing sex => wftm through solidly');
     const sellSexToWftmTx = await solidlyRouter.populateTransaction.swapExactTokensForTokens(
       sexBalance,
-      calculatedWftmAmount.sub(1),
+      calculatedWftmAmount.sub(1000),
       path,
       multicallSwapperAddress,
       constants.MaxUint256
@@ -100,7 +100,7 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Executing wftm => boo through spooky');
     const sellWftmToBooTx = await spookyRouter.populateTransaction.swapExactTokensForTokens(
       calculatedWftmAmount,
-      calculatedBooAmount,
+      calculatedBooAmount.sub(1000),
       pathSpooky,
       this.strategyAddress,
       constants.MaxUint256
