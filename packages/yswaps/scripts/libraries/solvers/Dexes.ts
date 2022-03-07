@@ -8,7 +8,15 @@ import { BigNumber, PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 
 export default class Dexes implements Solver {
-  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
+  async shouldExecuteTrade({
+    strategy,
+    trades,
+    dustThreshold,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    dustThreshold: BigNumber;
+  }): Promise<boolean> {
     if (trades.length != 1) return false;
     const { tokenIn: tokenInAddress } = trades[0];
     const tokenIn = IERC20Metadata__factory.connect(tokenInAddress, wallet.generateRandom());

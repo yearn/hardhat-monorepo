@@ -22,7 +22,15 @@ export class ThreePoolCrv implements Solver {
   private usdcAddress = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
+  async shouldExecuteTrade({
+    strategy,
+    trades,
+    dustThreshold,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    dustThreshold: BigNumber;
+  }): Promise<boolean> {
     if (trades.length != 1) return false;
     const threeCrv = IERC20__factory.connect(this.threeCrvAddress, wallet.generateRandom());
     const strategyBalance = await threeCrv.balanceOf(strategy);

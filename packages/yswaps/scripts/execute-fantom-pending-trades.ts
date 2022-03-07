@@ -74,7 +74,7 @@ async function main() {
           strategy,
           trades: enabledTrades,
           tradeFactory,
-          dustThreshold
+          dustThreshold,
         });
 
         console.log('[Execution] Reverting to snapshot');

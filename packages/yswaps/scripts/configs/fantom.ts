@@ -17,7 +17,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           },
         ],
         solver: 'Dexes',
-        dustThreshold: utils.parseEther('250')
+        dustThreshold: utils.parseEther('250'),
       },
       {
         enabledTrades: [
@@ -27,7 +27,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           },
         ],
         solver: 'BooSexSeller',
-        dustThreshold: utils.parseEther('250')
+        dustThreshold: utils.parseEther('250'),
       },
     ],
   },

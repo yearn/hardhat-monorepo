@@ -49,7 +49,15 @@ export class CurveYfiEth implements Solver {
     );
   }
 
-  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
+  async shouldExecuteTrade({
+    strategy,
+    trades,
+    dustThreshold,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    dustThreshold: BigNumber;
+  }): Promise<boolean> {
     const crvStrategyBalance = await this._crv.balanceOf(strategy);
     const cvxStrategyBalance = await this._cvx.balanceOf(strategy);
     return cvxStrategyBalance.gt(dustThreshold) || crvStrategyBalance.gt(dustThreshold);

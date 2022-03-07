@@ -24,7 +24,15 @@ export class CurveSpellEth implements Solver {
   private wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean> {
+  async shouldExecuteTrade({
+    strategy,
+    trades,
+    dustThreshold,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    dustThreshold: BigNumber;
+  }): Promise<boolean> {
     const cvx = IERC20__factory.connect(this.cvxAddress, wallet.generateRandom());
     const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
     const crvStrategyBalance = await crv.balanceOf(strategy);

@@ -57,7 +57,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           },
         ],
         solver: 'CurveYfiEth',
-        dustThreshold: utils.parseEther('1')
+        dustThreshold: utils.parseEther('1'),
       },
     ],
   },
@@ -72,7 +72,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           },
         ],
         solver: 'Dexes',
-        dustThreshold: utils.parseEther('1')
+        dustThreshold: utils.parseEther('1'),
       },
     ],
   },

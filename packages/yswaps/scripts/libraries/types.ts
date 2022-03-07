@@ -16,7 +16,15 @@ export abstract class Solver {
     dustThreshold: BigNumber;
   }): Promise<PopulatedTransaction>;
 
-  abstract shouldExecuteTrade({ strategy, trades, dustThreshold }: { strategy: string; trades: SimpleEnabledTrade[], dustThreshold: BigNumber }): Promise<boolean>;
+  abstract shouldExecuteTrade({
+    strategy,
+    trades,
+    dustThreshold,
+  }: {
+    strategy: string;
+    trades: SimpleEnabledTrade[];
+    dustThreshold: BigNumber;
+  }): Promise<boolean>;
 }
 
 export type SimpleEnabledTrade = {
