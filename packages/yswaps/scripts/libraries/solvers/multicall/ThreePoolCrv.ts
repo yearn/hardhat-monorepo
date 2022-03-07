@@ -7,8 +7,6 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
-const DUST_THRESHOLD = utils.parseEther('1');
-
 // 1) 3pool => [usdc|usdt|dai]
 // 2) [usdc|usdt|dai] => yvBOOST
 // 3) yvBOOST withdraw  => yveCRV

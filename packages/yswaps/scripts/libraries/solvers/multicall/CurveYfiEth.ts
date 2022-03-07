@@ -8,8 +8,6 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import { ethers } from 'hardhat';
 import { AsyncTradeExecutionDetailsStruct } from '@typechained/ITradeFactoryExecutor';
 
-const DUST_THRESHOLD = utils.parseEther('1');
-
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper

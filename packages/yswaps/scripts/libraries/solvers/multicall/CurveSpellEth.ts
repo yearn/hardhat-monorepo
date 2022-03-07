@@ -8,8 +8,6 @@ import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
-const DUST_THRESHOLD = utils.parseEther('1');
-
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper
