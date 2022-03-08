@@ -34,7 +34,7 @@ export default class Dexes implements Solver {
     const amount = await tokenIn.balanceOf(strategy);
 
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
-    const network: SUPPORTED_NETWORKS = (process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS);
+    const network: SUPPORTED_NETWORKS = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS;
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
       chainId: NETWORK_NAME_IDS[network],
       sellToken: tokenInAddress,
