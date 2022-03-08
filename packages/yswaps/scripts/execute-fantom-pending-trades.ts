@@ -37,7 +37,7 @@ async function main() {
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider('https://holy-still-dawn.fantom.quiknode.pro/cb7dce90a9949069a52a87631ec5de798b211221/');
+  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'), { name: 'fantom', chainId: 250 });
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
@@ -48,18 +48,14 @@ async function main() {
     const tradesConfig = fantomConfig[strategy];
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
-      console.log('[Execution] Taking snapshot of fork');
-      const snapshotId = (await network.provider.request({
-        method: 'evm_snapshot',
-        params: [],
-      })) as string;
-
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
       const solver = fantomSolversMap[tradeConfig.solver] as Solver;
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
+        console.log('[Execution] Should execute');
+
         console.time('[Execution] Total trade execution time');
 
         console.log('[Execution] Setting fork up to speed with mainnet');
@@ -67,7 +63,11 @@ async function main() {
           jsonRpcUrl: getNodeUrl('fantom'),
         });
 
-        console.log('[Execution] Should execute');
+        console.log('[Execution] Taking snapshot of fork');
+        const snapshotId = (await network.provider.request({
+          method: 'evm_snapshot',
+          params: [],
+        })) as string;
 
         const executeTx = await solver.solve({
           strategy,
