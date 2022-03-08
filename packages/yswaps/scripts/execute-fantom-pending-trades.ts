@@ -37,7 +37,7 @@ async function main() {
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'), { name: 'fantom', chainId: 250 });
+  fantomProvider = new ethers.providers.WebSocketProvider(getNodeUrl('fantom').replace('https', 'wss'), { name: 'fantom', chainId: 250 });
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
@@ -114,7 +114,7 @@ async function main() {
           const tx = await fantomProvider.sendTransaction(signedTx);
           console.log(`[Execution] Transaction sent, check at https://ftmscan.com/tx/${tx.hash}`);
           try {
-            await tx.wait(20);
+            await tx.wait(5);
             console.log('[Execution] Transaction confirmed');
           } catch (err) {
             console.error('[Execution] Transaction reverted');
