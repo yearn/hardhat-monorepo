@@ -7,6 +7,7 @@ import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trad
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
+import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
 
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
@@ -33,8 +34,9 @@ export default class Dexes implements Solver {
     const amount = await tokenIn.balanceOf(strategy);
 
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
+    const network: SUPPORTED_NETWORKS = (process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS);
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: 250,
+      chainId: NETWORK_NAME_IDS[network],
       sellToken: tokenInAddress,
       buyToken: tokenOutAddress,
       sellAmount: amount,

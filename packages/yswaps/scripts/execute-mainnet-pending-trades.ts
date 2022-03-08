@@ -16,7 +16,7 @@ import {
   TransactionSimulationRevert,
 } from '@flashbots/ethers-provider-bundle';
 import kms from '../../commons/tools/kms';
-import { getNodeUrl } from '@utils/network';
+import { getNodeUrl, SUPPORTED_NETWORKS } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
@@ -43,9 +43,10 @@ async function main() {
   console.log('[Setup] Forking mainnet');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
-  process.env.HARDHAT_DEPLOY_FORK = 'mainnet';
+  const networkName: SUPPORTED_NETWORKS = 'mainnet';
+  process.env.HARDHAT_DEPLOY_FORK = networkName;
   await evm.reset({
-    jsonRpcUrl: getNodeUrl('mainnet'),
+    jsonRpcUrl: getNodeUrl(networkName),
   });
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);

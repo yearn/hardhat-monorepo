@@ -5,7 +5,7 @@ import sleep from 'sleep-promise';
 import moment from 'moment';
 import * as gasprice from './libraries/utils/ftm-gas-price';
 import kms from '../../commons/tools/kms';
-import { getNodeUrl } from '@utils/network';
+import { getNodeUrl, SUPPORTED_NETWORKS } from '@utils/network';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { getFantomSolversMap, fantomConfig } from '@scripts/configs/fantom';
@@ -27,9 +27,10 @@ async function main() {
   console.log('[Setup] Forking fantom');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
-  process.env.HARDHAT_DEPLOY_FORK = 'fantom';
+  const networkName: SUPPORTED_NETWORKS = 'fantom';
+  process.env.HARDHAT_DEPLOY_FORK = networkName;
   await evm.reset({
-    jsonRpcUrl: getNodeUrl('fantom'),
+    jsonRpcUrl: getNodeUrl(networkName),
   });
 
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
@@ -37,7 +38,7 @@ async function main() {
   console.log('[Setup] Executing with address', ymech.address);
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  fantomProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('fantom'), { name: 'fantom', chainId: 250 });
+  fantomProvider = new ethers.providers.WebSocketProvider(getNodeUrl('fantom').replace('https', 'wss'), { name: 'fantom', chainId: 250 });
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory', ymech);
 
