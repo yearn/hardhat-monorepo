@@ -5,6 +5,7 @@ import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
+import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
@@ -25,11 +26,7 @@ export class CurveSpellEth implements Solver {
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
-    const cvx = IERC20__factory.connect(this.cvxAddress, wallet.generateRandom());
-    const crv = IERC20__factory.connect(this.crvAddress, wallet.generateRandom());
-    const crvStrategyBalance = await crv.balanceOf(strategy);
-    const cvxStrategyBalance = await cvx.balanceOf(strategy);
-    return cvxStrategyBalance.gt(DUST_THRESHOLD) && crvStrategyBalance.gt(DUST_THRESHOLD);
+    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
   }
 
   async solve({

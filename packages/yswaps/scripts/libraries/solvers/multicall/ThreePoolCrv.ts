@@ -2,6 +2,7 @@ import { BigNumber, constants, PopulatedTransaction, utils } from 'ethers';
 import { ICurveFi__factory, IERC20__factory, IVault__factory, TradeFactory } from '@typechained';
 import zrx from '@libraries/dexes/zrx';
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
+import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import * as wallet from '@test-utils/wallet';
@@ -24,9 +25,7 @@ export class ThreePoolCrv implements Solver {
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
     if (trades.length != 1) return false;
-    const threeCrv = IERC20__factory.connect(this.threeCrvAddress, wallet.generateRandom());
-    const strategyBalance = await threeCrv.balanceOf(strategy);
-    return strategyBalance.gt(DUST_THRESHOLD);
+    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
   }
 
   async solve({

@@ -4,6 +4,7 @@ import { IUniswapV2Router02__factory, IERC20__factory, IWETH__factory, TradeFact
 import { mergeTransactions } from '@scripts/libraries/utils/multicall';
 import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
+import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import * as wallet from '@test-utils/wallet';
 import { ethers } from 'hardhat';
 
@@ -20,9 +21,7 @@ export class BooSexSeller implements Solver {
   private wftmAddress = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83';
 
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
-    const sex = IERC20__factory.connect(this.sexAddress, wallet.generateRandom());
-    const sexStrategyBalance = await sex.balanceOf(strategy);
-    return sexStrategyBalance.gt(DUST_THRESHOLD);
+    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
   }
 
   async solve({
