@@ -37,9 +37,6 @@ let mainnetProvider: JsonRpcProvider;
 async function main() {
   await gasprice.start();
 
-  console.log('[Setup] Getting solvers map');
-  const mainnetSolversMap = await getMainnetSolversMap();
-
   console.log('[Setup] Forking mainnet');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
@@ -52,6 +49,9 @@ async function main() {
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.MAINNET_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
+
+  console.log('[Setup] Getting solvers map');
+  const mainnetSolversMap = await getMainnetSolversMap();
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   mainnetProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
