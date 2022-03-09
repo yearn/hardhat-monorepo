@@ -51,13 +51,13 @@ async function main() {
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      const solver = fantomSolversMap[tradeConfig.solver] as Solver;
+      const solver = fantomSolversMap[tradeConfig.solver];
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
         console.log('[Execution] Should execute');
 
-        console.time('[Execution] Total trade execution time');
+        console.time('[Execution] Total trade execution time in fork');
 
         console.log('[Execution] Setting fork up to speed with mainnet');
         await evm.reset({
@@ -109,7 +109,7 @@ async function main() {
           nonce: nonce,
         });
 
-        console.timeEnd('[Execution] Total trade execution time');
+        console.timeEnd('[Execution] Total trade execution time in fork');
 
         try {
           const tx = await fantomProvider.sendTransaction(signedTx);
