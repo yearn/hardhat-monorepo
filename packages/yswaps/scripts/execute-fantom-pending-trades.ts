@@ -21,9 +21,6 @@ let fantomProvider: JsonRpcProvider;
 async function main() {
   await gasprice.start();
 
-  console.log('[Setup] Getting solvers map');
-  const fantomSolversMap = await getFantomSolversMap();
-
   console.log('[Setup] Forking fantom');
 
   // We set this so hardhat-deploys uses the correct deployment addresses.
@@ -36,6 +33,9 @@ async function main() {
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
   await ethers.provider.send('hardhat_setBalance', [ymech.address, '0xffffffffffffffff']);
   console.log('[Setup] Executing with address', ymech.address);
+
+  console.log('[Setup] Getting solvers map');
+  const fantomSolversMap = await getFantomSolversMap();
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
   fantomProvider = new ethers.providers.WebSocketProvider(getNodeUrl('fantom').replace('https', 'wss'), { name: 'fantom', chainId: 250 });
