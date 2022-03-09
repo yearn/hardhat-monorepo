@@ -61,7 +61,8 @@ export class BooSexSeller implements Solver {
         stable: false,
       },
     ];
-    const calculatedWftmAmount = (await solidlyRouter.getAmountsOut(sexBalance, path))[1];
+    let calculatedWftmAmount = (await solidlyRouter.getAmountsOut(sexBalance, path))[1];
+    calculatedWftmAmount = calculatedWftmAmount.sub(calculatedWftmAmount.div(100).mul(1).div(2));
     console.log('[BooSexSeller] Expected wftm', utils.formatEther(calculatedWftmAmount), 'from sex => wft trade');
 
     const approveSex = (await sex.allowance(multicallSwapperAddress, this.solidlyRouter)).lt(sexBalance);
@@ -75,7 +76,7 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Executing sex => wftm through solidly');
     const sellSexToWftmTx = await solidlyRouter.populateTransaction.swapExactTokensForTokens(
       sexBalance,
-      calculatedWftmAmount.sub(1000),
+      calculatedWftmAmount,
       path,
       multicallSwapperAddress,
       constants.MaxUint256
@@ -99,7 +100,7 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Executing wftm => boo through spooky');
     const sellWftmToBooTx = await spookyRouter.populateTransaction.swapExactTokensForTokens(
       calculatedWftmAmount,
-      calculatedBooAmount.sub(1000),
+      calculatedBooAmount.sub(calculatedBooAmount.div(100).mul(1).div(2)),
       pathSpooky,
       this.strategyAddress,
       constants.MaxUint256

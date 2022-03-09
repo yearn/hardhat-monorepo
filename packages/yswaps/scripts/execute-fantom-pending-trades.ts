@@ -115,7 +115,7 @@ async function main() {
           const tx = await fantomProvider.sendTransaction(signedTx);
           console.log(`[Execution] Transaction sent, check at https://ftmscan.com/tx/${tx.hash}`);
           try {
-            await tx.wait(20);
+            await tx.wait(5);
             console.log('[Execution] Transaction confirmed');
           } catch (err) {
             console.error('[Execution] Transaction reverted');
