@@ -83,13 +83,13 @@ async function main() {
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      const solver = mainnetSolversMap[tradeConfig.solver] as Solver;
+      const solver = mainnetSolversMap[tradeConfig.solver];
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
         console.log('[Execution] Should execute');
 
-        console.time('[Execution] Total trade execution time');
+        console.time('[Execution] Total trade execution time in fork');
 
         console.log('[Execution] Setting fork up to speed with mainnet');
         await evm.reset({
@@ -135,7 +135,7 @@ async function main() {
 
         const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-        console.timeEnd('[Execution] Total trade execution time');
+        console.timeEnd('[Execution] Total trade execution time in fork');
 
         await generateAndSendBundle({
           blockProtection,
