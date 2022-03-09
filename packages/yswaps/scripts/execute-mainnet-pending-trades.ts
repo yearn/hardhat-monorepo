@@ -21,6 +21,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import * as evm from '@test-utils/evm';
 import { abi as BlockProtectionABI } from './abis/BlockProtection';
 import { getMainnetSolversMap, mainnetConfig } from '@scripts/configs/mainnet';
+import { Solver } from './libraries/types';
 
 const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
@@ -54,7 +55,7 @@ async function main() {
   const mainnetSolversMap = await getMainnetSolversMap();
 
   // We create a provider thats connected to a real network, hardhat provider will be connected to fork
-  mainnetProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), 'mainnet');
+  mainnetProvider = new ethers.providers.JsonRpcProvider(getNodeUrl('mainnet'), { name: 'mainnet', chainId: 1 });
 
   // console.log('[Setup] Creating flashbots provider ...');
   flashbotsProvider = await FlashbotsBundleProvider.create(
@@ -75,13 +76,6 @@ async function main() {
 
   let nonce = await ethers.provider.getTransactionCount(ymech.address);
 
-  console.log('[Execution] Taking snapshot of fork');
-
-  const snapshotId = (await network.provider.request({
-    method: 'evm_snapshot',
-    params: [],
-  })) as string;
-
   console.log('------------');
   for (const strategy in mainnetConfig) {
     const tradesConfig = mainnetConfig[strategy];
@@ -89,11 +83,24 @@ async function main() {
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
 
-      const solver = mainnetSolversMap[tradeConfig.solver];
+      const solver = mainnetSolversMap[tradeConfig.solver] as Solver;
       const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
 
       if (shouldExecute) {
         console.log('[Execution] Should execute');
+
+        console.time('[Execution] Total trade execution time');
+
+        console.log('[Execution] Setting fork up to speed with mainnet');
+        await evm.reset({
+          jsonRpcUrl: getNodeUrl('mainnet'),
+        });
+
+        console.log('[Execution] Taking snapshot of fork');
+        const snapshotId = (await network.provider.request({
+          method: 'evm_snapshot',
+          params: [],
+        })) as string;
 
         const executeTx = await solver.solve({
           strategy,
@@ -128,17 +135,19 @@ async function main() {
 
         const blockProtection = await ethers.getContractAt(BlockProtectionABI, '0xCC268041259904bB6ae2c84F9Db2D976BCEB43E5', ymech);
 
-        // await generateAndSendBundle({
-        //   blockProtection,
-        //   wallet: ymech,
-        //   executeTx,
-        //   gasParams: {
-        //     ...gasPriceParams,
-        //     // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
-        //     gasLimit: BigNumber.from(2_000_000),
-        //   },
-        //   nonce,
-        // });
+        console.timeEnd('[Execution] Total trade execution time');
+
+        await generateAndSendBundle({
+          blockProtection,
+          wallet: ymech,
+          executeTx,
+          gasParams: {
+            ...gasPriceParams,
+            // gasLimit: confirmedTx.gasUsed.add(confirmedTx.gasUsed.div(5)),
+            gasLimit: BigNumber.from(2_000_000),
+          },
+          nonce,
+        });
       } else {
         console.log('[Execution] Should not execute');
       }

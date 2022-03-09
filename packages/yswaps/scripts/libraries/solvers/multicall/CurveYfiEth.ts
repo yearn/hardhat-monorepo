@@ -7,7 +7,7 @@ import { impersonate } from '@test-utils/wallet';
 import { SimpleEnabledTrade, Solver } from '@scripts/libraries/types';
 import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { ethers } from 'hardhat';
-import { AsyncTradeExecutionDetailsStruct } from '@typechained/ITradeFactoryExecutor';
+import { ITradeFactoryExecutor } from '@typechained';
 
 const DUST_THRESHOLD = utils.parseEther('1');
 
@@ -74,7 +74,7 @@ export class CurveYfiEth implements Solver {
     const transactions: PopulatedTransaction[] = [];
 
     // Create list of trades details to be executed
-    const asyncTradesExecutionDetails: AsyncTradeExecutionDetailsStruct[] = [];
+    const asyncTradesExecutionDetails: ITradeFactoryExecutor.AsyncTradeExecutionDetailsStruct[] = [];
 
     console.log('[CurveYfiEth] CRV management');
     const shouldExecuteCrvTrade = crvBalance.gt(DUST_THRESHOLD);
@@ -214,7 +214,7 @@ export class CurveYfiEth implements Solver {
     data,
   }: {
     tradeFactory: TradeFactory;
-    asyncTradesExecutionDetails: AsyncTradeExecutionDetailsStruct[];
+    asyncTradesExecutionDetails: ITradeFactoryExecutor.AsyncTradeExecutionDetailsStruct[];
     swapperAddress: string;
     data: string;
   }): Promise<PopulatedTransaction> {
