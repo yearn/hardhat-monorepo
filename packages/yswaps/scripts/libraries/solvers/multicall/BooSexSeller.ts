@@ -86,7 +86,8 @@ export class BooSexSeller implements Solver {
 
     console.log('[BooSexSeller] Getting wftm => boo trade information');
     const pathSpooky = [wftm.address, this.booAddress];
-    const calculatedBooAmount = (await spookyRouter.getAmountsOut(calculatedWftmAmount, pathSpooky))[1];
+    let calculatedBooAmount = (await spookyRouter.getAmountsOut(calculatedWftmAmount, pathSpooky))[1];
+    calculatedBooAmount = calculatedBooAmount.sub(calculatedBooAmount.div(100).mul(1).div(2));
     console.log('[BooSexSeller] Expected boo', utils.formatEther(calculatedBooAmount), 'from wftm => boo trade');
 
     const approveWftmSpooky = (await wftm.allowance(multicallSwapperAddress, this.spookyRouter)).lt(calculatedWftmAmount);
@@ -100,7 +101,7 @@ export class BooSexSeller implements Solver {
     console.log('[BooSexSeller] Executing wftm => boo through spooky');
     const sellWftmToBooTx = await spookyRouter.populateTransaction.swapExactTokensForTokens(
       calculatedWftmAmount,
-      calculatedBooAmount.sub(calculatedBooAmount.div(100).mul(1).div(2)),
+      calculatedBooAmount,
       pathSpooky,
       this.strategyAddress,
       constants.MaxUint256
