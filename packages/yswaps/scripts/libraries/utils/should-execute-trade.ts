@@ -16,12 +16,14 @@ export async function shouldExecuteTrade({
   for (const trade of trades) {
     const token = await ethers.getContractAt<IERC20Metadata>(IERC20Metadata__factory.abi, trade.tokenIn);
     const balance = await token.balanceOf(strategy);
-    if (balance.gt(trade.threshold)) executeConfirmations.push(true);
+    const tokenDecimals = await token.decimals();
+    const thresholdWei = utils.formatUnits(trade.threshold, tokenDecimals);
+    if (balance.gt(thresholdWei)) executeConfirmations.push(true);
     else {
       console.log(
         `[Should Execute] Token ${await token.symbol()} should NOT execute. Balance: ${utils.formatEther(
           balance
-        )} - Threshold ${utils.formatEther(trade.threshold)}`
+        )} - Threshold ${thresholdWei}`
       );
     }
   }

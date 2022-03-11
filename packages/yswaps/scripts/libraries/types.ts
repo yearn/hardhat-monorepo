@@ -20,7 +20,7 @@ export abstract class Solver {
 export type SimpleEnabledTrade = {
   tokenIn: string;
   tokenOut: string;
-  threshold: BigNumber;
+  threshold: number;
 };
 
 export type SolversMap<T extends Network> = {

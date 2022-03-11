@@ -77,7 +77,7 @@ export class CurveYfiEth implements Solver {
     console.log('[CurveYfiEth] CRV management');
     const crvTrade = trades.find((trade) => trade.tokenIn === this._crv.address);
     if (!crvTrade) throw new Error('Crv token not present in trades');
-    const shouldExecuteCrvTrade = crvBalance.gt(crvTrade.threshold);
+    const shouldExecuteCrvTrade = crvBalance.gt(utils.formatEther(crvTrade.threshold)); // crv has 18 decimals
 
     if (shouldExecuteCrvTrade) {
       console.log('[CurveYfiEth] Transfering crv to multicall swapper for simulations');
@@ -123,7 +123,7 @@ export class CurveYfiEth implements Solver {
     console.log('[CurveYfiEth] CVX management');
     const cvxTrade = trades.find((trade) => trade.tokenIn === this._cvx.address);
     if (!cvxTrade) throw new Error('Cvx token not present in trades');
-    const shouldExecuteCvxTrade = cvxBalance.gt(cvxTrade.threshold);
+    const shouldExecuteCvxTrade = cvxBalance.gt(utils.formatEther(cvxTrade.threshold)); // cvx has 18 decimals
 
     if (shouldExecuteCvxTrade) {
       console.log('[CurveYfiEth] Transfering cvx to multicall swapper for simulations');

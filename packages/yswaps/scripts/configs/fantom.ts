@@ -14,7 +14,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           {
             tokenIn: '0x888EF71766ca594DED1F0FA3AE64eD2941740A20', // SOLID
             tokenOut: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE', // BOO
-            threshold: utils.parseEther('250'),
+            threshold: 250,
           },
         ],
         solver: 'Dexes',
@@ -24,7 +24,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           {
             tokenIn: '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7', // SEX
             tokenOut: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE', // BOO
-            threshold: utils.parseEther('250'),
+            threshold: 250,
           },
         ],
         solver: 'BooSexSeller',
