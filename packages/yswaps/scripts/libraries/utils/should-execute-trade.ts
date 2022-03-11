@@ -21,9 +21,7 @@ export async function shouldExecuteTrade({
     if (balance.gt(thresholdWei)) executeConfirmations.push(true);
     else {
       console.log(
-        `[Should Execute] Token ${await token.symbol()} should NOT execute. Balance: ${utils.formatEther(
-          balance
-        )} - Threshold ${thresholdWei}`
+        `[Should Execute] Token ${await token.symbol()} should NOT execute. Balance: ${utils.formatEther(balance)} - Threshold ${thresholdWei}`
       );
     }
   }
