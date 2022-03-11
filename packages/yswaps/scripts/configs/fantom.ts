@@ -34,7 +34,6 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
     ],
   },
   '0xBa2251912D29Cb608953808dCBFAc6D0F7f580FF': {
-    // new boo strat
     name: 'Wftm Anyftm veLp Solidex',
     tradesConfigurations: [
       {
@@ -50,7 +49,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
       {
         enabledTrades: [
           {
-            tokenIn: '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7', // SOLID
+            tokenIn: '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7', // SEX
             tokenOut: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
             threshold: utils.parseEther('250'),
           },
@@ -65,7 +64,7 @@ const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
   return {
     BooSexSeller: new BooSexSeller(),
     Dexes: new Dexes(),
-    SolidlySolver: new SolidlySolver
+    SolidlySolver: new SolidlySolver(),
   };
 };
 

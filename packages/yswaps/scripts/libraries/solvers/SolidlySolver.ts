@@ -30,7 +30,7 @@ export default class SolidlySolver implements Solver {
     const inSymbol = await tokenIn.symbol();
     const tokenOut = await IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer);
     const outSymbol = await tokenOut.symbol();
-    const outDecimals = await tokenOut.decimals()
+    const outDecimals = await tokenOut.decimals();
     const amount = await tokenIn.balanceOf(strategy);
 
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
@@ -41,7 +41,7 @@ export default class SolidlySolver implements Solver {
       solidlyFactory: SOLIDLY_FACTORY,
       solidlyRouter: SOLIDLY_ROUTER,
       slippage: 3,
-    })
+    });
 
     console.log('[SolidltSolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
