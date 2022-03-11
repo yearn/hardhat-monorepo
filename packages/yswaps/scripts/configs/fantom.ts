@@ -6,7 +6,7 @@ import { BooSexSeller } from '../libraries/solvers/multicall/BooSexSeller';
 export type FantomSolvers = 'BooSexSeller' | 'Dexes';
 
 const fantomConfig: StrategyConfiguration<'FANTOM'> = {
-  '0x768F43717899FD0f1B45Ea7f23b66e191348073E': { // new boo strat
+  '0x768F43717899FD0f1B45Ea7f23b66e191348073E': {
     name: 'Some Boo strat',
     tradesConfigurations: [
       {
