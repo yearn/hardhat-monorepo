@@ -1,9 +1,10 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
+import SolidlySolver from '@scripts/libraries/solvers/SolidlySolver';
 import { utils } from 'ethers';
 import { BooSexSeller } from '../libraries/solvers/multicall/BooSexSeller';
 
-export type FantomSolvers = 'BooSexSeller' | 'Dexes';
+export type FantomSolvers = 'BooSexSeller' | 'SolidlySolver' | 'Dexes';
 
 const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   '0x768F43717899FD0f1B45Ea7f23b66e191348073E': {
@@ -18,7 +19,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
             threshold: utils.parseEther('250'),
           },
         ],
-        solver: 'Dexes',
+        solver: 'SolidlySolver',
       },
       {
         enabledTrades: [
@@ -32,12 +33,39 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
       },
     ],
   },
+  '0xBa2251912D29Cb608953808dCBFAc6D0F7f580FF': {
+    // new boo strat
+    name: 'Wftm Anyftm veLp Solidex',
+    tradesConfigurations: [
+      {
+        enabledTrades: [
+          {
+            tokenIn: '0x888EF71766ca594DED1F0FA3AE64eD2941740A20', // SOLID
+            tokenOut: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
+            threshold: utils.parseEther('250'),
+          },
+        ],
+        solver: 'SolidlySolver',
+      },
+      {
+        enabledTrades: [
+          {
+            tokenIn: '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7', // SOLID
+            tokenOut: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
+            threshold: utils.parseEther('250'),
+          },
+        ],
+        solver: 'SolidlySolver',
+      },
+    ],
+  },
 };
 
 const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
   return {
     BooSexSeller: new BooSexSeller(),
     Dexes: new Dexes(),
+    SolidlySolver: new SolidlySolver
   };
 };
 
