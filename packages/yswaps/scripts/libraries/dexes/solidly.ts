@@ -9,7 +9,7 @@ export type SwapParams = {
   amountIn: BigNumber;
   solidlyFactory: string;
   solidlyRouter: string;
-  hopTokensToTest?: ISolidlyRouter.RouteStruct[];
+  hopTokensToTest?: string[];
   slippage?: number;
 };
 
@@ -40,20 +40,23 @@ export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapRe
     if (notStableOut.gt(maxOut)) maxPath = notStablePath;
   }
 
-  //   for (let i = 0; i < swapParams.hopTokensToTest.length; i++) {
-  //     if (
-  //       (await factory.getPair(swapParams.tokenIn, swapParams.hopTokensToTest[i])) != constants.AddressZero &&
-  //       (await factory.getPair(swapParams.hopTokensToTest[i], swapParams.tokenOut)) != constants.AddressZero
-  //     ) {
-  //       const hopPath = [swapParams.tokenIn, swapParams.hopTokensToTest[i], swapParams.tokenOut];
-  //       const amountsOut = await router.getAmountsOut(swapParams.amountIn, hopPath);
-  //       const hopOut = amountsOut[amountsOut.length - 1];
-  //       if (hopOut.gt(maxOut)) {
-  //         maxOut = hopOut;
-  //         maxPath = hopPath;
-  //       }
+  // for (const hopToken of swapParams.hopTokensToTest) {
+  //   if (
+  //     (await factory.getPair(swapParams.tokenIn, hopToken, false)) != constants.AddressZero &&
+  //     (await factory.getPair(hopToken, swapParams.tokenOut, false)) != constants.AddressZero
+  //   ) {
+  //     const hopPath: ISolidlyRouter.RouteStruct[] = [
+  //       { from: swapParams.tokenIn, to: hopToken, stable: true },
+  //       { from: hopToken, to: swapParams.tokenOut, stable: true }
+  //     ];
+  //     const amountsOut = await router.getAmountsOut(swapParams.amountIn, hopPath);
+  //     const hopOut = amountsOut[amountsOut.length - 1];
+  //     if (hopOut.gt(maxOut)) {
+  //       maxOut = hopOut;
+  //       maxPath = hopPath;
   //     }
   //   }
+  // }
 
   const pathMap = maxPath.map((path) => Object.values(path));
   const response: SwapResponse = {
