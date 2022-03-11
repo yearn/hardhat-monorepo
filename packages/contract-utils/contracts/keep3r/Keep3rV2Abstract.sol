@@ -4,7 +4,7 @@ pragma solidity >=0.8.4 <0.9.0;
 import '../interfaces/keep3rV2/IKeep3rHelper.sol';
 import '../interfaces/keep3rV2/IKeep3r.sol';
 
-abstract contract Keep3r is IKeep3r {
+abstract contract Keep3r {
   IKeep3r internal _Keep3r;
   address public bond;
   uint256 public minBond;
