@@ -13,7 +13,6 @@ const DUST_THRESHOLD = utils.parseEther('250');
 // 1) solid => boo with spookyswap
 
 export class BooSexSeller implements Solver {
-  private strategyAddress = '0xADE3BaC94177295329474aAd6A253Bae979BFA68'; // boo strat
   private spookyRouter = '0xF491e7B69E4244ad4002BC14e878a34207E38c29';
   private solidlyRouter = '0xa38cd27185a464914D3046f0AB9d43356B34829D';
   private sexAddress = '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7';
@@ -34,7 +33,7 @@ export class BooSexSeller implements Solver {
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
     const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
-    const strategySigner = await impersonate(this.strategyAddress);
+    const strategySigner = await impersonate(strategy);
     const sexFromStrat = IERC20__factory.connect(this.sexAddress, strategySigner);
 
     const multicallSwapperSigner = await impersonate(multicallSwapperAddress);
@@ -103,13 +102,13 @@ export class BooSexSeller implements Solver {
       calculatedWftmAmount,
       calculatedBooAmount,
       pathSpooky,
-      this.strategyAddress,
+      strategy,
       constants.MaxUint256
     );
     await multicallSwapperSigner.sendTransaction(sellWftmToBooTx);
     transactions.push(sellWftmToBooTx);
 
-    const amountOut = await boo.balanceOf(this.strategyAddress);
+    const amountOut = await boo.balanceOf(strategy);
     console.log('[BooSexSeller] Final boo balance is', utils.formatEther(amountOut));
 
     if (amountOut.eq(0)) throw new Error('No boo tokens were received');
@@ -118,7 +117,7 @@ export class BooSexSeller implements Solver {
 
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
-        _strategy: this.strategyAddress,
+        _strategy: strategy,
         _tokenIn: this.sexAddress,
         _tokenOut: this.booAddress,
         _amount: sexBalance,
