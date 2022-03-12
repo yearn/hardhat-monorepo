@@ -36,8 +36,11 @@ export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapRe
 
   if ((await factory.getPair(swapParams.tokenIn, swapParams.tokenOut, false)) != constants.AddressZero) {
     const notStablePath = [{ from: swapParams.tokenIn, to: swapParams.tokenOut, stable: false }];
-    const [, notStableOut] = await router.getAmountsOut(swapParams.amountIn, maxPath);
-    if (notStableOut.gt(maxOut)) maxPath = notStablePath;
+    const [, notStableOut] = await router.getAmountsOut(swapParams.amountIn, notStablePath);
+    if (notStableOut.gt(maxOut)) {
+      maxPath = notStablePath;
+      maxOut = notStableOut;
+    };
   }
 
   // for (const hopToken of swapParams.hopTokensToTest) {
