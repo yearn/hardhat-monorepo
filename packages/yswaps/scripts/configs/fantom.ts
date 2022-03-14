@@ -3,8 +3,9 @@ import Dexes from '@scripts/libraries/solvers/Dexes';
 import SolidlySolver from '@scripts/libraries/solvers/SolidlySolver';
 import { utils } from 'ethers';
 import { BooSexSeller } from '../libraries/solvers/multicall/BooSexSeller';
+import { BooSolidSeller } from '../libraries/solvers/multicall/BooSolidSeller';
 
-export type FantomSolvers = 'BooSexSeller' | 'SolidlySolver' | 'Dexes';
+export type FantomSolvers = 'BooSexSeller' | 'BooSolidSeller' | 'SolidlySolver' | 'Dexes';
 
 const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   '0x768F43717899FD0f1B45Ea7f23b66e191348073E': {
@@ -19,7 +20,8 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
             threshold: utils.parseEther('250'),
           },
         ],
-        solver: 'SolidlySolver',
+        solver: 'BooSolidSeller',
+        // solver: 'SolidlySolver',
       },
       {
         enabledTrades: [
@@ -63,6 +65,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
 const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
   return {
     BooSexSeller: new BooSexSeller(),
+    BooSolidSeller: new BooSolidSeller(),
     Dexes: new Dexes(),
     SolidlySolver: new SolidlySolver(),
   };
