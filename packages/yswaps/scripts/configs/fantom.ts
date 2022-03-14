@@ -1,9 +1,9 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
 import SolidlySolver from '@scripts/libraries/solvers/SolidlySolver';
+import { BooSexSeller } from '@scripts/libraries/solvers/multicall/BooSexSeller';
+import { BooSolidSeller } from '@scripts/libraries/solvers/multicall/BooSolidSeller';
 import { utils } from 'ethers';
-import { BooSexSeller } from '../libraries/solvers/multicall/BooSexSeller';
-import { BooSolidSeller } from '../libraries/solvers/multicall/BooSolidSeller';
 
 export type FantomSolvers = 'BooSexSeller' | 'BooSolidSeller' | 'SolidlySolver' | 'Dexes';
 
