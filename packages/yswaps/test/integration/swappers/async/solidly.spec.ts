@@ -5,7 +5,7 @@ import { evm, wallet } from '@test-utils';
 import { then, when } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
-// import forkBlockNumber from '@integration/fork-block-numbers';
+import forkBlockNumber from '@integration/fork-block-numbers';
 import solidly, { SwapResponse } from '@scripts/libraries/dexes/solidly';
 import { WETH, SOLIDLY_ROUTER, SOLIDLY_FACTORY } from '@deploy/fantom-swappers/solidly';
 import * as setup from '../setup';
@@ -26,7 +26,7 @@ describe('Solidly', function () {
   let solidlyResponse: SwapResponse;
 
   when('on fantom', () => {
-    // const FORK_BLOCK_NUMBER = forkBlockNumber['mainnet-swappers'];
+    const FORK_BLOCK_NUMBER = forkBlockNumber['fantom-swappers'];
 
     const CHAIN_ID = 250;
 
@@ -40,7 +40,7 @@ describe('Solidly', function () {
 
       await evm.reset({
         jsonRpcUrl: getNodeUrl('fantom'),
-        // blockNumber: FORK_BLOCK_NUMBER,
+        blockNumber: FORK_BLOCK_NUMBER,
       });
 
       ({
