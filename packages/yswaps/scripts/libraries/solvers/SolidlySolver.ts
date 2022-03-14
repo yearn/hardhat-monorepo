@@ -33,7 +33,7 @@ export default class SolidlySolver implements Solver {
     const outDecimals = await tokenOut.decimals();
     const amount = await tokenIn.balanceOf(strategy);
 
-    console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
+    console.log('[SolidlySolver] Getting', inSymbol, '=>', outSymbol, 'trade information');
     const swapperResponse = await solidlyLibrary.getBestPathEncoded({
       tokenIn: tokenInAddress,
       tokenOut: tokenOutAddress,
@@ -43,7 +43,7 @@ export default class SolidlySolver implements Solver {
       slippage: 3,
     });
 
-    console.log('[SolidltSolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
+    console.log('[SolidlySolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
