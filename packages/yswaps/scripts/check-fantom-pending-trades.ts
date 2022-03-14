@@ -16,6 +16,7 @@ const DELAY = moment.duration('8', 'minutes').as('milliseconds');
 const RETRIES = 10;
 const MAX_GAS_PRICE = utils.parseUnits('1500', 'gwei');
 
+const KNOWN_DEPRECATED_STRATEGIES = ['0xADE3BaC94177295329474aAd6A253Bae979BFA68'];
 // Provider
 let fantomProvider: JsonRpcProvider;
 
@@ -30,14 +31,28 @@ async function main() {
     jsonRpcUrl: getNodeUrl('fantom'),
   });
 
+  console.log(`filtering out KNOWN_DEPRECATED_STRATEGIES: ${KNOWN_DEPRECATED_STRATEGIES}`);
   const ymech = new ethers.Wallet(await kms.decrypt(process.env.FANTOM_1_PRIVATE_KEY as string), ethers.provider);
 
   const tradeFactory: TradeFactory = await ethers.getContract('TradeFactory');
-  const enabledTrades = (await tradeFactory.enabledTrades()).map((enabledTrade) => ({
-    strategy: enabledTrade._strategy,
-    tokenIn: enabledTrade._tokenIn,
-    tokenOut: enabledTrade._tokenOut,
-  }));
+  const STRATEGY_ROLE = await tradeFactory.STRATEGY();
+  const enabledTrades = (await tradeFactory.enabledTrades())
+    .map((enabledTrade) => ({
+      strategy: enabledTrade._strategy,
+      tokenIn: enabledTrade._tokenIn,
+      tokenOut: enabledTrade._tokenOut,
+    }))
+    .filter((enabledTrade) => KNOWN_DEPRECATED_STRATEGIES.indexOf(enabledTrade.strategy) === -1);
+
+  for (const strategy of enabledTrades.map((enabledTrade) => enabledTrade.strategy).filter((v, i, a) => a.indexOf(v) === i)) {
+    if (await tradeFactory.hasRole(STRATEGY_ROLE, strategy)) continue;
+    console.log(`enabledTrades Strategy: ${strategy} missing STRATEGY role`);
+  }
+  for (const strategy of Object.keys(fantomConfig).filter((v, i, a) => a.indexOf(v) === i)) {
+    if (await tradeFactory.hasRole(STRATEGY_ROLE, strategy)) continue;
+    console.log(`fantomConfig Strategy: ${strategy} missing STRATEGY role`);
+  }
+
   console.log('------------');
 
   // do we have consistency on our strategies?
