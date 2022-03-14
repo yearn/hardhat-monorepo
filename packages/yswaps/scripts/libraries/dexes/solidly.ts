@@ -41,7 +41,7 @@ export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapRe
     if (notStableOut.gt(maxOut)) {
       maxPath = notStablePath;
       maxOut = notStableOut;
-    };
+    }
   }
 
   const { bestMaxPath: hopBestMaxPath, bestAmountOut: hopBestAmountOut, bestHopToken } = await hopTokenCalculation({ swapParams });
@@ -65,23 +65,22 @@ export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapRe
   return response;
 };
 
-
-async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
+async function hopTokenCalculation({ swapParams }: { swapParams: SwapParams }) {
   const { tokenIn, tokenOut, hopTokensToTest, amountIn } = swapParams;
   const factory = await ethers.getContractAt<ISolidlyFactory>(ISolidlyFactory__factory.abi, swapParams.solidlyFactory);
   const router = await ethers.getContractAt<ISolidlyRouter>(ISolidlyRouter__factory.abi, swapParams.solidlyRouter);
 
-  let bestMaxPath: ISolidlyRouter.RouteStruct[] = []
+  let bestMaxPath: ISolidlyRouter.RouteStruct[] = [];
   let bestAmountOut: BigNumber = BigNumber.from('0');
   let bestHopToken: string = '';
   if (!hopTokensToTest) return { bestMaxPath, bestAmountOut, bestHopToken };
 
   for (const hopToken of hopTokensToTest) {
     // Pairing tokenIn and tokenOut with hopToken
-    const tokenInStablePair = (await factory.getPair(tokenIn, hopToken, true));
-    const tokenInVolatilePair = (await factory.getPair(tokenIn, hopToken, false));
-    const tokenOutStablePair = (await factory.getPair(hopToken, tokenOut, true));
-    const tokenOutVolatilePair = (await factory.getPair(hopToken, tokenOut, false));
+    const tokenInStablePair = await factory.getPair(tokenIn, hopToken, true);
+    const tokenInVolatilePair = await factory.getPair(tokenIn, hopToken, false);
+    const tokenOutStablePair = await factory.getPair(hopToken, tokenOut, true);
+    const tokenOutVolatilePair = await factory.getPair(hopToken, tokenOut, false);
 
     const pairOptions = [
       {
@@ -90,7 +89,7 @@ async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
         path: [
           { from: tokenIn, to: hopToken, stable: true },
           { from: hopToken, to: tokenOut, stable: true },
-        ]
+        ],
       },
       {
         pairIn: tokenInVolatilePair,
@@ -98,7 +97,7 @@ async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
         path: [
           { from: tokenIn, to: hopToken, stable: false },
           { from: hopToken, to: tokenOut, stable: false },
-        ]
+        ],
       },
       {
         pairIn: tokenInStablePair,
@@ -106,7 +105,7 @@ async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
         path: [
           { from: tokenIn, to: hopToken, stable: true },
           { from: hopToken, to: tokenOut, stable: false },
-        ]
+        ],
       },
       {
         pairIn: tokenInVolatilePair,
@@ -114,23 +113,20 @@ async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
         path: [
           { from: tokenIn, to: hopToken, stable: false },
           { from: hopToken, to: tokenOut, stable: true },
-        ]
+        ],
       },
-    ]
+    ];
 
     for (const pairOption of pairOptions) {
       const { pairIn, pairOut, path } = pairOption;
-      if (
-      pairIn != constants.AddressZero &&
-      pairOut != constants.AddressZero
-    ) {
-        const [,, amountOut] = await router.getAmountsOut(amountIn, path);
+      if (pairIn != constants.AddressZero && pairOut != constants.AddressZero) {
+        const [, , amountOut] = await router.getAmountsOut(amountIn, path);
         if (amountOut.gt(bestAmountOut)) {
           bestAmountOut = amountOut;
-          bestMaxPath = path
+          bestMaxPath = path;
           bestHopToken = hopToken;
         }
-      };
+      }
     }
   }
 
