@@ -36,7 +36,7 @@ export default class SolidlySolver implements Solver {
       tokenIn.decimals(),
       tokenOut.symbol(),
       tokenOut.decimals(),
-      tokenIn.balanceOf(strategy),
+      (await tokenIn.balanceOf(strategy)).sub(1),
     ]);
 
     console.log('[SolidlySolver] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);

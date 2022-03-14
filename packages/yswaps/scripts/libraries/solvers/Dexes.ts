@@ -26,12 +26,17 @@ export default class Dexes implements Solver {
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
-    const zrxSwapper = await ethers.getContract('ZRX');
-    const tokenIn = await IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer);
-    const inSymbol = await tokenIn.symbol();
-    const tokenOut = await IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer);
-    const outSymbol = await tokenOut.symbol();
-    const amount = await tokenIn.balanceOf(strategy);
+    const [zrxSwapper, tokenIn, tokenOut] = await Promise.all([
+      ethers.getContract('ZRX'),
+      IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer),
+      IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
+    ]);
+
+    const [inSymbol, outSymbol, amount] = await Promise.all([
+      tokenIn.symbol(),
+      tokenOut.symbol(),
+      (await tokenIn.balanceOf(strategy)).sub(1),
+    ]);
 
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
     const network: SUPPORTED_NETWORKS = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS;

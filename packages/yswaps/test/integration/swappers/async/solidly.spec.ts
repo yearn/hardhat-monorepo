@@ -12,7 +12,7 @@ import * as setup from '../setup';
 
 const AMOUNT_IN = utils.parseUnits('100', 6);
 
-describe.only('Solidly', function () {
+describe('Solidly', function () {
   let yMech: JsonRpcSigner;
   let strategy: Wallet;
   let tradeFactory: TradeFactory;
