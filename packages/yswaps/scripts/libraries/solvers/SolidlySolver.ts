@@ -25,15 +25,22 @@ export default class SolidlySolver implements Solver {
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
-    const solidlySwapper = await ethers.getContract('AsyncSolidly');
-    const tokenIn = await IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer);
-    const inSymbol = await tokenIn.symbol();
-    const tokenOut = await IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer);
-    const outSymbol = await tokenOut.symbol();
-    const outDecimals = await tokenOut.decimals();
-    const amount = await tokenIn.balanceOf(strategy);
+    const [solidlySwapper, tokenIn, tokenOut] = await Promise.all([
+      ethers.getContract('AsyncSolidly'),
+      IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer),
+      IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
+    ]);
 
-    console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
+    const [inSymbol, inDecimals, outSymbol, outDecimals, amount] = await Promise.all([
+      tokenIn.symbol(),
+      tokenIn.decimals(),
+      tokenOut.symbol(),
+      tokenOut.decimals(),
+      tokenIn.balanceOf(strategy),
+    ]);
+
+    console.log('[SolidlySolver] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
+    console.log('[SolidlySolver] Getting', inSymbol, '=>', outSymbol, 'trade information');
     const swapperResponse = await solidlyLibrary.getBestPathEncoded({
       tokenIn: tokenInAddress,
       tokenOut: tokenOutAddress,
@@ -43,7 +50,7 @@ export default class SolidlySolver implements Solver {
       slippage: 3,
     });
 
-    console.log('[SolidltSolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
+    console.log('[SolidlySolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
