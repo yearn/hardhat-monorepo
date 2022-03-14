@@ -51,4 +51,13 @@ interface IKeep3r {
     /// @notice Address of Keep3rHelper's contract
     /// @return _keep3rHelper The address of Keep3rHelper's contract
     function keep3rHelper() external view returns (address _keep3rHelper);
+
+    /// @notice Allows any caller to add a new job
+    /// @param _job Address of the contract for which work should be performed
+    function addJob(address _job) external;
+
+    /// @notice Gifts liquidity credits to the specified job
+    /// @param _job The address of the job being credited
+    /// @param _amount The amount of liquidity credits to gift
+    function forceLiquidityCreditsToJob(address _job, uint256 _amount) external;
 }

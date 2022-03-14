@@ -4,9 +4,7 @@ pragma solidity ^0.8.4;
 
 import './Keep3rV2Job.sol';
 
-import '../../interfaces/jobs/v2/IV2Keep3rPublicJob.sol';
-
-abstract contract Keep3rV2PublicJob is Keep3rV2Job, IV2Keep3rPublicJob {
+abstract contract Keep3rV2PublicJob is Keep3rV2Job {
   constructor(
     address _mechanicsRegistry,
     address _yOracle,
