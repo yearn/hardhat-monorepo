@@ -21,7 +21,7 @@ export type SwapResponse = {
 };
 
 export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapResponse> => {
-  const { tokenIn, tokenOut, hopTokensToTest, amountIn } = swapParams;
+  const { tokenIn, tokenOut, amountIn } = swapParams;
   swapParams.hopTokensToTest = swapParams.hopTokensToTest ?? [];
 
   const factory = await ethers.getContractAt<ISolidlyFactory>(ISolidlyFactory__factory.abi, swapParams.solidlyFactory);
@@ -67,85 +67,71 @@ export const getBestPathEncoded = async (swapParams: SwapParams): Promise<SwapRe
 
 
 async function hopTokenCalculation({ swapParams }: {swapParams: SwapParams}) {
-  const { tokenIn, tokenOut, amountIn, hopTokensToTest } = swapParams;
+  const { tokenIn, tokenOut, hopTokensToTest, amountIn } = swapParams;
   const factory = await ethers.getContractAt<ISolidlyFactory>(ISolidlyFactory__factory.abi, swapParams.solidlyFactory);
   const router = await ethers.getContractAt<ISolidlyRouter>(ISolidlyRouter__factory.abi, swapParams.solidlyRouter);
 
   let bestMaxPath: ISolidlyRouter.RouteStruct[] = []
   let bestAmountOut: BigNumber = BigNumber.from('0');
   let bestHopToken: string = '';
-  if (!hopTokensToTest) return { bestMaxPath, bestAmountOut };
+  if (!hopTokensToTest) return { bestMaxPath, bestAmountOut, bestHopToken };
 
   for (const hopToken of hopTokensToTest) {
-    let hopMaxPath: ISolidlyRouter.RouteStruct[] = [];
-    let hopAmountOut: BigNumber = BigNumber.from('0');
+    // Pairing tokenIn and tokenOut with hopToken
+    const tokenInStablePair = (await factory.getPair(tokenIn, hopToken, true));
+    const tokenInVolatilePair = (await factory.getPair(tokenIn, hopToken, false));
+    const tokenOutStablePair = (await factory.getPair(hopToken, tokenOut, true));
+    const tokenOutVolatilePair = (await factory.getPair(hopToken, tokenOut, false));
 
-    const tokenInHopStablePair = (await factory.getPair(tokenIn, hopToken, true));
-    const tokenInHopVolatilePair = (await factory.getPair(tokenIn, hopToken, false));
-    const HopTokenOutStablePair = (await factory.getPair(tokenIn, hopToken, true));
-    const HopTokenOutVolatilePair = (await factory.getPair(tokenIn, hopToken, false));
-
-    if (
-      tokenInHopStablePair != constants.AddressZero &&
-      HopTokenOutStablePair != constants.AddressZero
-    ) {
-        hopMaxPath = [
+    const pairOptions = [
+      {
+        pairIn: tokenInStablePair,
+        pairOut: tokenOutStablePair,
+        path: [
           { from: tokenIn, to: hopToken, stable: true },
           { from: hopToken, to: tokenOut, stable: true },
-        ];
-        [,, hopAmountOut] = await router.getAmountsOut(amountIn, hopMaxPath);
+        ]
+      },
+      {
+        pairIn: tokenInVolatilePair,
+        pairOut: tokenOutVolatilePair,
+        path: [
+          { from: tokenIn, to: hopToken, stable: false },
+          { from: hopToken, to: tokenOut, stable: false },
+        ]
+      },
+      {
+        pairIn: tokenInStablePair,
+        pairOut: tokenOutVolatilePair,
+        path: [
+          { from: tokenIn, to: hopToken, stable: true },
+          { from: hopToken, to: tokenOut, stable: false },
+        ]
+      },
+      {
+        pairIn: tokenInVolatilePair,
+        pairOut: tokenOutStablePair,
+        path: [
+          { from: tokenIn, to: hopToken, stable: false },
+          { from: hopToken, to: tokenOut, stable: true },
+        ]
+      },
+    ]
+
+    for (const pairOption of pairOptions) {
+      const { pairIn, pairOut, path } = pairOption;
+      if (
+      pairIn != constants.AddressZero &&
+      pairOut != constants.AddressZero
+    ) {
+        const [,, amountOut] = await router.getAmountsOut(amountIn, path);
+        if (amountOut.gt(bestAmountOut)) {
+          bestAmountOut = amountOut;
+          bestMaxPath = path
+          bestHopToken = hopToken;
+        }
       };
-
-    if (
-      tokenInHopVolatilePair != constants.AddressZero &&
-      HopTokenOutVolatilePair != constants.AddressZero
-    ) {
-        const path = [
-          { from: tokenIn, to: hopToken, stable: false },
-          { from: hopToken, to: tokenOut, stable: false },
-        ];
-        const [,, amountOut] = await router.getAmountsOut(amountIn, path);
-        if (amountOut.gt(hopAmountOut)) {
-          hopMaxPath = path;
-          hopAmountOut = amountOut;
-        }
-      }
-
-    if (
-      tokenInHopStablePair != constants.AddressZero &&
-      HopTokenOutVolatilePair != constants.AddressZero
-    ) {
-        const path = [
-          { from: tokenIn, to: hopToken, stable: true },
-          { from: hopToken, to: tokenOut, stable: false },
-        ];
-        const [,, amountOut] = await router.getAmountsOut(amountIn, path);
-        if (amountOut.gt(hopAmountOut)) {
-          hopMaxPath = path;
-          hopAmountOut = amountOut;
-        }
-      }
-
-    if (
-      tokenInHopVolatilePair != constants.AddressZero &&
-      HopTokenOutStablePair != constants.AddressZero
-    ) {
-        const path = [
-          { from: tokenIn, to: hopToken, stable: false },
-          { from: hopToken, to: tokenOut, stable: true },
-        ];
-        const [,, amountOut] = await router.getAmountsOut(amountIn, path);
-        if (amountOut.gt(hopAmountOut)) {
-          hopMaxPath = path;
-          hopAmountOut = amountOut;
-        }
-      }
-
-      if (hopAmountOut.gt(bestAmountOut)) {
-        bestMaxPath = hopMaxPath;
-        bestAmountOut = hopAmountOut;
-        bestHopToken = hopToken;
-      }
+    }
   }
 
   return { bestMaxPath, bestAmountOut, bestHopToken };
