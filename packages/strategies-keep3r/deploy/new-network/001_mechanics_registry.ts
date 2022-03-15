@@ -35,5 +35,5 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
   }
 };
 deployFunction.dependencies = [];
-deployFunction.tags = ['MechanicsRegistry'];
+deployFunction.tags = ['MechanicsRegistry', 'NewNetwork'];
 export default deployFunction;

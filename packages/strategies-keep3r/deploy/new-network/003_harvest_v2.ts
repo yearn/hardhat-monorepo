@@ -58,5 +58,5 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
 };
 
 deployFunction.dependencies = [];
-deployFunction.tags = ['HarvestV2DetachedGaslessJob'];
+deployFunction.tags = ['HarvestV2DetachedGaslessJob', 'NewNetwork'];
 export default deployFunction;

@@ -35,5 +35,5 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
   }
 };
 deployFunction.dependencies = [];
-deployFunction.tags = ['V2Keeper'];
+deployFunction.tags = ['V2Keeper', 'NewNetwork'];
 export default deployFunction;
