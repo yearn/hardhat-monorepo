@@ -1,12 +1,8 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
 import { abi as IUniswapV2Factory } from '@uniswap/v2-core/build/IUniswapV2Factory.json';
 import { abi as IUniswapV2Router02 } from '@uniswap/v2-periphery/build/IUniswapV2Router02.json';
 import { ethers } from 'hardhat';
 import { constants } from 'ethers';
-
-axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
 export type SwapParams = {
   tokenIn: string;

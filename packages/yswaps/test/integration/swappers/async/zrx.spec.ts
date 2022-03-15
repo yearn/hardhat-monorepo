@@ -4,7 +4,7 @@ import { BigNumber, utils, Wallet } from 'ethers';
 import { evm, wallet } from '@test-utils';
 import { then } from '@test-utils/bdd';
 import { getNodeUrl } from '@utils/network';
-import zrx, { QuoteResponse } from '@scripts/libraries/solvers/zrx';
+import zrx, { QuoteResponse } from '@scripts/libraries/dexes/zrx';
 import * as setup from '../setup';
 import { IERC20, ISwapper, TradeFactory } from '@typechained';
 
