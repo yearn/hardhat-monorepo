@@ -3,6 +3,40 @@ import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
 import { FantomSolvers } from '@scripts/configs/fantom';
 
+export type DexLibrarySwapProps = {
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: BigNumber;
+  hops?: string[];
+};
+
+export type DexLibrarySwapResponse = {
+  data: string;
+  swapTransactionData: string;
+  amountOut: BigNumber;
+  path: string[];
+};
+
+export abstract class DexLibrary {
+  abstract swap(props: DexLibrarySwapProps): Promise<DexLibrarySwapResponse>;
+}
+
+export class BaseDexLibrary {
+  protected _name: string;
+  protected _network: Network;
+
+  constructor({ name, network }: { name: string; network: Network }) {
+    this._name = name;
+    this._network = network;
+  }
+  public static async init({ name, network }: { name: string; network: Network }): Promise<BaseDexLibrary> {
+    const dexLibraryInstance = new BaseDexLibrary({ name, network });
+    await dexLibraryInstance._loadContracts();
+    return dexLibraryInstance;
+  }
+  protected async _loadContracts(): Promise<void> {}
+}
+
 export abstract class Solver {
   abstract solve({
     strategy,
