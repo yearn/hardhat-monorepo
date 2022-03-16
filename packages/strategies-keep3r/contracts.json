@@ -5,7 +5,8 @@
       "keep3rGovernance": "0x0D5Dc686d0a2ABBfDaFDFb4D0533E886517d4E83",
       "keeper": "0x1ea056C13F8ccC981E51c5f1CDF87476666D0A74",
       "deployer": "0x1ea056C13F8ccC981E51c5f1CDF87476666D0A74",
-      "whale": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8"
+      "whale": "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8",
+      "governorV2Keeper":"0x2C01B4AD51a67E2d8F02208F54dF9aC4c0B778B6"
     }
   },
   "contracts": {
@@ -74,6 +75,12 @@
       },
       "keep3r": {
         "address": "0x1cEB5cB57C4D4E2b2433641b95Dd330A33185A44"
+      },
+      "keep3rV2": {
+        "address": "0x4a6cff9e1456eaa3b6f37572395c6fa0c959edab"
+      },
+      "wethToken":{
+        "address":"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
       },
       "keep3rV1Oracle": {
         "address": "0x73353801921417f465377c8d898c6f4c0270282c"

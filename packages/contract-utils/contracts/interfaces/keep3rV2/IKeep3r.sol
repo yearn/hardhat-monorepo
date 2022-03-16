@@ -60,4 +60,28 @@ interface IKeep3r {
     /// @param _job The address of the job being credited
     /// @param _amount The amount of liquidity credits to gift
     function forceLiquidityCreditsToJob(address _job, uint256 _amount) external;
+
+    /// @notice Beginning of the bonding process
+    /// @param _bonding The asset being bonded
+    /// @param _amount The amount of bonding asset being bonded
+    function bond(address _bonding, uint256 _amount) external;
+
+    /// @notice End of the bonding process after bonding time has passed
+    /// @param _bonding The asset being activated as bond collateral
+    function activate(address _bonding) external;
+
+      /// @notice Add credit to a job to be paid out for work
+    /// @param _job The address of the job being credited
+    /// @param _token The address of the token being credited
+    /// @param _amount The amount of credit being added
+    function addTokenCreditsToJob(
+        address _job,
+        address _token,
+        uint256 _amount
+    ) external;
+
+    /// @notice Beginning of the unbonding process
+    /// @param _bonding The asset being unbound
+    /// @param _amount Allows for partial unbonding
+    function unbond(address _bonding, uint256 _amount) external;
 }
