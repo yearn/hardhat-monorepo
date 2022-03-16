@@ -2,6 +2,44 @@ import { BigNumber, PopulatedTransaction } from 'ethers';
 import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
 import { FantomSolvers } from '@scripts/configs/fantom';
+import { Network as EthersNetwork } from '@ethersproject/networks';
+
+export type DexLibrarySwapProps = {
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: BigNumber;
+  strategy: string;
+  hops?: string[];
+};
+
+export type DexLibrarySwapResponse = {
+  data: string;
+  executionTransactionData: string;
+  swapTransactionData: string;
+  amountOut: BigNumber;
+  dex: string;
+  path: string[];
+};
+
+export abstract class DexLibrary {
+  abstract swap(props: DexLibrarySwapProps): Promise<DexLibrarySwapResponse>;
+}
+
+export class BaseDexLibrary {
+  protected _name: string;
+  protected _network: EthersNetwork;
+
+  constructor({ name, network }: { name: string; network: EthersNetwork }) {
+    this._name = name;
+    this._network = network;
+  }
+  public static async create({ name, network }: { name: string; network: EthersNetwork }): Promise<BaseDexLibrary> {
+    const dexLibraryInstance = new BaseDexLibrary({ name, network });
+    await dexLibraryInstance.init();
+    return dexLibraryInstance;
+  }
+  protected async init(): Promise<void> {}
+}
 
 export abstract class Solver {
   abstract solve({

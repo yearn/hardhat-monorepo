@@ -1,17 +1,20 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
+import qs from 'qs';
+import { BaseDexLibrary, DexLibrary, DexLibrarySwapProps, DexLibrarySwapResponse } from '../types';
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
+// Ref.: https://docs.1inch.io/docs/aggregation-protocol/api/swap-params
 export type SwapParams = {
-  tokenIn: string;
-  tokenOut: string;
-  amountIn: BigNumber;
+  fromTokenAddress: string;
+  toTokenAddress: string;
+  amount: string;
   fromAddress: string;
   slippage: number;
-  protocols?: string;
-  receiver?: string;
+  protocols?: string[];
+  destReceiver?: string;
   referrer?: string;
   fee?: number;
   gasPrice?: BigNumber;
@@ -24,7 +27,6 @@ export type SwapParams = {
   parts?: number;
   mainRouteParts?: number;
 };
-
 type Token = {
   symbol: string;
   name: string;
@@ -32,7 +34,6 @@ type Token = {
   address: string;
   logoURI: string;
 };
-
 type SwapPart = {
   name: string;
   part: number;
@@ -59,32 +60,35 @@ export type SwapResponse = {
   };
 };
 
-export const swap = async (chainId: number, swapParams: SwapParams): Promise<SwapResponse> => {
-  let data: SwapResponse;
-  try {
-    const axiosProtocolResponse = (await axios.get(`https://api.1inch.exchange/v3.0/${chainId}/protocols`)) as any;
+export class OneInchLibrary extends BaseDexLibrary implements DexLibrary {
+  async swap({ tokenIn, amountIn, tokenOut, strategy }: DexLibrarySwapProps): Promise<DexLibrarySwapResponse> {
+    const axiosProtocolResponse = (await axios.get(`https://api.1inch.exchange/v3.0/${this._network.chainId}/protocols`)) as any;
     const protocols = (axiosProtocolResponse.data.protocols as string[]).filter((protocol) => {
       return protocol.includes('ONE_INCH_LIMIT_ORDER') == false;
     });
-    ({ data } = await axios.get(
-      `https://api.1inch.exchange/v3.0/${chainId}/swap?fromTokenAddress=${swapParams.tokenIn}&toTokenAddress=${
-        swapParams.tokenOut
-      }&destReceiver=${swapParams.receiver}&amount=${swapParams.amountIn.toString()}&fromAddress=${swapParams.fromAddress}&slippage=${
-        swapParams.slippage
-      }&disableEstimate=${swapParams.disableEstimate}&allowPartialFill=${swapParams.allowPartialFill}&fee=${swapParams.fee}&gasLimit=${
-        swapParams.gasLimit
-      }&protocols=${protocols.join(',')}`
-    ));
-  } catch (err: any) {
-    throw new Error(`Status code: ${err.response.data.statusCode}. Message: ${err.response.data.message}`);
+    const swapParams: SwapParams = {
+      fromTokenAddress: tokenIn,
+      toTokenAddress: tokenOut,
+      amount: amountIn.toString(),
+      fromAddress: strategy,
+      protocols,
+      slippage: 0.5, // 0.5%
+      allowPartialFill: false,
+    };
+    try {
+      const response = await axios.get(`https://api.1inch.exchange/v3.0/${this._network.chainId}/swap?${qs.stringify(swapParams)}`);
+      const swapResponse = response.data as SwapResponse;
+      return {
+        dex: 'zrx',
+        executionTransactionData: '',
+        swapTransactionData: '',
+        data: swapResponse.tx.data,
+        amountOut: BigNumber.from(swapResponse.minAmountOut),
+        path: [tokenIn, tokenOut],
+      };
+    } catch (err: any) {
+      const code = err.response ? err.response.data.code : err.code;
+      throw new Error(`Error code: ${code}. Reason: ${err.response?.data.reason}`);
+    }
   }
-  if (swapParams.hasOwnProperty('slippage')) {
-    const amountOut = BigNumber.from(data.toTokenAmount);
-    data.minAmountOut = amountOut.sub(amountOut.mul(swapParams.slippage).div(100));
-  }
-  return data;
-};
-
-export default {
-  swap,
-};
+}
