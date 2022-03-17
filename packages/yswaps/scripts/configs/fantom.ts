@@ -36,7 +36,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
     ],
   },
   '0xBa2251912D29Cb608953808dCBFAc6D0F7f580FF': {
-    name: 'Wftm Anyftm veLp Solidex',
+    name: 'Wftm Anyftm veLp Solidex to Wftm',
     tradesConfigurations: [
       {
         enabledTrades: [
@@ -60,6 +60,32 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
       },
     ],
   },
+  // we need to make the refactor first before being able to swap this strat propertly.
+  // '0x526f9FcD4db76878B62a450F1BD79cF38f036cc1': {
+  //   name: 'Wftm Anyftm veLp Solidex to Yfi',
+  //   tradesConfigurations: [
+  //     {
+  //       enabledTrades: [
+  //         {
+  //           tokenIn: '0x888EF71766ca594DED1F0FA3AE64eD2941740A20', // SOLID
+  //           tokenOut: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69', // YFI
+  //           threshold: utils.parseEther('250'),
+  //         },
+  //       ],
+  //       solver: 'SolidlySolver',
+  //     },
+  //     {
+  //       enabledTrades: [
+  //         {
+  //           tokenIn: '0xD31Fcd1f7Ba190dBc75354046F6024A9b86014d7', // SEX
+  //           tokenOut: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69', // YFI
+  //           threshold: utils.parseEther('250'),
+  //         },
+  //       ],
+  //       solver: 'SolidlySolver',
+  //     },
+  //   ],
+  // },
 };
 
 const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
