@@ -4,6 +4,10 @@ export type ContractChainAddress = {
   [chainName in SUPPORTED_NETWORKS]?: string;
 };
 
+export const weth: ContractChainAddress = {
+  fantom: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+};
+
 export const stealthVault: ContractChainAddress = {
   mainnet: '0xC454F4E1DDB39c8De9663287D52b0E4Feb4cA45E',
   goerli: '0x093a60a183245b9ce41fBe5Bd0ef6b1A0AA52A65',
@@ -86,22 +90,27 @@ export const multicall2: ContractChainAddress = {
   fantom: '0x6cAfA5f64476769aAEc7c0Ae8D8E14c2a77272a2',
 };
 
-export const yOracle = {
+export const yOracle: ContractChainAddress = {
   mainnet: '0x0000000000000000000000000000000000000000',
   fantom: '0x0000000000000000000000000000000000000000',
 };
 
-export const baseFeeOracle = {
+export const baseFeeOracle: ContractChainAddress = {
   mainnet: '0xf8d0ec04e94296773ce20efbeea82e76220cd549',
   fantom: '',
 };
 
-export const tendV2DetachedJob = {
+export const tendV2DetachedJob: ContractChainAddress = {
   mainnet: '',
   fantom: '0xaB4b34e69Ae8599361709B0EC4A6dA539eFd7Fb8',
 };
 
-export const harvestV2DetachedJob = {
+export const harvestV2DetachedJob: ContractChainAddress = {
   mainnet: '',
   fantom: '0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8',
+};
+
+export const yMechanicsDefaultOwner: ContractChainAddress = {
+  fantom: '0x9f2A061d6fEF20ad3A656e23fd9C814b75fd5803', // ymechs multisig
+  arbitrumOne: '0x0000000031669Ab4083265E0850030fa8dEc8daf', // yKeeper
 };

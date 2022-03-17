@@ -3,9 +3,10 @@ import kms from '../tools/kms';
 
 const MAX_ACCOUNTS = 10;
 
+export type SUPPORTED_NETWORKS_IDS = 1 | 3 | 4 | 5 | 137 | 250 | 42161;
 export type SUPPORTED_NETWORKS = 'mainnet' | 'rinkeby' | 'ropsten' | 'goerli' | 'polygon' | 'fantom' | 'arbitrumOne';
 
-export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
+export const NETWORK_ID_NAMES: { [id in SUPPORTED_NETWORKS_IDS]: SUPPORTED_NETWORKS } = {
   1: 'mainnet',
   3: 'ropsten',
   4: 'rinkeby',
@@ -15,7 +16,7 @@ export const NETWORK_ID_NAMES: { [chainId: number]: SUPPORTED_NETWORKS } = {
   42161: 'arbitrumOne',
 };
 
-export const NETWORK_NAME_IDS: { [network in SUPPORTED_NETWORKS]: number } = {
+export const NETWORK_NAME_IDS: { [network in SUPPORTED_NETWORKS]: SUPPORTED_NETWORKS_IDS } = {
   'mainnet': 1,
   'ropsten': 3,
   'rinkeby': 4,
