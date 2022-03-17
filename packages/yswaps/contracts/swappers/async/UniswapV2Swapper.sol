@@ -45,7 +45,7 @@ contract UniswapV2Swapper is IUniswapV2Swapper, AsyncSwapper {
     IERC20(_path[0]).approve(ROUTER, _amountIn);
     IUniswapV2Router02(ROUTER).swapExactTokensForTokens(
       _amountIn,
-      0, // Slippage protection is done in AsyncSwapper abstract
+      0, // Slippage is checked after execution in trade factory
       _path,
       _receiver,
       block.timestamp

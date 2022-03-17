@@ -228,9 +228,23 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   {
     name: 'Boo Xboo Solidex',
     added: true,
-    address: '0xADE3BaC94177295329474aAd6A253Bae979BFA68',
+    address: '0x768F43717899FD0f1B45Ea7f23b66e191348073E',
     tokensBeingDumped: [], //only yswaps
     want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
+  },
+  {
+    name: 'Wftm Anyftm veLp Solidex to WFTM',
+    added: true,
+    address: '0xBa2251912D29Cb608953808dCBFAc6D0F7f580FF',
+    tokensBeingDumped: [], //only yswaps
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'Wftm Anyftm veLp Solidex to YFI',
+    added: true,
+    address: '0x526f9FcD4db76878B62a450F1BD79cF38f036cc1',
+    tokensBeingDumped: [], //only yswaps
+    want: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69',
   },
 ];
 

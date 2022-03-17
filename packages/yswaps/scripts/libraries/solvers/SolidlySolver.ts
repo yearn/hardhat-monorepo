@@ -1,15 +1,14 @@
 import { ethers } from 'hardhat';
 import { SimpleEnabledTrade, Solver } from '../types';
-import * as uniswapV2Library from '@libraries/dexes/uniswap-v2';
-import zrx from '@libraries/dexes/zrx';
-import { UNISWAP_V2_FACTORY, UNISWAP_V2_ROUTER } from '@deploy/mainnet-swappers/uniswap_v2';
+import * as solidlyLibrary from '@libraries/dexes/solidly';
+import { SOLIDLY_FACTORY, SOLIDLY_ROUTER } from '@deploy/fantom-swappers/solidly';
 import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
 
-export default class Dexes implements Solver {
+export default class SolidlySolver implements Solver {
   async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
     if (trades.length != 1) return false;
     return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
@@ -26,40 +25,45 @@ export default class Dexes implements Solver {
   }): Promise<PopulatedTransaction> {
     if (trades.length > 1) throw new Error('Should only be one token in and one token out');
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trades[0];
-    const [zrxSwapper, tokenIn, tokenOut] = await Promise.all([
-      ethers.getContract('ZRX'),
+    const [solidlySwapper, tokenIn, tokenOut] = await Promise.all([
+      ethers.getContract('AsyncSolidly'),
       IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer),
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
 
-    const [inSymbol, outSymbol, amount] = await Promise.all([tokenIn.symbol(), tokenOut.symbol(), (await tokenIn.balanceOf(strategy)).sub(1)]);
+    const [inSymbol, inDecimals, outSymbol, outDecimals, amount] = await Promise.all([
+      tokenIn.symbol(),
+      tokenIn.decimals(),
+      tokenOut.symbol(),
+      tokenOut.decimals(),
+      (await tokenIn.balanceOf(strategy)).sub(1),
+    ]);
 
-    console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
-    const network: SUPPORTED_NETWORKS = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS;
-    const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-      chainId: NETWORK_NAME_IDS[network],
-      sellToken: tokenInAddress,
-      buyToken: tokenOutAddress,
-      sellAmount: amount,
-      slippagePercentage: 1 / 100,
-      skipValidation: true,
-      takerAddress: strategy,
+    console.log('[SolidlySolver] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
+    console.log('[SolidlySolver] Getting', inSymbol, '=>', outSymbol, 'trade information');
+    const swapperResponse = await solidlyLibrary.getBestPathEncoded({
+      tokenIn: tokenInAddress,
+      tokenOut: tokenOutAddress,
+      amountIn: amount,
+      solidlyFactory: SOLIDLY_FACTORY,
+      solidlyRouter: SOLIDLY_ROUTER,
+      slippage: 3,
     });
 
-    console.log('[Dexes] Calculated min amount', utils.formatEther(zrxMinAmountOut!), outSymbol);
+    console.log('[SolidlySolver] Calculated min amount', utils.formatUnits(swapperResponse.minAmountOut!, outDecimals), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
         _tokenIn: tokenInAddress,
         _tokenOut: tokenOutAddress,
         _amount: amount,
-        _minAmountOut: zrxMinAmountOut!,
+        _minAmountOut: swapperResponse.minAmountOut!,
       },
-      zrxSwapper.address,
-      zrxData
+      solidlySwapper.address,
+      swapperResponse.data
     );
 
-    if (zrxMinAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
+    if (swapperResponse.minAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
 
     return executeTx;
   }
