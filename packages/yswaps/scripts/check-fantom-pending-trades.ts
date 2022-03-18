@@ -67,15 +67,14 @@ async function main() {
     console.log('strategy:', strategy);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
       console.log('with solver:', tradeConfig.solver);
-      for (const enabledTrade of tradeConfig.enabledTrades) {
-        const tokenIn = IERC20Metadata__factory.connect(enabledTrade.tokenIn, ymech);
-        const amountIn = await tokenIn.balanceOf(strategy);
-        let decimals = 18;
-        try {
-          decimals = await tokenIn.decimals();
-        } catch (error) {}
-        console.log(`${await tokenIn.symbol()}:`, formatUnits(amountIn.toString(), decimals));
-      }
+      const { enabledTrade } = tradeConfig;
+      const tokenIn = IERC20Metadata__factory.connect(enabledTrade.tokenIn, ymech);
+      const amountIn = await tokenIn.balanceOf(strategy);
+      let decimals = 18;
+      try {
+        decimals = await tokenIn.decimals();
+      } catch (error) {}
+      console.log(`${await tokenIn.symbol()}:`, formatUnits(amountIn.toString(), decimals));
       console.log('************');
     }
   }

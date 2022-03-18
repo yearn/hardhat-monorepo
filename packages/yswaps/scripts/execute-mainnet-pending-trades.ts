@@ -81,10 +81,10 @@ async function main() {
     const tradesConfig = mainnetConfig[strategy];
     console.log('[Execution] Processing trade of strategy', tradesConfig.name);
     for (const tradeConfig of tradesConfig.tradesConfigurations) {
-      console.log('[Execution] Processing', tradeConfig.enabledTrades.length, 'enabled trades with solver', tradeConfig.solver);
+      console.log('[Execution] Processing enabled trades with solver', tradeConfig.solver);
 
       const solver = mainnetSolversMap[tradeConfig.solver];
-      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trades: tradeConfig.enabledTrades });
+      const shouldExecute = await solver.shouldExecuteTrade({ strategy, trade: tradeConfig.enabledTrade });
 
       if (shouldExecute) {
         console.log('[Execution] Should execute');
@@ -104,7 +104,7 @@ async function main() {
 
         const executeTx = await solver.solve({
           strategy,
-          trades: tradeConfig.enabledTrades,
+          trade: tradeConfig.enabledTrade,
           tradeFactory,
         });
 

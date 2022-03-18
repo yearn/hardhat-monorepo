@@ -13,11 +13,11 @@ export type DexLibrarySwapProps = {
 };
 
 export type DexLibrarySwapResponse = {
-  data: string;
+  dex: string;
   executionTransactionData: string;
   swapTransactionData: string;
+  data: string;
   amountOut: BigNumber;
-  dex: string;
   path: string[];
 };
 
@@ -44,15 +44,15 @@ export class BaseDexLibrary {
 export abstract class Solver {
   abstract solve({
     strategy,
-    trades,
+    trade,
     tradeFactory,
   }: {
     strategy: string;
-    trades: SimpleEnabledTrade[];
+    trade: SimpleEnabledTrade;
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction>;
 
-  abstract shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean>;
+  abstract shouldExecuteTrade({ strategy, trade }: { strategy: string; trade: SimpleEnabledTrade }): Promise<boolean>;
 }
 
 export type SimpleEnabledTrade = {
@@ -73,7 +73,7 @@ export type SolversNetworksMap = {
 export type Network = keyof SolversNetworksMap;
 
 export type TradeConfiguration<T extends Network> = {
-  enabledTrades: SimpleEnabledTrade[];
+  enabledTrade: SimpleEnabledTrade;
   solver: SolversNetworksMap[T];
 };
 
