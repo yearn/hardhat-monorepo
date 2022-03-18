@@ -17,7 +17,6 @@ import '../../interfaces/keep3r/IChainLinkFeed.sol';
 abstract contract Keep3rV2Job is MachineryReady, Keep3r, IV2Keep3rJob {
   using EnumerableSet for EnumerableSet.AddressSet;
 
-  // address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
   address public override fastGasOracle = 0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C;
 
   uint256 public constant PRECISION = 1_000;
