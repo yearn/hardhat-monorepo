@@ -25,17 +25,17 @@ export class CurveSpellEth implements Solver {
   private wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
   private zrxContractAddress = '0xDef1C0ded9bec7F1a1670819833240f027b25EfF';
 
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
-    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
+  async shouldExecuteTrade({ strategy, trade }: { strategy: string; trade: SimpleEnabledTrade }): Promise<boolean> {
+    return shouldExecuteTrade({ strategy, trade });
   }
 
   async solve({
     strategy,
-    trades,
+    trade,
     tradeFactory,
   }: {
     strategy: string;
-    trades: SimpleEnabledTrade[];
+    trade: SimpleEnabledTrade;
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
     const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
