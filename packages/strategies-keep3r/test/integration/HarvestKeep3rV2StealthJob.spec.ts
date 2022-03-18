@@ -59,6 +59,34 @@ describe('HarvestKeep3rV2StealthJob', () => {
     });
 
     v2Keeper = await ethers.getContractAt('V2Keeper', config.contracts.mainnet.proxyJobs.v2Keeper, governorV2Keeper);
+    keep3rV2 = await ethers.getContractAt('@yearn/contract-utils/contracts/interfaces/keep3rV2/IKeep3r.sol:IKeep3r', config.contracts.mainnet.keep3rV2.address, keep3rGovernance);
+
+    // Stealth contracts and setup
+    stealthVault = await ethers.getContractAt('IStealthVault', newStealthVault, governorV2Keeper);
+    stealthRelayer = await ethers.getContractAt('IStealthRelayer', contracts.stealthRelayer.mainnet as string, governorV2Keeper);
+
+    // Fund WETH
+    const wethSigner = await wallet.impersonate(config.contracts.mainnet.wethToken.address);
+    const weth = await ethers.getContractAt('ERC20Token', config.contracts.mainnet.wethToken.address, wethSigner);
+
+    // keeper stealthVault setup
+    const penalty = await stealthRelayer.callStatic.penalty();
+    await stealthVault.connect(anotherKeeper).bond({ value: penalty });
+    await stealthVault.connect(anotherKeeper).enableStealthContract(stealthRelayer.address);
+    
+    // Transfer WETH
+    await weth.connect(wethSigner).transfer(anotherKeeper.address, e18.mul(10));
+    
+    // Register keeper (bond WETH)
+    await weth.connect(anotherKeeper).approve(keep3rV2.address, e18.mul(10));
+    await keep3rV2.connect(anotherKeeper).bond(config.contracts.mainnet.wethToken.address, e18.mul(10));
+    await evm.advanceTimeAndBlock(4 * 24 * 60 * 60); // 4 days
+    await keep3rV2.connect(anotherKeeper).activate(config.contracts.mainnet.wethToken.address);
+
+    // Register keeper (bond KP3R)
+    await keep3rV2.connect(keeper).bond(config.contracts.mainnet.keep3r.address, e18.mul(0));
+    await evm.advanceTimeAndBlock(4 * 24 * 60 * 60); // 4 days
+    await keep3rV2.connect(keeper).activate(config.contracts.mainnet.keep3r.address);
 
     // Change undesired config in strategy
     strategy = new ethers.Contract(testStrategyAddress, [
@@ -90,14 +118,8 @@ describe('HarvestKeep3rV2StealthJob', () => {
     await v2Keeper.addJob(harvestKeep3rV2StealthJob.address);
 
     // Add to keep3rV2
-    keep3rV2 = await ethers.getContractAt('@yearn/contract-utils/contracts/interfaces/keep3rV2/IKeep3r.sol:IKeep3r', config.contracts.mainnet.keep3rV2.address, keep3rGovernance);
     await keep3rV2.addJob(harvestKeep3rV2StealthJob.address);
     await keep3rV2.forceLiquidityCreditsToJob(harvestKeep3rV2StealthJob.address, e18.mul(10000));
-
-    // Register keeper
-    await keep3rV2.connect(keeper).bond(config.contracts.mainnet.keep3r.address, e18.mul(0));
-    await evm.advanceTimeAndBlock(4 * 24 * 60 * 60); // 4 days
-    await keep3rV2.connect(keeper).activate(config.contracts.mainnet.keep3r.address);
 
     // Add strategies to job
     strategies = [
@@ -125,9 +147,6 @@ describe('HarvestKeep3rV2StealthJob', () => {
     const jobStrategies = await harvestKeep3rV2StealthJob.strategies();
     expect(lowerCaseArray(jobStrategies)).to.be.deep.eq(lowerCaseArray(strategies.map((s) => s.address)));
 
-    // Stealth contracts and setup
-    stealthVault = await ethers.getContractAt('IStealthVault', newStealthVault, governorV2Keeper);
-    stealthRelayer = await ethers.getContractAt('IStealthRelayer', contracts.stealthRelayer.mainnet as string, governorV2Keeper);
     // Set job in stealth relayer
     await stealthRelayer.addJob(harvestKeep3rV2StealthJob.address);
 
@@ -137,7 +156,7 @@ describe('HarvestKeep3rV2StealthJob', () => {
     await stealthVault.connect(keeper).enableStealthContract(stealthRelayer.address);
   });
 
-  it('Should work and pay in bonded KP3R', async function () {
+  it('Should work and get paid in bonded KP3R', async function () {
     // populates work transaction
     const rawTx = await harvestKeep3rV2StealthJob.connect(keeper).populateTransaction.work(strategies[0].address);
     const callData = rawTx.data;
@@ -170,24 +189,8 @@ describe('HarvestKeep3rV2StealthJob', () => {
     );
   });
 
-  it.skip('Should bond in WETH and pay in bonded KP3R', async function () {
-    // Fund WETH
-    const wethSigner = await wallet.impersonate(config.contracts.mainnet.wethToken.address);
-    const weth = await ethers.getContractAt('ERC20Token', config.contracts.mainnet.wethToken.address, wethSigner);
-
-    // keeper stealthVault setup
-    const penalty = await stealthRelayer.callStatic.penalty();
-    await stealthVault.connect(anotherKeeper).bond({ value: penalty });
-    await stealthVault.connect(anotherKeeper).enableStealthContract(stealthRelayer.address);
-    
-    // Transfer WETH
-    await weth.connect(wethSigner).transfer(anotherKeeper.address, e18.mul(10));
-    
-    // Register keeper (bond WETH)
-    await weth.connect(anotherKeeper).approve(keep3rV2.address, e18.mul(10));
-    await keep3rV2.connect(anotherKeeper).bond(config.contracts.mainnet.wethToken.address, e18.mul(10));
-    await evm.advanceTimeAndBlock(4 * 24 * 60 * 60); // 4 days
-    await keep3rV2.connect(anotherKeeper).activate(config.contracts.mainnet.wethToken.address);
+  it('Should bond in WETH and get paid in bonded KP3R', async function () {
+    await evm.advanceTimeAndBlock(6 * 60 * 60); // 6 hours
 
     // populates work transaction
     const rawTx = await harvestKeep3rV2StealthJob.connect(anotherKeeper).populateTransaction.work(strategies[0].address);
