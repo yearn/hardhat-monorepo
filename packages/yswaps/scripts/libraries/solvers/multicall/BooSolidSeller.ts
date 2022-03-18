@@ -17,17 +17,17 @@ export class BooSolidSeller implements Solver {
   private booAddress = '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE';
   private wftmAddress = '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83';
 
-  async shouldExecuteTrade({ strategy, trades }: { strategy: string; trades: SimpleEnabledTrade[] }): Promise<boolean> {
-    return shouldExecuteTrade({ strategy, trades, checkType: 'total' });
+  async shouldExecuteTrade({ strategy, trade }: { strategy: string; trade: SimpleEnabledTrade }): Promise<boolean> {
+    return shouldExecuteTrade({ strategy, trade });
   }
 
   async solve({
     strategy,
-    trades,
+    trade,
     tradeFactory,
   }: {
     strategy: string;
-    trades: SimpleEnabledTrade[];
+    trade: SimpleEnabledTrade;
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
     const multicallSwapperAddress = (await ethers.getContract('MultiCallOptimizedSwapper')).address;
