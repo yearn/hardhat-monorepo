@@ -49,21 +49,19 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
     name: 'Strategy that uses crvYfiEth Solver',
     tradesConfigurations: [
       {
-        enabledTrade:
-          {
-            tokenIn: '0xD533a949740bb3306d119CC777fa900bA034cd52', // CRV
-            tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
-            threshold: utils.parseEther('20000'),
-          },
+        enabledTrade: {
+          tokenIn: '0xD533a949740bb3306d119CC777fa900bA034cd52', // CRV
+          tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
+          threshold: utils.parseEther('20000'),
+        },
         solver: 'CurveYfiEth',
       },
       {
-        enabledTrade:
-          {
-            tokenIn: '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B', // CVX
-            tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
-            threshold: utils.parseEther('2500'),
-          },
+        enabledTrade: {
+          tokenIn: '0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B', // CVX
+          tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
+          threshold: utils.parseEther('2500'),
+        },
         solver: 'CurveYfiEth',
       },
     ],
@@ -72,12 +70,11 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
     name: 'Tokemak strategy',
     tradesConfigurations: [
       {
-        enabledTrade:
-          {
-            tokenIn: '0x2e9d63788249371f1dfc918a52f8d799f4a38c94', // TOKE
-            tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
-            threshold: utils.parseEther('1600'),
-          },
+        enabledTrade: {
+          tokenIn: '0x2e9d63788249371f1dfc918a52f8d799f4a38c94', // TOKE
+          tokenOut: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
+          threshold: utils.parseEther('1600'),
+        },
         solver: 'Dexes',
       },
     ],

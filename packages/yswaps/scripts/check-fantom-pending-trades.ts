@@ -69,12 +69,12 @@ async function main() {
       console.log('with solver:', tradeConfig.solver);
       const { enabledTrade } = tradeConfig;
       const tokenIn = IERC20Metadata__factory.connect(enabledTrade.tokenIn, ymech);
-        const amountIn = await tokenIn.balanceOf(strategy);
-        let decimals = 18;
-        try {
-          decimals = await tokenIn.decimals();
-        } catch (error) {}
-        console.log(`${await tokenIn.symbol()}:`, formatUnits(amountIn.toString(), decimals));
+      const amountIn = await tokenIn.balanceOf(strategy);
+      let decimals = 18;
+      try {
+        decimals = await tokenIn.decimals();
+      } catch (error) {}
+      console.log(`${await tokenIn.symbol()}:`, formatUnits(amountIn.toString(), decimals));
       console.log('************');
     }
   }
