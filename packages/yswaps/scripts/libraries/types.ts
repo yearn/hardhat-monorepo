@@ -71,8 +71,8 @@ type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
 
 // TODO: move to solver
 type DexesSolverMetadata = {
-  hopTokens: string[]
-}
+  hopTokens: string[];
+};
 
 // TODO: move to solver
 type MultiDexesSolverMetadata = {
@@ -90,13 +90,13 @@ type SolversMetadataMap = {
   ThreePoolCrv: MultiDexesSolverMetadata;
 };
 
-
-type TradeConfiguration<T extends Network> = { [K in SolversNetworksMap[T]]: {
+type TradeConfiguration<T extends Network> = {
+  [K in SolversNetworksMap[T]]: {
     enabledTrade: SimpleEnabledTrade;
     solver: K;
-    metadata: SolversMetadataMap[K]
-} }[SolversNetworksMap[T]];
-
+    metadata: SolversMetadataMap[K];
+  };
+}[SolversNetworksMap[T]];
 
 export type StrategyConfiguration<T extends Network> = {
   [strategy: string]: {

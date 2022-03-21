@@ -20,7 +20,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
         },
         solver: 'BooSolidSeller',
         // solver: 'SolidlySolver',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
       {
         enabledTrade: {
@@ -29,7 +29,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           threshold: utils.parseEther('250'),
         },
         solver: 'BooSexSeller',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
     ],
   },
@@ -43,7 +43,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           threshold: utils.parseEther('250'),
         },
         solver: 'SolidlySolver',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
       {
         enabledTrade: {
@@ -52,7 +52,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           threshold: utils.parseEther('250'),
         },
         solver: 'SolidlySolver',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
     ],
   },

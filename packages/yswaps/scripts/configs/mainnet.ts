@@ -19,7 +19,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //           threshold: utils.parseEther('40000'),
   //         },
   //       solver: 'ThreePoolCrv',
-        // metadata: { hopTokens: [] }
+  // metadata: { hopTokens: [] }
   //     },
   //   ],
   // },
@@ -34,7 +34,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //           threshold: utils.parseEther('20000'),
   //         },
   //       solver: 'CurveSpellEth',
-        // metadata: { hopTokens: [] }
+  // metadata: { hopTokens: [] }
   //     },
   //     {
   //       enabledTrade:
@@ -44,7 +44,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //           threshold: utils.parseEther('2500'),
   //         },
   //       solver: 'CurveSpellEth',
-        // metadata: { hopTokens: [] }
+  // metadata: { hopTokens: [] }
   //     },
   //   ],
   // },
@@ -58,7 +58,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           threshold: utils.parseEther('20000'),
         },
         solver: 'CurveYfiEth',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
       {
         enabledTrade: {
@@ -67,7 +67,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           threshold: utils.parseEther('2500'),
         },
         solver: 'CurveYfiEth',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
     ],
   },
@@ -81,7 +81,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           threshold: utils.parseEther('1600'),
         },
         solver: 'Dexes',
-        metadata: { hopTokens: [] }
+        metadata: { hopTokens: [] },
       },
     ],
   },
