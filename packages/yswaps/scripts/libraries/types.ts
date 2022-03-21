@@ -71,11 +71,36 @@ export type SolversNetworksMap = {
 };
 
 export type Network = keyof SolversNetworksMap;
+type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
 
-export type TradeConfiguration<T extends Network> = {
-  enabledTrade: SimpleEnabledTrade;
-  solver: SolversNetworksMap[T];
+// TODO: move to solver
+type DexesSolverMetadata = {
+  hopTokens: string[];
 };
+
+// TODO: move to solver
+type MultiDexesSolverMetadata = {
+  hopTokens: string[];
+};
+
+// TODO: enforce that only accepts valid dexes keys from Solvers type
+type SolversMetadataMap = {
+  Dexes: DexesSolverMetadata;
+  BooSexSeller: MultiDexesSolverMetadata;
+  BooSolidSeller: MultiDexesSolverMetadata;
+  CurveSpellEth: MultiDexesSolverMetadata;
+  CurveYfiEth: MultiDexesSolverMetadata;
+  SolidlySolver: MultiDexesSolverMetadata;
+  ThreePoolCrv: MultiDexesSolverMetadata;
+};
+
+type TradeConfiguration<T extends Network> = {
+  [K in SolversNetworksMap[T]]: {
+    enabledTrade: SimpleEnabledTrade;
+    solver: K;
+    metadata: SolversMetadataMap[K];
+  };
+}[SolversNetworksMap[T]];
 
 export type StrategyConfiguration<T extends Network> = {
   [strategy: string]: {
