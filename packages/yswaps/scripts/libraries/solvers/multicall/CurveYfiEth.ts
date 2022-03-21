@@ -9,8 +9,6 @@ import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trad
 import { ethers } from 'hardhat';
 import { ITradeFactoryExecutor } from '@typechained';
 
-const DUST_THRESHOLD = utils.parseEther('1');
-
 // 1) crv => weth with zrx
 // 2) cvx => weth with zrx
 // 3) weth => eth with wrapper
@@ -77,7 +75,9 @@ export class CurveYfiEth implements Solver {
     const asyncTradesExecutionDetails: ITradeFactoryExecutor.AsyncTradeExecutionDetailsStruct[] = [];
 
     console.log('[CurveYfiEth] CRV management');
-    const shouldExecuteCrvTrade = crvBalance.gt(DUST_THRESHOLD);
+    const crvTrade = trades.find((trade) => trade.tokenIn === this._crv.address);
+    if (!crvTrade) throw new Error('Crv token not present in trades');
+    const shouldExecuteCrvTrade = crvBalance.gt(crvTrade.threshold);
 
     if (shouldExecuteCrvTrade) {
       console.log('[CurveYfiEth] Transfering crv to multicall swapper for simulations');
@@ -121,7 +121,9 @@ export class CurveYfiEth implements Solver {
     }
 
     console.log('[CurveYfiEth] CVX management');
-    const shouldExecuteCvxTrade = cvxBalance.gt(DUST_THRESHOLD);
+    const cvxTrade = trades.find((trade) => trade.tokenIn === this._cvx.address);
+    if (!cvxTrade) throw new Error('Cvx token not present in trades');
+    const shouldExecuteCvxTrade = cvxBalance.gt(cvxTrade.threshold);
 
     if (shouldExecuteCvxTrade) {
       console.log('[CurveYfiEth] Transfering cvx to multicall swapper for simulations');

@@ -1,6 +1,6 @@
 import { utils } from 'ethers';
 import { ethers } from 'hardhat';
-import { IERC20, IERC20__factory } from '../../../typechained';
+import { IERC20Metadata, IERC20Metadata__factory } from '../../../typechained';
 import { SimpleEnabledTrade } from '../types';
 
 export async function shouldExecuteTrade({
@@ -14,14 +14,15 @@ export async function shouldExecuteTrade({
 }): Promise<boolean> {
   const executeConfirmations: boolean[] = [];
   for (const trade of trades) {
-    const token = await ethers.getContractAt<IERC20>(IERC20__factory.abi, trade.tokenIn);
-    const balance = await token.balanceOf(strategy);
+    const token = await ethers.getContractAt<IERC20Metadata>(IERC20Metadata__factory.abi, trade.tokenIn);
+    const [balance, decimals] = await Promise.all([token.balanceOf(strategy), token.decimals()]);
     if (balance.gt(trade.threshold)) executeConfirmations.push(true);
     else {
       console.log(
-        `[Should Execute] Token ${trade.tokenIn} should NOT execute. Balance: ${utils.formatEther(balance)} - Threshold ${utils.formatEther(
-          trade.threshold
-        )}`
+        `[Should Execute] Token ${await token.symbol()} should NOT execute. Balance: ${utils.formatUnits(
+          balance,
+          decimals
+        )} - Threshold ${utils.formatUnits(trade.threshold, decimals)}`
       );
     }
   }
