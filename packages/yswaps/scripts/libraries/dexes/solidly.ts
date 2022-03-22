@@ -97,9 +97,8 @@ export class SolidlyLibrary extends BaseDexLibrary implements DexLibrary {
     pathAddresses.push(maxPath[maxPath.length - 1].to);
     return {
       dex: 'solidly',
-      executionTransactionData: '',
-      swapTransactionData: '',
-      data: ethers.utils.defaultAbiCoder.encode(['tuple(address, address, bool)[]'], [[...pathMap]]),
+      unsignedSwapTx: await this._router.populateTransaction.factory(), // MOCKED
+      swapperData: ethers.utils.defaultAbiCoder.encode(['tuple(address, address, bool)[]'], [[...pathMap]]),
       amountOut: maxOut,
       path: pathAddresses,
     };

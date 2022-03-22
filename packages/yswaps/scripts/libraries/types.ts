@@ -14,9 +14,8 @@ export type DexLibrarySwapProps = {
 
 export type DexLibrarySwapResponse = {
   dex: string;
-  executionTransactionData: string;
-  swapTransactionData: string;
-  data: string;
+  unsignedSwapTx: PopulatedTransaction;
+  swapperData: string;
   amountOut: BigNumber;
   path: string[];
 };

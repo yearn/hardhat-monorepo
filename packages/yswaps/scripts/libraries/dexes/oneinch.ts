@@ -2,7 +2,10 @@ import { BigNumber } from '@ethersproject/bignumber';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import qs from 'qs';
+import { IERC20Metadata } from '../../../typechained';
+import { abi as IERC20MetadataABI } from '@artifacts/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol/IERC20Metadata.json';
 import { BaseDexLibrary, DexLibrary, DexLibrarySwapProps, DexLibrarySwapResponse } from '../types';
+import { ethers } from 'hardhat';
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
@@ -62,6 +65,10 @@ export type SwapResponse = {
 
 export class OneInchLibrary extends BaseDexLibrary implements DexLibrary {
   async swap({ tokenIn, amountIn, tokenOut, strategy }: DexLibrarySwapProps): Promise<DexLibrarySwapResponse> {
+    const [tokenInContract, tokenOutContract] = await Promise.all([
+      ethers.getContractAt<IERC20Metadata>(IERC20MetadataABI, tokenIn),
+      ethers.getContractAt<IERC20Metadata>(IERC20MetadataABI, tokenOut),
+    ]);
     const axiosProtocolResponse = (await axios.get(`https://api.1inch.exchange/v3.0/${this._network.chainId}/protocols`)) as any;
     const protocols = (axiosProtocolResponse.data.protocols as string[]).filter((protocol) => {
       return protocol.includes('ONE_INCH_LIMIT_ORDER') == false;
@@ -80,9 +87,8 @@ export class OneInchLibrary extends BaseDexLibrary implements DexLibrary {
       const swapResponse = response.data as SwapResponse;
       return {
         dex: 'zrx',
-        executionTransactionData: '',
-        swapTransactionData: '',
-        data: swapResponse.tx.data,
+        unsignedSwapTx: await tokenInContract.populateTransaction.decimals(), // MOCKED
+        swapperData: swapResponse.tx.data,
         amountOut: BigNumber.from(swapResponse.minAmountOut),
         path: [tokenIn, tokenOut],
       };

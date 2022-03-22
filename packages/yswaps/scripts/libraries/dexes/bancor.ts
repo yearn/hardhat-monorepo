@@ -39,9 +39,8 @@ export class BancorLibrary extends BaseDexLibrary implements DexLibrary {
     const path = pathAndRate.path.map((step) => step.blockchainId);
     return {
       dex: 'bancor',
-      executionTransactionData: '',
-      swapTransactionData: '',
-      data: ethers.utils.defaultAbiCoder.encode(['address[]'], [path]),
+      unsignedSwapTx: await tokenInContract.populateTransaction.decimals(), // MOCKED
+      swapperData: ethers.utils.defaultAbiCoder.encode(['address[]'], [path]),
       amountOut,
       path,
     };
