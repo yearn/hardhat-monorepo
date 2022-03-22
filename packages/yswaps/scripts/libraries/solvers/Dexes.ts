@@ -61,7 +61,7 @@ export default class Dexes implements Solver {
 
     if (!bestDexResponse) throw new Error('No valid response from dexes');
 
-    const { amountOut, dex, path, swapperData, unsignedSwapTx } =  bestDexResponse; // DexLibraryResponse
+    const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } =  bestDexResponse; // DexLibraryResponse
 
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
 
@@ -78,7 +78,7 @@ export default class Dexes implements Solver {
       swapperData
     );
 
-    if (zrxMinAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
+    if (amountOut.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
 
     return executeTx;
 
