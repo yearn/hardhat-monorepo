@@ -16,6 +16,7 @@ export type DexLibrarySwapResponse = {
   dex: string;
   unsignedSwapTx: PopulatedTransaction;
   swapperData: string;
+  swapperAddress: string;
   amountOut: BigNumber;
   path: string[];
 };

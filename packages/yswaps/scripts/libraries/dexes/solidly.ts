@@ -99,6 +99,7 @@ export class SolidlyLibrary extends BaseDexLibrary implements DexLibrary {
       dex: 'solidly',
       unsignedSwapTx: await this._router.populateTransaction.factory(), // MOCKED
       swapperData: ethers.utils.defaultAbiCoder.encode(['tuple(address, address, bool)[]'], [[...pathMap]]),
+      swapperAddress: '',
       amountOut: maxOut,
       path: pathAddresses,
     };

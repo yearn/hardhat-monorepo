@@ -41,6 +41,7 @@ export class BancorLibrary extends BaseDexLibrary implements DexLibrary {
       dex: 'bancor',
       unsignedSwapTx: await tokenInContract.populateTransaction.decimals(), // MOCKED
       swapperData: ethers.utils.defaultAbiCoder.encode(['address[]'], [path]),
+      swapperAddress: '',
       amountOut,
       path,
     };
