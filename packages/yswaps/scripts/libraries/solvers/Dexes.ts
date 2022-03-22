@@ -30,8 +30,14 @@ export default class Dexes implements Solver {
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
 
-    const [inSymbol, outSymbol, amount] = await Promise.all([tokenIn.symbol(), tokenOut.symbol(), (await tokenIn.balanceOf(strategy)).sub(1)]);
+    const [inSymbol, outSymbol, amount, inDecimals] = await Promise.all([
+      tokenIn.symbol(),
+      tokenOut.symbol(),
+      (await tokenIn.balanceOf(strategy)).sub(1),
+      tokenIn.decimals(),
+    ]);
 
+    console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
     const network: SUPPORTED_NETWORKS = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS;
     const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
