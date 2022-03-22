@@ -30,11 +30,12 @@ export default class Dexes implements Solver {
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
 
-    const [inSymbol, outSymbol, amount, inDecimals] = await Promise.all([
+    const [inSymbol, outSymbol, amount, inDecimals, outDecimals] = await Promise.all([
       tokenIn.symbol(),
       tokenOut.symbol(),
       (await tokenIn.balanceOf(strategy)).sub(1),
       tokenIn.decimals(),
+      tokenOut.decimals(),
     ]);
 
     console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
@@ -61,12 +62,12 @@ export default class Dexes implements Solver {
     if (!bestDexResponse) throw new Error('No valid response from dexes');
 
     const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } =  bestDexResponse;
-    console.log(`[Dexes] Best calculate amount out`, utils.formatEther(amountOut), outSymbol, ` from dex: ${dex} using path ${path}`);
+    console.log(`[Dexes] Best calculate amount out`, utils.formatUnits(amountOut, outDecimals), outSymbol, ` from dex: ${dex} using path ${path}`);
 
     // should we calculate minAmountOut? should slippage be a parameter on trade config?
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
 
-    console.log('[Dexes] Calculated min amount', utils.formatEther(amountOut), outSymbol);
+    console.log('[Dexes] Calculated min amount', utils.formatUnits(amountOut, outDecimals), outSymbol);
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
