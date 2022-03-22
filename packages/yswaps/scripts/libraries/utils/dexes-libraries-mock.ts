@@ -6,7 +6,7 @@ import { DexLibrary } from "../types";
 
 const zrxLibrary = new ZrxLibrary({name: 'ZrxLibrary', network: ethers.provider.network });
 
-export type TEST_SUPPORTED = 'mainnet' | 'fantom' | 'arbitrum';
+export type SUPPORTED_NETWORKS_MOCK = 'mainnet' | 'fantom' | 'arbitrum';
 export type MAINNET_DEXES = 'uniswap' | 'zrx';
 export type FANTOM_DEXES = 'spookyswap' | 'zrx';
 export type ABITRUM_DEXES = 'arbiswap';
@@ -20,7 +20,7 @@ export type DexesNetworkMap = {
 export async function initDexesNetworkMap() {
 }
 
-export const dexesNerworkMap: DexesNetworkMap = {
+export const dexesNerworkMapMock: DexesNetworkMap = {
   fantom: {
     spookyswap: zrxLibrary,
     zrx: zrxLibrary,

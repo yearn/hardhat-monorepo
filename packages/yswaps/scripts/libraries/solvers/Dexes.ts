@@ -8,7 +8,7 @@ import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
-import { dexesNerworkMap, TEST_SUPPORTED } from '../utils/dexes-libraries';
+import { dexesNerworkMapMock, SUPPORTED_NETWORKS_MOCK } from '../utils/dexes-libraries-mock';
 
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trade }: { strategy: string; trade: SimpleEnabledTrade }): Promise<boolean> {
@@ -41,8 +41,8 @@ export default class Dexes implements Solver {
     console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
 
-    const network = process.env.HARDHAT_DEPLOY_FORK as TEST_SUPPORTED;
-    const dexes = dexesNerworkMap[network];
+    const network = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS_MOCK;
+    const dexes = dexesNerworkMapMock[network];
 
     let bestDexResponse: DexLibrarySwapResponse | undefined;
 
