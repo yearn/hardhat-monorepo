@@ -59,9 +59,32 @@ export default class Dexes implements Solver {
       }
     }
 
+    if (!bestDexResponse) throw new Error('No valid response from dexes');
+
+    const { amountOut, dex, path, swapperData, unsignedSwapTx } =  bestDexResponse; // DexLibraryResponse
+
+    const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
+
+    console.log('[Dexes] Calculated min amount', utils.formatEther(amountOut), outSymbol);
+    const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
+      {
+        _strategy: strategy,
+        _tokenIn: tokenInAddress,
+        _tokenOut: tokenOutAddress,
+        _amount: amount,
+        _minAmountOut: minAmountOut,
+      },
+      swapperAddress,
+      swapperData
+    );
+
+    if (zrxMinAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
+
+    return executeTx;
 
 
-    return await tradeFactory.populateTransaction.ETH_ADDRESS();
+
+    // return await tradeFactory.populateTransaction.ETH_ADDRESS();
 
     // console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
     // console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
