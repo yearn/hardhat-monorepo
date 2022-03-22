@@ -15,9 +15,10 @@ contract TendKeep3rV2Job is Keep3rV2PublicJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
-    Keep3rV2PublicJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown)
+    Keep3rV2PublicJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown, _baseFeeOracle)
   // solhint-disable-next-line no-empty-blocks
   {
 

@@ -21,9 +21,10 @@ abstract contract Keep3rV2StealthJob is Keep3rV2Job, OnlyStealthRelayer, IV2Keep
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
-    Keep3rV2Job(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown)
+    Keep3rV2Job(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown,  _baseFeeOracle)
     OnlyStealthRelayer(_stealthRelayer)
   // solhint-disable-next-line no-empty-blocks
   {

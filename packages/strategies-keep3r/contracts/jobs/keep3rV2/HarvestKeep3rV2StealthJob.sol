@@ -16,7 +16,8 @@ contract HarvestKeep3rV2StealthJob is Keep3rV2StealthJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
     Keep3rV2StealthJob(
       _mechanicsRegistry,
@@ -29,7 +30,8 @@ contract HarvestKeep3rV2StealthJob is Keep3rV2StealthJob {
       _age,
       _onlyEOA,
       _v2Keeper,
-      _workCooldown
+      _workCooldown,
+      _baseFeeOracle
     )
   // solhint-disable-next-line no-empty-blocks
   {

@@ -110,7 +110,8 @@ describe('HarvestKeep3rV2StealthJob', () => {
         0, // uint256 _age,
         true, // bool _onlyEOA,
         v2Keeper.address, // address _v2Keeper
-        6 * 60 * 60 // uint256 _workCooldown // 6 hours
+        6 * 60 * 60, // uint256 _workCooldown // 6 hours
+        contracts.baseFeeOracle.mainnet //baseFeeOracle
       )
     ).connect(owner);
 
