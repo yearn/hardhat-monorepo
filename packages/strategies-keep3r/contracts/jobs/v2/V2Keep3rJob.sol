@@ -58,7 +58,7 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
   }
 
   // Keep3r Setters
-  function setKeep3r(address _keep3r) external override onlyGovernor {
+  function setKeep3r(address _keep3r) external onlyGovernor {
     _setKeep3r(_keep3r);
   }
 
@@ -85,7 +85,7 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
     uint256 _earned,
     uint256 _age,
     bool _onlyEOA
-  ) external override onlyGovernor {
+  ) external onlyGovernor {
     _setKeep3rRequirements(_bond, _minBond, _earned, _age, _onlyEOA);
   }
 

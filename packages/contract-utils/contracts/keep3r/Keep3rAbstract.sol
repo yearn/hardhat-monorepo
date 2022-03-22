@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4 <0.9.0;
 
+import './Keep3rBase.sol';
 import '../interfaces/keep3r/IKeep3rV1.sol';
 import '../interfaces/keep3r/IKeep3r.sol';
 
-abstract contract Keep3r is IKeep3r {
+abstract contract Keep3r is Keep3rBase {
   IKeep3rV1 internal _Keep3r;
-  address public override bond;
-  uint256 public override minBond;
-  uint256 public override earned;
-  uint256 public override age;
-  bool public override onlyEOA;
 
   constructor(address _keep3r) {
     _setKeep3r(_keep3r);
   }
 
   // Setters
-  function _setKeep3r(address _keep3r) internal {
+  function _setKeep3r(address _keep3r) internal override {
     _Keep3r = IKeep3rV1(_keep3r);
     emit Keep3rSet(_keep3r);
   }
@@ -28,7 +24,7 @@ abstract contract Keep3r is IKeep3r {
     uint256 _earned,
     uint256 _age,
     bool _onlyEOA
-  ) internal {
+  ) internal override {
     bond = _bond;
     minBond = _minBond;
     earned = _earned;
@@ -37,26 +33,13 @@ abstract contract Keep3r is IKeep3r {
     emit Keep3rRequirementsSet(_bond, _minBond, _earned, _age, _onlyEOA);
   }
 
-  // Modifiers
-  // Only checks if caller is a valid keeper, payment should be handled manually
-  modifier onlyKeeper(address _keeper) {
-    _isKeeper(_keeper);
-    _;
-  }
-
   // view
   function keep3r() external view override returns (address _keep3r) {
     return address(_Keep3r);
   }
 
-  // handles default payment after execution
-  modifier paysKeeper(address _keeper) {
-    _;
-    _paysKeeper(_keeper);
-  }
-
   // Internal helpers
-  function _isKeeper(address _keeper) internal {
+  function _isKeeper(address _keeper) internal override {
     if (onlyEOA) require(_keeper == tx.origin, 'keep3r::isKeeper:keeper-is-not-eoa');
     if (minBond == 0 && earned == 0 && age == 0) {
       // If no custom keeper requirements are set, just evaluate if sender is a registered keeper
@@ -72,22 +55,22 @@ abstract contract Keep3r is IKeep3r {
     }
   }
 
-  function _getQuoteLimitFor(address _for, uint256 _initialGas) internal view returns (uint256 _credits) {
+  function _getQuoteLimitFor(address _for, uint256 _initialGas) internal view override returns (uint256 _credits) {
     return _Keep3r.KPRH().getQuoteLimitFor(_for, _initialGas - gasleft());
   }
 
   // pays in bonded KP3R after execution
-  function _paysKeeper(address _keeper) internal {
+  function _paysKeeper(address _keeper) internal override {
     _Keep3r.worked(_keeper);
   }
 
   // pays _amount in KP3R after execution
-  function _paysKeeperInTokens(address _keeper, uint256 _amount) internal {
+  function _paysKeeperInTokens(address _keeper, uint256 _amount) internal override {
     _Keep3r.receipt(address(_Keep3r), _keeper, _amount);
   }
 
   // pays _amount in bonded KP3R after execution
-  function _paysKeeperAmount(address _keeper, uint256 _amount) internal {
+  function _paysKeeperAmount(address _keeper, uint256 _amount) internal override {
     _Keep3r.workReceipt(_keeper, _amount);
   }
 
@@ -96,12 +79,12 @@ abstract contract Keep3r is IKeep3r {
     address _credit,
     address _keeper,
     uint256 _amount
-  ) internal {
+  ) internal override {
     _Keep3r.receipt(_credit, _keeper, _amount);
   }
 
   // pays _amount in ETH after execution
-  function _paysKeeperEth(address _keeper, uint256 _amount) internal {
+  function _paysKeeperEth(address _keeper, uint256 _amount) internal override {
     _Keep3r.receiptETH(_keeper, _amount);
   }
 }

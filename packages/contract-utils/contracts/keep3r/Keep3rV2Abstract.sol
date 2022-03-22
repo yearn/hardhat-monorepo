@@ -1,28 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4 <0.9.0;
 
+import './Keep3rBase.sol';
 import '../interfaces/keep3rV2/IKeep3rHelper.sol';
 import '../interfaces/keep3rV2/IKeep3r.sol';
 
-abstract contract Keep3r {
+abstract contract Keep3rV2 is Keep3rBase {
   IKeep3r internal _Keep3r;
-  address public bond;
-  uint256 public minBond;
-  uint256 public earned;
-  uint256 public age;
-  bool public onlyEOA;
   address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
-  event Keep3rSet(address _keep3r);
-
-  event Keep3rRequirementsSet(address _bond, uint256 _minBond, uint256 _earned, uint256 _age, bool _onlyEOA);
 
   constructor(address _keep3r) {
     _setKeep3r(_keep3r);
   }
 
   // Setters
-  function _setKeep3r(address _keep3r) internal {
+  function _setKeep3r(address _keep3r) internal override {
     _Keep3r = IKeep3r(_keep3r);
     emit Keep3rSet(_keep3r);
   }
@@ -33,7 +25,7 @@ abstract contract Keep3r {
     uint256 _earned,
     uint256 _age,
     bool _onlyEOA
-  ) internal {
+  ) internal override {
     bond = _bond;
     minBond = _minBond;
     earned = _earned;
@@ -42,26 +34,13 @@ abstract contract Keep3r {
     emit Keep3rRequirementsSet(_bond, _minBond, _earned, _age, _onlyEOA);
   }
 
-  // Modifiers
-  // Only checks if caller is a valid keeper, payment should be handled manually
-  modifier onlyKeeper(address _keeper) {
-    _isKeeper(_keeper);
-    _;
-  }
-
   // view
-  function keep3r() external view returns (address _keep3r) {
+  function keep3r() external view override returns (address _keep3r) {
     return address(_Keep3r);
   }
 
-  // handles default payment after execution
-  modifier paysKeeper(address _keeper) {
-    _;
-    _paysKeeper(_keeper);
-  }
-
   // Internal helpers
-  function _isKeeper(address _keeper) internal {
+  function _isKeeper(address _keeper) internal override {
     if (onlyEOA) require(_keeper == tx.origin, 'keep3r::isKeeper:keeper-is-not-eoa');
     if (minBond == 0 && earned == 0 && age == 0) {
       // If no custom keeper requirements are set, just evaluate if sender is a registered keeper
@@ -78,22 +57,36 @@ abstract contract Keep3r {
     }
   }
 
-  function _getQuoteLimitFor(address _for, uint256 _initialGas) internal view returns (uint256 _credits) {
+  function _getQuoteLimitFor(address _for, uint256 _initialGas) internal view override returns (uint256 _credits) {
     return IKeep3rHelper(_Keep3r.keep3rHelper()).getRewardAmountFor(_for, _initialGas - gasleft());
   }
 
   // pays in bonded KP3R after execution
-  function _paysKeeper(address _keeper) internal {
+  function _paysKeeper(address _keeper) internal override {
     _Keep3r.worked(_keeper);
   }
 
+  // pays _amount in KP3R after execution
+  function _paysKeeperInTokens(address _keeper, uint256 _amount) internal override {
+    revert("not implemented");
+  }
+
   // pays _amount in bonded KP3R after execution
-  function _paysKeeperAmount(address _keeper, uint256 _amount) internal {
+  function _paysKeeperAmount(address _keeper, uint256 _amount) internal override {
     _Keep3r.bondedPayment(_keeper, _amount);
   }
 
+  // pays _amount in _credit after execution
+  function _paysKeeperCredit(
+    address _credit,
+    address _keeper,
+    uint256 _amount
+  ) internal override {
+    revert("not implemented");
+  }
+
   // pays _amount in ETH after execution
-  function _paysKeeperEth(address _keeper, uint256 _amount) internal {
+  function _paysKeeperEth(address _keeper, uint256 _amount) internal override {
     _Keep3r.directTokenPayment(WETH, _keeper, _amount);
   }
 }

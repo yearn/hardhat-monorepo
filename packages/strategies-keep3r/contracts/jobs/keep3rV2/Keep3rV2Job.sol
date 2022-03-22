@@ -14,7 +14,7 @@ import '../../interfaces/yearn/IBaseStrategy.sol';
 import '../../interfaces/oracle/IYOracle.sol';
 import '../../interfaces/keep3r/IChainLinkFeed.sol';
 
-abstract contract Keep3rV2Job is MachineryReady, Keep3r, IV2Keep3rJob {
+abstract contract Keep3rV2Job is MachineryReady, Keep3rV2, IV2Keep3rJob {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   address public override fastGasOracle = 0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C;
@@ -49,7 +49,7 @@ abstract contract Keep3rV2Job is MachineryReady, Keep3r, IV2Keep3rJob {
     bool _onlyEOA,
     address _v2Keeper,
     uint256 _workCooldown
-  ) MachineryReady(_mechanicsRegistry) Keep3r(_keep3r) {
+  ) MachineryReady(_mechanicsRegistry) Keep3rV2(_keep3r) {
     _setYOracle(_yOracle);
     _setKeep3rRequirements(_bond, _minBond, _earned, _age, _onlyEOA);
     v2Keeper = _v2Keeper;
