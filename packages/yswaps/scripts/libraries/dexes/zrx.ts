@@ -76,6 +76,7 @@ export class ZrxLibrary extends BaseDexLibrary implements DexLibrary {
         dex: 'zrx',
         unsignedSwapTx: await tokenInContract.populateTransaction.decimals(), // MOCKED
         swapperData: quoteResponse.data,
+        swapperAddress: '',
         amountOut: BigNumber.from(quoteResponse.buyAmount),
         path: [tokenIn, tokenOut],
       };

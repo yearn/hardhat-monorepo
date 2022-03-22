@@ -89,6 +89,7 @@ export class OneInchLibrary extends BaseDexLibrary implements DexLibrary {
         dex: 'zrx',
         unsignedSwapTx: await tokenInContract.populateTransaction.decimals(), // MOCKED
         swapperData: swapResponse.tx.data,
+        swapperAddress: '',
         amountOut: BigNumber.from(swapResponse.minAmountOut),
         path: [tokenIn, tokenOut],
       };

@@ -47,6 +47,7 @@ export class UniswapLibrary extends BaseDexLibrary implements DexLibrary {
       dex: 'uniswap',
       unsignedSwapTx: await this._router.populateTransaction.factory(), // MOCKED
       swapperData: ethers.utils.defaultAbiCoder.encode(['address[]'], [maxPath]),
+      swapperAddress: '',
       amountOut: maxOut,
       path: maxPath,
     };
