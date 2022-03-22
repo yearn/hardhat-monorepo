@@ -30,7 +30,12 @@ export default class Dexes implements Solver {
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
 
-    const [inSymbol, outSymbol, amount, inDecimals] = await Promise.all([tokenIn.symbol(), tokenOut.symbol(), (await tokenIn.balanceOf(strategy)).sub(1), tokenIn.decimals()]);
+    const [inSymbol, outSymbol, amount, inDecimals] = await Promise.all([
+      tokenIn.symbol(),
+      tokenOut.symbol(),
+      (await tokenIn.balanceOf(strategy)).sub(1),
+      tokenIn.decimals(),
+    ]);
 
     console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
