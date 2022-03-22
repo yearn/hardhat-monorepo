@@ -73,6 +73,7 @@ async function main() {
         const executeTx = await solver.solve({
           strategy,
           trade: tradeConfig.enabledTrade,
+          metadata: tradeConfig.metadata,
           tradeFactory,
         });
 

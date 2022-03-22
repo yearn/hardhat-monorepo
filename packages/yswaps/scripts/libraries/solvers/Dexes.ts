@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { DexLibrarySwapResponse, SimpleEnabledTrade, Solver } from '../types';
+import { DexLibrarySwapResponse, SimpleEnabledTrade, Solver, Solvers } from '../types';
 import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
@@ -7,6 +7,9 @@ import * as wallet from '@test-utils/wallet';
 import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
 import { dexesNerworkMapMock, SUPPORTED_NETWORKS_MOCK } from '../utils/dexes-libraries-mock';
 
+export type DexesSolverMetadata = {
+  hopTokens: string[];
+};
 export default class Dexes implements Solver {
   async shouldExecuteTrade({ strategy, trade }: { strategy: string; trade: SimpleEnabledTrade }): Promise<boolean> {
     return shouldExecuteTrade({ strategy, trade });
@@ -15,10 +18,12 @@ export default class Dexes implements Solver {
   async solve({
     strategy,
     trade,
+    metadata,
     tradeFactory,
   }: {
     strategy: string;
     trade: SimpleEnabledTrade;
+    metadata: DexesSolverMetadata;
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trade;
@@ -49,6 +54,7 @@ export default class Dexes implements Solver {
         strategy,
         tokenIn: tokenInAddress,
         tokenOut: tokenOutAddress,
+        hops: metadata.hopTokens,
       });
 
       if (!bestDexResponse || response.amountOut.gt(bestDexResponse.amountOut)) {

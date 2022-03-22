@@ -3,6 +3,8 @@ import { TradeFactory } from '@typechained';
 import { MainnetSolvers } from '../configs/mainnet';
 import { FantomSolvers } from '@scripts/configs/fantom';
 import { Network as EthersNetwork } from '@ethersproject/networks';
+import { DexesSolverMetadata } from './solvers/Dexes';
+import { MultiDexesSolverMetadata } from './solvers/MulticallDexes';
 
 export type DexLibrarySwapProps = {
   tokenIn: string;
@@ -45,10 +47,12 @@ export abstract class Solver {
   abstract solve({
     strategy,
     trade,
+    metadata,
     tradeFactory,
   }: {
     strategy: string;
     trade: SimpleEnabledTrade;
+    metadata: SolversMetadataMap[keyof SolversMetadataMap];
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction>;
 
@@ -71,17 +75,7 @@ export type SolversNetworksMap = {
 };
 
 export type Network = keyof SolversNetworksMap;
-type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
-
-// TODO: move to solver
-type DexesSolverMetadata = {
-  hopTokens: string[];
-};
-
-// TODO: move to solver
-type MultiDexesSolverMetadata = {
-  hopTokens: string[];
-};
+export type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
 
 // TODO: enforce that only accepts valid dexes keys from Solvers type
 type SolversMetadataMap = {
