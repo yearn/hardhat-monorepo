@@ -25,8 +25,7 @@ export default class Dexes implements Solver {
     tradeFactory: TradeFactory;
   }): Promise<PopulatedTransaction> {
     const { tokenIn: tokenInAddress, tokenOut: tokenOutAddress } = trade;
-    const [zrxSwapper, tokenIn, tokenOut] = await Promise.all([
-      ethers.getContract('ZRX'),
+    const [tokenIn, tokenOut] = await Promise.all([
       IERC20Metadata__factory.connect(tokenInAddress, tradeFactory.signer),
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
@@ -61,8 +60,10 @@ export default class Dexes implements Solver {
 
     if (!bestDexResponse) throw new Error('No valid response from dexes');
 
-    const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } =  bestDexResponse; // DexLibraryResponse
+    const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } =  bestDexResponse;
+    console.log(`[Dexes] Best calculate amount out`, utils.formatEther(amountOut), outSymbol, ` from dex: ${dex} using path ${path}`);
 
+    // should we calculate minAmountOut? should slippage be a parameter on trade config?
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
 
     console.log('[Dexes] Calculated min amount', utils.formatEther(amountOut), outSymbol);
@@ -81,39 +82,5 @@ export default class Dexes implements Solver {
     if (amountOut.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
 
     return executeTx;
-
-
-
-    // return await tradeFactory.populateTransaction.ETH_ADDRESS();
-
-    // console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
-    // console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
-    // const network: SUPPORTED_NETWORKS = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS;
-    // const { data: zrxData, minAmountOut: zrxMinAmountOut } = await zrx.quote({
-    //   chainId: NETWORK_NAME_IDS[network],
-    //   sellToken: tokenInAddress,
-    //   buyToken: tokenOutAddress,
-    //   sellAmount: amount,
-    //   slippagePercentage: 1 / 100,
-    //   skipValidation: true,
-    //   takerAddress: strategy,
-    // });
-
-    // console.log('[Dexes] Calculated min amount', utils.formatEther(zrxMinAmountOut!), outSymbol);
-    // const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
-    //   {
-    //     _strategy: strategy,
-    //     _tokenIn: tokenInAddress,
-    //     _tokenOut: tokenOutAddress,
-    //     _amount: amount,
-    //     _minAmountOut: zrxMinAmountOut!,
-    //   },
-    //   zrxSwapper.address,
-    //   zrxData
-    // );
-
-    // if (zrxMinAmountOut!.eq(0)) throw new Error(`No ${outSymbol} tokens were received`);
-
-    // return executeTx;
   }
 }
