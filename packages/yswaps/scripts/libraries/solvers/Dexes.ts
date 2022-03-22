@@ -58,8 +58,13 @@ export default class Dexes implements Solver {
 
     if (!bestDexResponse) throw new Error('No valid response from dexes');
 
-    const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } =  bestDexResponse;
-    console.log(`[Dexes] Best calculate amount out`, utils.formatUnits(amountOut, outDecimals), outSymbol, ` from dex: ${dex} using path ${path}`);
+    const { amountOut, dex, path, swapperData, unsignedSwapTx, swapperAddress } = bestDexResponse;
+    console.log(
+      `[Dexes] Best calculate amount out`,
+      utils.formatUnits(amountOut, outDecimals),
+      outSymbol,
+      ` from dex: ${dex} using path ${path}`
+    );
 
     // should we calculate minAmountOut? should slippage be a parameter on trade config?
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
