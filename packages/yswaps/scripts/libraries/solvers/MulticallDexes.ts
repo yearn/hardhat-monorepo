@@ -48,7 +48,8 @@ export default class MulticallDexes implements Solver {
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
 
     const network = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS_MOCK;
-    const dexes = Object.values(dexesNerworkMapMock[network]);
+    const dexesMap = dexesNerworkMapMock[network];
+    const dexes = Object.values(dexesMap);
     const dexesBestResults: DexLibrarySwapResponse[] = []; // index will represent the path order.
 
     // pair in: tokenIn + hopToken
@@ -92,12 +93,12 @@ export default class MulticallDexes implements Solver {
     const firstSwapResponse = dexesBestResults[0];
     const lastSwapResponse = dexesBestResults[1];
 
-
     const amountOut = lastSwapResponse.amountOut;
-
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
-
     const data = mergeTransactions(dexesBestResults.map((result => result.unsignedSwapTx)));
+
+    const multicallSwapper = await ethers.getContract('MultiCallOptimizedSwapper');
+    const swapper = multicallSwapper; // this could also be a single swapper if paths are merged.
 
     console.log('[Dexes] Calculated min amount', utils.formatUnits(amountOut, outDecimals), outSymbol);
 
@@ -110,7 +111,7 @@ export default class MulticallDexes implements Solver {
         _amount: amount,
         _minAmountOut: minAmountOut,
       },
-      multicallSwapperAddress,
+      swapper.address,
       data
     );
 
