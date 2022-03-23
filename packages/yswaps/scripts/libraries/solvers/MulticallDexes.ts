@@ -87,8 +87,8 @@ export default class MulticallDexes implements Solver {
       };
     };
 
-    // check if both paths uses same dex.
-    // If so, merge them into one.
+    // TODO: check if both paths uses same dex.
+    // If so, merge them into one. And use correct swapper on exec
 
     const firstSwapResponse = dexesBestResults[0];
     const lastSwapResponse = dexesBestResults[1];
@@ -102,7 +102,6 @@ export default class MulticallDexes implements Solver {
 
     console.log('[Dexes] Calculated min amount', utils.formatUnits(amountOut, outDecimals), outSymbol);
 
-    // we need to use the helper function used on CrvYfiEth to compare tx and use execute(detail) or execute(detail[])
     const executeTx = await tradeFactory.populateTransaction['execute((address,address,address,uint256,uint256),address,bytes)'](
       {
         _strategy: strategy,
