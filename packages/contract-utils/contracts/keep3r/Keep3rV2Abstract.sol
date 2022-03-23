@@ -2,8 +2,8 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import './Keep3rBase.sol';
-import '../interfaces/keep3rV2/IKeep3rHelper.sol';
-import '../interfaces/keep3rV2/IKeep3r.sol';
+import 'keep3r-v2/solidity/interfaces/IKeep3rHelper.sol';
+import 'keep3r-v2/solidity/interfaces/IKeep3r.sol';
 
 abstract contract Keep3rV2 is Keep3rBase {
   IKeep3r internal _Keep3r;
