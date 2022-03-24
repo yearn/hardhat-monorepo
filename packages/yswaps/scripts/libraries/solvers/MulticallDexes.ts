@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { DexLibrarySwapResponse, SimpleEnabledTrade, Solver, Solvers } from '../types';
 import { shouldExecuteTrade } from '@scripts/libraries/utils/should-execute-trade';
 import { IERC20Metadata__factory, TradeFactory } from '@typechained';
-import { PopulatedTransaction, utils } from 'ethers';
+import { BigNumber, PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
 import { dexesNerworkMapMock, FANTOM_DEXES, MAINNET_DEXES, SUPPORTED_NETWORKS_MOCK } from '../utils/dexes-libraries-mock';
@@ -92,14 +92,28 @@ export default class MulticallDexes implements Solver {
     const lastSwapResponse = dexesBestResults[1];
 
     // TODO: check if both paths uses same dex.
-    // If so, merge them into one. And use correct swapper on exec
+    let uniqueSwapResponse: DexLibrarySwapResponse | undefined;
+    if (firstSwapResponse.dex === lastSwapResponse.dex) {
+      // NOTE first draft, could change.
+      // const dex = dexesMap[firstSwapResponse.dex];
+      // uniqueSwapResponse = await dex.swap({
+      //     tokenIn: tokenInAddress,
+      //     tokenOut: tokenOutAddress,
+      //     amountIn: amount,
+      //     strategy,
+      //   });
+    }
 
-    const amountOut = lastSwapResponse.amountOut;
+    const amountOut = uniqueSwapResponse ? uniqueSwapResponse.amountOut: lastSwapResponse.amountOut;
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));
-    const data = mergeTransactions(dexesBestResults.map((result => result.unsignedSwapTx)));
+    const data = uniqueSwapResponse
+      ? mergeTransactions([uniqueSwapResponse.unsignedSwapTx]) // TODO check if theres a util for single tx
+      : mergeTransactions(dexesBestResults.map((result => result.unsignedSwapTx)));
 
     const multicallSwapper = await ethers.getContract('MultiCallOptimizedSwapper');
-    const swapper = multicallSwapper; // this could also be a single swapper if paths are merged.
+    const swapperAddress = uniqueSwapResponse
+      ? uniqueSwapResponse.swapperAddress
+      : multicallSwapper.address;
 
     console.log('[Dexes] Calculated min amount', utils.formatUnits(amountOut, outDecimals), outSymbol);
 
@@ -111,7 +125,7 @@ export default class MulticallDexes implements Solver {
         _amount: amount,
         _minAmountOut: minAmountOut,
       },
-      swapper.address,
+      swapperAddress,
       data
     );
 
