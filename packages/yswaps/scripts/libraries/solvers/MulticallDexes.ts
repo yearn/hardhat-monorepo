@@ -5,7 +5,7 @@ import { IERC20Metadata__factory, TradeFactory } from '@typechained';
 import { PopulatedTransaction, utils } from 'ethers';
 import * as wallet from '@test-utils/wallet';
 import { NETWORK_NAME_IDS, SUPPORTED_NETWORKS } from '../../../../commons/utils/network';
-import { dexesNerworkMapMock, SUPPORTED_NETWORKS_MOCK } from '../utils/dexes-libraries-mock';
+import { dexesNerworkMapMock, FANTOM_DEXES, MAINNET_DEXES, SUPPORTED_NETWORKS_MOCK } from '../utils/dexes-libraries-mock';
 import { mergeTransactions } from '../utils/multicall';
 
 export type MultiDexesSolverMetadata = {
@@ -87,11 +87,12 @@ export default class MulticallDexes implements Solver {
       };
     };
 
-    // TODO: check if both paths uses same dex.
-    // If so, merge them into one. And use correct swapper on exec
 
     const firstSwapResponse = dexesBestResults[0];
     const lastSwapResponse = dexesBestResults[1];
+
+    // TODO: check if both paths uses same dex.
+    // If so, merge them into one. And use correct swapper on exec
 
     const amountOut = lastSwapResponse.amountOut;
     const minAmountOut = amountOut.sub(amountOut.mul(3).div(100));

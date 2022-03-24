@@ -8,12 +8,11 @@ export type SUPPORTED_NETWORKS_MOCK = 'mainnet' | 'fantom';
 export type MAINNET_DEXES = 'uniswap' | 'zrx';
 export type FANTOM_DEXES = 'spookyswap' | 'zrx';
 
-export type DexesNetworkMap = {
-  mainnet: { [dexes in MAINNET_DEXES]: DexLibrary };
-  fantom: { [dexes in FANTOM_DEXES]: DexLibrary };
-};
+export interface DexesNetworkMap {
+  mainnet: Record<MAINNET_DEXES, DexLibrary>,
+  fantom: Record<FANTOM_DEXES, DexLibrary>,
+}
 
-export async function initDexesNetworkMap() {}
 
 export const dexesNerworkMapMock: DexesNetworkMap = {
   fantom: {
