@@ -36,13 +36,15 @@ export default class MulticallDexes implements Solver {
       IERC20Metadata__factory.connect(tokenOutAddress, tradeFactory.signer),
     ]);
 
-    const [inSymbol, outSymbol, amount, inDecimals, outDecimals] = await Promise.all([
+    const [inSymbol, outSymbol, balance, inDecimals, outDecimals] = await Promise.all([
       tokenIn.symbol(),
       tokenOut.symbol(),
-      (await tokenIn.balanceOf(strategy)).sub(1),
+      tokenIn.balanceOf(strategy),
       tokenIn.decimals(),
       tokenOut.decimals(),
     ]);
+
+    const amount = balance.sub(1);
 
     console.log('[Dexes] Total balance is', utils.formatUnits(amount, inDecimals), inSymbol);
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
