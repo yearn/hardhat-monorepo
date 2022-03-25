@@ -80,10 +80,7 @@ export type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
 // TODO: enforce that only accepts valid dexes keys from Solvers type
 type SolversMetadataMap = {
   Dexes: DexesSolverMetadata;
-  BooSexSeller: MultiDexesSolverMetadata;
-  BooSolidSeller: MultiDexesSolverMetadata;
-  CurveSpellEth: MultiDexesSolverMetadata;
-  CurveYfiEth: MultiDexesSolverMetadata;
+  MulticallDexes: MultiDexesSolverMetadata;
   SolidlySolver: MultiDexesSolverMetadata;
   ThreePoolCrv: MultiDexesSolverMetadata;
 };

@@ -1,11 +1,10 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
+import MulticallDexes from '../libraries/solvers/MulticallDexes';
 import SolidlySolver from '@scripts/libraries/solvers/SolidlySolver';
-import { BooSexSeller } from '@scripts/libraries/solvers/multicall/BooSexSeller';
-import { BooSolidSeller } from '@scripts/libraries/solvers/multicall/BooSolidSeller';
 import { utils } from 'ethers';
 
-export type FantomSolvers = 'BooSexSeller' | 'BooSolidSeller' | 'SolidlySolver' | 'Dexes';
+export type FantomSolvers = 'SolidlySolver' | 'Dexes' | 'MulticallDexes';
 
 const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   '0x768F43717899FD0f1B45Ea7f23b66e191348073E': {
@@ -18,7 +17,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           tokenOut: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE', // BOO
           threshold: utils.parseUnits('250', 18),
         },
-        solver: 'BooSolidSeller',
+        solver: 'MulticallDexes',
         // solver: 'SolidlySolver',
         metadata: { hopTokens: [] },
       },
@@ -28,7 +27,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           tokenOut: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE', // BOO
           threshold: utils.parseUnits('250', 18),
         },
-        solver: 'BooSexSeller',
+        solver: 'MulticallDexes',
         metadata: { hopTokens: [] },
       },
     ],
@@ -86,9 +85,8 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
 
 const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
   return {
-    BooSexSeller: new BooSexSeller(),
-    BooSolidSeller: new BooSolidSeller(),
     Dexes: new Dexes(),
+    MulticallDexes: new MulticallDexes(),
     SolidlySolver: new SolidlySolver(),
   };
 };

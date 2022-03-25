@@ -1,11 +1,10 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
-import { CurveSpellEth } from '@scripts/libraries/solvers/multicall/CurveSpellEth';
-import { CurveYfiEth } from '@scripts/libraries/solvers/multicall/CurveYfiEth';
+import MulticallDexes from '@scripts/libraries/solvers/Dexes';
 import { ThreePoolCrv } from '@scripts/libraries/solvers/multicall/ThreePoolCrv';
 import { utils } from 'ethers';
 
-export type MainnetSolvers = 'CurveSpellEth' | 'CurveYfiEth' | 'ThreePoolCrv' | 'Dexes';
+export type MainnetSolvers = 'ThreePoolCrv' | 'Dexes' | 'MulticallDexes';
 
 const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   // '0x91C3424A608439FBf3A91B6d954aF0577C1B9B8A': {
@@ -33,7 +32,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //           tokenOut: '0x8282BD15dcA2EA2bDf24163E8f2781B30C43A2ef', // crvSpellEth
   //           threshold: utils.parseUnits('20000', 18),
   //         },
-  //       solver: 'CurveSpellEth',
+  //       solver: 'MulticallDexes',
   // metadata: { hopTokens: [] }
   //     },
   //     {
@@ -43,7 +42,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
   //           tokenOut: '0x8282BD15dcA2EA2bDf24163E8f2781B30C43A2ef', // crvSpellEth
   //           threshold: utils.parseUnits('2500', 18),
   //         },
-  //       solver: 'CurveSpellEth',
+  //       solver: 'MulticallDexes',
   // metadata: { hopTokens: [] }
   //     },
   //   ],
@@ -57,7 +56,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
           threshold: utils.parseUnits('20000', 18),
         },
-        solver: 'CurveYfiEth',
+        solver: 'MulticallDexes',
         metadata: { hopTokens: [] },
       },
       {
@@ -66,7 +65,7 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
           tokenOut: '0x29059568bB40344487d62f7450E78b8E6C74e0e5', // crvYfiEth
           threshold: utils.parseUnits('2500', 18),
         },
-        solver: 'CurveYfiEth',
+        solver: 'MulticallDexes',
         metadata: { hopTokens: [] },
       },
     ],
@@ -89,10 +88,9 @@ const mainnetConfig: StrategyConfiguration<'MAINNET'> = {
 
 const getMainnetSolversMap = async (): Promise<SolversMap<'MAINNET'>> => {
   return {
-    CurveSpellEth: new CurveSpellEth(),
-    CurveYfiEth: await CurveYfiEth.init(),
     ThreePoolCrv: new ThreePoolCrv(),
     Dexes: new Dexes(),
+    MulticallDexes: new MulticallDexes(),
   };
 };
 
