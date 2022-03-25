@@ -44,23 +44,24 @@ export default class Dexes implements Solver {
     console.log('[Dexes] Getting', inSymbol, '=>', outSymbol, 'trade information');
 
     const network = process.env.HARDHAT_DEPLOY_FORK as SUPPORTED_NETWORKS_MOCK;
-    const dexes = dexesNerworkMapMock[network];
+    const dexesMap = dexesNerworkMapMock[network];
+    const dexes = Object.values(dexesMap);
 
     let bestDexResponse: DexLibrarySwapResponse | undefined;
 
-    for (const dex of Object.values(dexes)) {
-      const response = await dex.swap({
-        amountIn: amount,
-        strategy,
-        tokenIn: tokenInAddress,
-        tokenOut: tokenOutAddress,
-        hops: metadata.hopTokens,
-      });
-
+    const dexesPromises = dexes.map((dex) => dex.swap({
+      amountIn: amount,
+      strategy,
+      tokenIn: tokenInAddress,
+      tokenOut: tokenOutAddress,
+      hops: metadata.hopTokens,
+    }));
+    const responses = await Promise.all(dexesPromises);
+    responses.forEach((response) => {
       if (!bestDexResponse || response.amountOut.gt(bestDexResponse.amountOut)) {
         bestDexResponse = response;
       }
-    }
+    });
 
     if (!bestDexResponse) throw new Error('No valid response from dexes');
 
