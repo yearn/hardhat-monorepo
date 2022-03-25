@@ -1,10 +1,9 @@
 import { SolversMap, StrategyConfiguration } from '@libraries/types';
 import Dexes from '@scripts/libraries/solvers/Dexes';
 import MulticallDexes from '../libraries/solvers/MulticallDexes';
-import SolidlySolver from '@scripts/libraries/solvers/SolidlySolver';
 import { utils } from 'ethers';
 
-export type FantomSolvers = 'SolidlySolver' | 'Dexes' | 'MulticallDexes';
+export type FantomSolvers = 'Dexes' | 'MulticallDexes';
 
 const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   '0x768F43717899FD0f1B45Ea7f23b66e191348073E': {
@@ -18,7 +17,6 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           threshold: utils.parseUnits('250', 18),
         },
         solver: 'MulticallDexes',
-        // solver: 'SolidlySolver',
         metadata: { hopTokens: [] },
       },
       {
@@ -41,7 +39,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           tokenOut: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
           threshold: utils.parseUnits('250', 18),
         },
-        solver: 'SolidlySolver',
+        solver: 'MulticallDexes',
         metadata: { hopTokens: [] },
       },
       {
@@ -50,7 +48,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
           tokenOut: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
           threshold: utils.parseUnits('250', 18),
         },
-        solver: 'SolidlySolver',
+        solver: 'MulticallDexes',
         metadata: { hopTokens: [] },
       },
     ],
@@ -67,7 +65,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   //           threshold: utils.parseUnits('250', 18),
   //         },
   //       ],
-  //       solver: 'SolidlySolver',
+  //       solver: 'MulticallDexes',
   //     },
   //     {
   //       enabledTrades: [
@@ -77,7 +75,7 @@ const fantomConfig: StrategyConfiguration<'FANTOM'> = {
   //           threshold: utils.parseUnits('250', 18),
   //         },
   //       ],
-  //       solver: 'SolidlySolver',
+  //       solver: 'MulticallDexes',
   //     },
   //   ],
   // },
@@ -87,7 +85,6 @@ const getFantomSolversMap = async (): Promise<SolversMap<'FANTOM'>> => {
   return {
     Dexes: new Dexes(),
     MulticallDexes: new MulticallDexes(),
-    SolidlySolver: new SolidlySolver(),
   };
 };
 

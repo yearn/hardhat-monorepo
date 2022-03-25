@@ -81,7 +81,6 @@ export type Solvers = SolversNetworksMap[keyof SolversNetworksMap];
 type SolversMetadataMap = {
   Dexes: DexesSolverMetadata;
   MulticallDexes: MultiDexesSolverMetadata;
-  SolidlySolver: MultiDexesSolverMetadata;
   ThreePoolCrv: MultiDexesSolverMetadata;
 };
 
