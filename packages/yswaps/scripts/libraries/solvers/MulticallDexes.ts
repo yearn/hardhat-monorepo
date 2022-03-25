@@ -52,41 +52,49 @@ export default class MulticallDexes implements Solver {
     const dexes = Object.values(dexesMap);
     const dexesBestResults: DexLibrarySwapResponse[] = []; // index will represent the path order.
 
-    // pair in: tokenIn + hopToken
-    for (const hopToken of hopTokens) {
-      for (const dex of dexes) {
-        const response = await dex.swap({
+    // PAIR-IN: tokenIn + hopToken
+    // For optimization we first create an array of all the promises for the first path requests.
+    const firstPathPromises = hopTokens.map((hopToken) => {
+      return dexes.map((dex) => {
+        return dex.swap({
           tokenIn: tokenInAddress,
           tokenOut: hopToken,
           amountIn: amount,
           strategy,
         });
+      })
+    }).flat();
 
-        const bestResponse = dexesBestResults[0];
-        if (!bestResponse || response.amountOut.gt(bestResponse.amountOut)) {
-          dexesBestResults[0] = response;
-        };
+    // we call all the promises at onces.
+    let firstBestResponse: DexLibrarySwapResponse;
+    const firstPathResponses = await Promise.all(firstPathPromises);
+    firstPathResponses.forEach((response) => {
+      if (!firstBestResponse || response.amountOut.gt(firstBestResponse.amountOut)) {
+        dexesBestResults[0] = response;
       };
-    };
+    });
 
-    // pair out: hopToken + tokenOut
-    for (const hopToken of hopTokens) {
-      const firstPathResponse = dexesBestResults[0];
-      for (const dex of dexes) {
-        const response = await dex.swap({
-          tokenIn: hopToken,
-          tokenOut: tokenOutAddress,
-          amountIn: firstPathResponse.amountOut,
+    // PAIR-OUT: hopToken + tokenOut
+    // For optimization we first create an array of all the promises for the last path requests.
+    const lastPathPromises = hopTokens.map((hopToken) => {
+      return dexes.map((dex) => {
+        return dex.swap({
+          tokenIn: tokenInAddress,
+          tokenOut: hopToken,
+          amountIn: amount,
           strategy,
         });
+      })
+    }).flat();
 
-        const bestResponse = dexesBestResults[1];
-        if (!bestResponse || response.amountOut.gt(bestResponse.amountOut)) {
-          dexesBestResults[1] = response;
-        };
+    // we call all the promises at onces.
+    let lastBestResponse: DexLibrarySwapResponse;
+    const lastPathResponses = await Promise.all(lastPathPromises);
+    lastPathResponses.forEach((response) => {
+      if (!lastBestResponse || response.amountOut.gt(lastBestResponse.amountOut)) {
+        dexesBestResults[0] = response;
       };
-    };
-
+    });
 
     const firstSwapResponse = dexesBestResults[0];
     const lastSwapResponse = dexesBestResults[1];
