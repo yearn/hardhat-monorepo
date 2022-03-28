@@ -6,8 +6,8 @@ import { Network as EthersNetwork } from '@ethersproject/networks';
 import { DexesSolverMetadata } from './solvers/Dexes';
 import { MultiDexesSolverMetadata } from './solvers/MulticallDexes';
 
-type DexName = string;
-type Address = string;
+export type DexName = string;
+export type Address = string;
 
 export type DexLibrarySwapProps = {
   tokenIn: Address;
