@@ -246,6 +246,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: [], //only yswaps
     want: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69',
   },
+  {
+    name: 'fBeets autocompounder',
+    added: true,
+    address: '0x5Df3E97e96FC04ae1F75A9D07A141348E4B07E45',
+    tokensBeingDumped: [], //only yswaps
+    want: '0xfcef8a994209d6916eb2c86cdd2afd60aa6f54b1',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];
