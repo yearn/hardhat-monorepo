@@ -3,7 +3,7 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import '@yearn/contract-utils/contracts/abstract/MachineryReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/MachineryReady.sol';
 
 import '../../interfaces/jobs/detached/IV2DetachedGaslessJob.sol';
 

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.4;
 
-import '@yearn/contract-utils/contracts/utils/CollectableDust.sol';
-import '@yearn/contract-utils/contracts/utils/Governable.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/utils/CollectableDust.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/utils/Governable.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
 import './interfaces/IStealthRelayer.sol';

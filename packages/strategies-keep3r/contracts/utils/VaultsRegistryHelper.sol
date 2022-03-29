@@ -3,7 +3,7 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/Address.sol';
-import '@yearn/contract-utils/contracts/abstract/UtilsReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/UtilsReady.sol';
 import '../interfaces/yearn/IV2Registry.sol';
 import '../interfaces/yearn/IV2Vault.sol';
 

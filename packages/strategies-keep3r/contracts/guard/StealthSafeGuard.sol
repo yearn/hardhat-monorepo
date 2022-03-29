@@ -2,8 +2,8 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import '@yearn/contract-utils/contracts/abstract/UtilsReady.sol';
-import '@yearn/contract-utils/contracts/utils/Manageable.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/UtilsReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/utils/Manageable.sol';
 import '@lbertenasco/bonded-stealth-tx/contracts/utils/OnlyStealthRelayer.sol';
 
 import '../interfaces/gnosis/IGnosisSafe.sol';

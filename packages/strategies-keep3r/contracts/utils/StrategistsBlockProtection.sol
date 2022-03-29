@@ -3,7 +3,7 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/Address.sol';
-import '@yearn/contract-utils/contracts/abstract/MachineryReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/MachineryReady.sol';
 
 interface IBlockProtection {
   error InvalidBlock();

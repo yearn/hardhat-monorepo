@@ -12,7 +12,7 @@ const genericV2Keep3rJobContracts = config.contracts.mainnet.genericV2Keep3rJob;
 
 const lowerCaseArray = (array: string[]) => array.map((address: string) => address.toLowerCase());
 
-describe('HarvestV2QueueKeep3rJob', () => {
+describe.skip('HarvestV2QueueKeep3rJob', () => {
   let owner: SignerWithAddress;
 
   before('Setup accounts and contracts', async () => {
