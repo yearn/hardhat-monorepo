@@ -78,6 +78,8 @@
     ]
   },
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "compile": "lerna run compile --stream",
+    "test": "lerna run test --stream"
   }
 }

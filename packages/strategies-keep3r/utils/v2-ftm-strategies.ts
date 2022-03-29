@@ -233,11 +233,25 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
   },
   {
-    name: 'Wftm Anyftm veLp Solidex',
+    name: 'Wftm Anyftm veLp Solidex to WFTM',
     added: true,
     address: '0xBa2251912D29Cb608953808dCBFAc6D0F7f580FF',
     tokensBeingDumped: [], //only yswaps
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'Wftm Anyftm veLp Solidex to YFI',
+    added: true,
+    address: '0x526f9FcD4db76878B62a450F1BD79cF38f036cc1',
+    tokensBeingDumped: [], //only yswaps
+    want: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69',
+  },
+  {
+    name: 'fBeets autocompounder',
+    added: true,
+    address: '0x5Df3E97e96FC04ae1F75A9D07A141348E4B07E45',
+    tokensBeingDumped: [], //only yswaps
+    want: '0xfcef8a994209d6916eb2c86cdd2afd60aa6f54b1',
   },
 ];
 
