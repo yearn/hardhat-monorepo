@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        package: ["yswaps", "strategies-keep3r", "stealth-txs", "contract-utils"]
+        package: ["strategies-keep3r", "stealth-txs"]
     steps:
       - name: Check out github repository
         id: github-checkout
