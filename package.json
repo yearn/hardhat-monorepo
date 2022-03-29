@@ -69,10 +69,8 @@
   },
   "dependencies": {
     "@yearn/commons": "file:packages/commons",
-    "@yearn/contract-utils": "file:packages/contract-utils",
     "@yearn/stealth-txs": "file:packages/stealth-txs",
-    "@yearn/strategies-keep3r": "file:packages/strategies-keep3r",
-    "@yearn/yswaps": "file:packages/yswaps"
+    "@yearn/strategies-keep3r": "file:packages/strategies-keep3r"
   },
   "commitlint": {
     "extends": [
