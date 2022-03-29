@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.4;
 
-import './V2Keep3rJob.sol';
+import './Keep3rV2Job.sol';
 
 import '@lbertenasco/bonded-stealth-tx/contracts/utils/OnlyStealthRelayer.sol';
 import '../../interfaces/jobs/v2/IV2Keep3rStealthJob.sol';
 
 import '../../interfaces/stealth/IStealthRelayer.sol';
 
-abstract contract V2Keep3rStealthJob is V2Keep3rJob, OnlyStealthRelayer, IV2Keep3rStealthJob {
+abstract contract Keep3rV2StealthJob is Keep3rV2Job, OnlyStealthRelayer, IV2Keep3rStealthJob {
   constructor(
     address _mechanicsRegistry,
     address _stealthRelayer,
@@ -21,9 +21,10 @@ abstract contract V2Keep3rStealthJob is V2Keep3rJob, OnlyStealthRelayer, IV2Keep
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
-    V2Keep3rJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown)
+    Keep3rV2Job(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown,  _baseFeeOracle)
     OnlyStealthRelayer(_stealthRelayer)
   // solhint-disable-next-line no-empty-blocks
   {

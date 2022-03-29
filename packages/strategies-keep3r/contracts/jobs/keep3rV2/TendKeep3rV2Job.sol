@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.4;
 
-import './V2Keep3rPublicJob.sol';
+import './Keep3rV2PublicJob.sol';
 
-contract TendV2Keep3rJob is V2Keep3rPublicJob {
+contract TendKeep3rV2Job is Keep3rV2PublicJob {
   constructor(
     address _mechanicsRegistry,
     address _yOracle,
@@ -15,9 +15,10 @@ contract TendV2Keep3rJob is V2Keep3rPublicJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
-    V2Keep3rPublicJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown)
+    Keep3rV2PublicJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown, _baseFeeOracle)
   // solhint-disable-next-line no-empty-blocks
   {
 

@@ -2,11 +2,9 @@
 
 pragma solidity ^0.8.4;
 
-import './V2Keep3rJob.sol';
+import './Keep3rV2Job.sol';
 
-import '../../interfaces/jobs/v2/IV2Keep3rPublicJob.sol';
-
-abstract contract V2Keep3rPublicJob is V2Keep3rJob, IV2Keep3rPublicJob {
+abstract contract Keep3rV2PublicJob is Keep3rV2Job {
   constructor(
     address _mechanicsRegistry,
     address _yOracle,
@@ -17,8 +15,9 @@ abstract contract V2Keep3rPublicJob is V2Keep3rJob, IV2Keep3rPublicJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
-  ) V2Keep3rJob(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown) {}
+    uint256 _workCooldown,
+    address _baseFeeOracle
+  ) Keep3rV2Job(_mechanicsRegistry, _yOracle, _keep3r, _bond, _minBond, _earned, _age, _onlyEOA, _v2Keeper, _workCooldown, _baseFeeOracle) {}
 
   // Mechanics keeper bypass
   function forceWork(address _strategy) external override onlyGovernorOrMechanic {

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.4;
 
-import './V2Keep3rStealthJob.sol';
+import './Keep3rV2StealthJob.sol';
 
-contract HarvestV2Keep3rStealthJob is V2Keep3rStealthJob {
+contract TendKeep3rV2StealthJob is Keep3rV2StealthJob {
   constructor(
     address _mechanicsRegistry,
     address _stealthRelayer,
@@ -16,9 +16,10 @@ contract HarvestV2Keep3rStealthJob is V2Keep3rStealthJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
+    uint256 _workCooldown,
+    address _baseFeeOracle
   )
-    V2Keep3rStealthJob(
+    Keep3rV2StealthJob(
       _mechanicsRegistry,
       _stealthRelayer,
       _yOracle,
@@ -29,7 +30,8 @@ contract HarvestV2Keep3rStealthJob is V2Keep3rStealthJob {
       _age,
       _onlyEOA,
       _v2Keeper,
-      _workCooldown
+      _workCooldown,
+      _baseFeeOracle
     )
   // solhint-disable-next-line no-empty-blocks
   {
@@ -42,12 +44,12 @@ contract HarvestV2Keep3rStealthJob is V2Keep3rStealthJob {
 
   function _workable(address _strategy) internal view override returns (bool) {
     if (!super._workable(_strategy)) return false;
-    return IBaseStrategy(_strategy).harvestTrigger(_getCallCosts(_strategy));
+    return IBaseStrategy(_strategy).tendTrigger(_getCallCosts(_strategy));
   }
 
   function _work(address _strategy) internal override {
     lastWorkAt[_strategy] = block.timestamp;
-    IV2Keeper(v2Keeper).harvest(_strategy);
+    IV2Keeper(v2Keeper).tend(_strategy);
   }
 
   // Keep3r actions

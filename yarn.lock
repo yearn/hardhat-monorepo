@@ -1904,7 +1904,7 @@
     "@opencensus/core" "^0.0.8"
     uuid "^3.2.1"
 
-"@openzeppelin/contracts@4.0.0", "@openzeppelin/contracts@4.1.0", "@openzeppelin/contracts@4.3.2":
+"@openzeppelin/contracts@4.0.0", "@openzeppelin/contracts@4.1.0", "@openzeppelin/contracts@4.3.0", "@openzeppelin/contracts@4.3.2":
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.3.2.tgz#ff80affd6d352dbe1bbc5b4e1833c41afd6283b6"
   integrity sha512-AybF1cesONZStg5kWf6ao9OlqTZuPqddvprc0ky7lrUVOjXeKpmQ2Y9FK+6ygxasb+4aic4O5pneFBfwVsRRRg==
@@ -2455,7 +2455,7 @@
   version "0.2.0"
   dependencies:
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v6/npm-@yearn-stealth-txs-0.2.0-8f92e0bc-11b1-41d5-98b9-91b7ec461549-1646679067790/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../.cache/yarn/v6/npm-@yearn-stealth-txs-0.2.0-a0adc832-165a-4890-b7c1-6c09e4589b9b-1648072360088/node_modules/@yearn/contract-utils"
 
 "@yearn/strategies-keep3r@file:packages/strategies-keep3r":
   version "0.2.0"
@@ -2463,7 +2463,7 @@
     "@gnosis.pm/safe-core-sdk" "0.3.1"
     "@gnosis.pm/safe-service-client" "0.1.1"
     "@openzeppelin/contracts" "4.3.2"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v6/npm-@yearn-strategies-keep3r-0.2.0-64dcc608-4c15-49c5-81cb-0a4e3ed0ff44-1646679067792/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../.cache/yarn/v6/npm-@yearn-strategies-keep3r-0.2.0-01451d00-590a-410e-804a-158785148f2c-1648072360092/node_modules/@yearn/contract-utils"
     deasync "0.1.23"
     inquirer "8.2.0"
     prompt-confirm "2.0.4"
@@ -2476,7 +2476,7 @@
     "@bancor/sdk" "0.2.10"
     "@openzeppelin/contracts" "4.3.2"
     "@uniswap/v2-periphery" "1.1.0-beta.0"
-    "@yearn/contract-utils" "file:../../../.cache/yarn/v6/npm-@yearn-yswaps-0.2.0-d074caa2-7393-414d-89be-8b55c1663478-1646679067846/node_modules/@yearn/contract-utils"
+    "@yearn/contract-utils" "file:../../.cache/yarn/v6/npm-@yearn-yswaps-0.2.0-f9bb2c74-c9ea-4d8f-984e-37ab0e680c66-1648072360199/node_modules/@yearn/contract-utils"
     qs "6.10.1"
 
 JSONStream@^1.0.4:
@@ -8983,6 +8983,13 @@ keccak@^3.0.0:
     node-addon-api "^2.0.0"
     node-gyp-build "^4.2.0"
     readable-stream "^3.6.0"
+
+keep3r-v2@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/keep3r-v2/-/keep3r-v2-1.0.0.tgz#14d084473e47c6d4ec56eeb20bcfcac460a43c37"
+  integrity sha512-m/CaOA3YGBmHZcTdUayPthS8lhkqM1VqS67SbvgI08wcfuStrQsAsdzMsvDFbFIabwAoKQpVE3813V6krDUSSw==
+  dependencies:
+    "@openzeppelin/contracts" "4.3.0"
 
 keyv@^3.0.0:
   version "3.1.0"

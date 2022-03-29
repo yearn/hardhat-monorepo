@@ -21,8 +21,6 @@ interface IV2Keep3rJob is IKeep3rJob {
   // Getters
   function v2Keeper() external view returns (address _v2Keeper);
 
-  function fastGasOracle() external view returns (address _fastGasOracle);
-
   function strategies() external view returns (address[] memory);
 
   function workable(address _strategy) external view returns (bool);
@@ -31,8 +29,6 @@ interface IV2Keep3rJob is IKeep3rJob {
   function setV2Keep3r(address _v2Keeper) external;
 
   function setYOracle(address _v2Keeper) external;
-
-  function setFastGasOracle(address _fastGasOracle) external;
 
   function setWorkCooldown(uint256 _workCooldown) external;
 

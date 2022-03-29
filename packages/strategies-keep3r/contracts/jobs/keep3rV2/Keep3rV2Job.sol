@@ -4,21 +4,20 @@ pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import '@yearn/contract-utils/contracts/abstract/MachineryReady.sol';
-import '@yearn/contract-utils/contracts/interfaces/keep3r/IKeep3rV1Helper.sol';
-import '@yearn/contract-utils/contracts/keep3r/Keep3rAbstract.sol';
+import '@yearn/contract-utils/contracts/keep3r/Keep3rV2Abstract.sol';
 
 import '../../interfaces/jobs/v2/IV2Keeper.sol';
 import '../../interfaces/jobs/v2/IV2Keep3rJob.sol';
 
 import '../../interfaces/yearn/IBaseStrategy.sol';
 import '../../interfaces/oracle/IYOracle.sol';
-import '../../interfaces/keep3r/IChainLinkFeed.sol';
 
-abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
+import '../../interfaces/utils/IBaseFee.sol';
+
+abstract contract Keep3rV2Job is MachineryReady, Keep3rV2, IV2Keep3rJob {
   using EnumerableSet for EnumerableSet.AddressSet;
 
-  address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-  address public override fastGasOracle = 0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C;
+  address public immutable baseFeeOracle;
 
   uint256 public constant PRECISION = 1_000;
   uint256 public constant MAX_REWARD_MULTIPLIER = 1 * PRECISION; // 1x max reward multiplier
@@ -49,8 +48,10 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
     uint256 _age,
     bool _onlyEOA,
     address _v2Keeper,
-    uint256 _workCooldown
-  ) MachineryReady(_mechanicsRegistry) Keep3r(_keep3r) {
+    uint256 _workCooldown,
+    address _baseFeeOracle
+  ) MachineryReady(_mechanicsRegistry) Keep3rV2(_keep3r) {
+    baseFeeOracle = _baseFeeOracle;
     _setYOracle(_yOracle);
     _setKeep3rRequirements(_bond, _minBond, _earned, _age, _onlyEOA);
     v2Keeper = _v2Keeper;
@@ -58,7 +59,7 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
   }
 
   // Keep3r Setters
-  function setKeep3r(address _keep3r) external override onlyGovernor {
+  function setKeep3r(address _keep3r) external onlyGovernor {
     _setKeep3r(_keep3r);
   }
 
@@ -74,18 +75,13 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
     yOracle = _yOracle;
   }
 
-  function setFastGasOracle(address _fastGasOracle) external override onlyGovernor {
-    require(_fastGasOracle != address(0), 'V2Keep3rJob::set-fas-gas-oracle:not-zero-address');
-    fastGasOracle = _fastGasOracle;
-  }
-
   function setKeep3rRequirements(
     address _bond,
     uint256 _minBond,
     uint256 _earned,
     uint256 _age,
     bool _onlyEOA
-  ) external override onlyGovernor {
+  ) external onlyGovernor {
     _setKeep3rRequirements(_bond, _minBond, _earned, _age, _onlyEOA);
   }
 
@@ -216,7 +212,7 @@ abstract contract V2Keep3rJob is MachineryReady, Keep3r, IV2Keep3rJob {
   // Get eth costs
   function _getCallCosts(address _strategy) internal view returns (uint256 _callCost) {
     if (requiredAmount[_strategy] == 0) return 0;
-    uint256 _ethCost = requiredAmount[_strategy] * uint256(IChainLinkFeed(fastGasOracle).latestAnswer());
+    uint256 _ethCost = requiredAmount[_strategy] * IBaseFee(baseFeeOracle).basefee_global();
     if (costToken[_strategy] == address(0)) return _ethCost;
     return IYOracle(yOracle).getAmountOut(costPair[_strategy], WETH, _ethCost, costToken[_strategy]);
   }

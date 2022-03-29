@@ -2,11 +2,12 @@
 pragma solidity >=0.8.4 <0.9.0;
 
 import './Keep3rBase.sol';
-import '../interfaces/keep3r/IKeep3rV1.sol';
-import '../interfaces/keep3r/IKeep3r.sol';
+import 'keep3r-v2/solidity/interfaces/IKeep3rHelper.sol';
+import 'keep3r-v2/solidity/interfaces/IKeep3r.sol';
 
-abstract contract Keep3r is Keep3rBase {
-  IKeep3rV1 internal _Keep3r;
+abstract contract Keep3rV2 is Keep3rBase {
+  IKeep3r internal _Keep3r;
+  address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
   constructor(address _keep3r) {
     _setKeep3r(_keep3r);
@@ -14,7 +15,7 @@ abstract contract Keep3r is Keep3rBase {
 
   // Setters
   function _setKeep3r(address _keep3r) internal override {
-    _Keep3r = IKeep3rV1(_keep3r);
+    _Keep3r = IKeep3r(_keep3r);
     emit Keep3rSet(_keep3r);
   }
 
@@ -47,7 +48,8 @@ abstract contract Keep3r is Keep3rBase {
     } else {
       if (bond == address(0)) {
         // Checks for min KP3R, earned and age.
-        require(_Keep3r.isMinKeeper(_keeper, minBond, earned, age), 'keep3r::isKeeper:keeper-not-min-requirements');
+        address kp3r = IKeep3rHelper(_Keep3r.keep3rHelper()).KP3R();
+        require(_Keep3r.isBondedKeeper(_keeper, kp3r, minBond, earned, age), 'keep3r::isKeeper:keeper-not-min-requirements');
       } else {
         // Checks for min custom-bond, earned and age.
         require(_Keep3r.isBondedKeeper(_keeper, bond, minBond, earned, age), 'keep3r::isKeeper:keeper-not-custom-min-requirements');
@@ -56,7 +58,7 @@ abstract contract Keep3r is Keep3rBase {
   }
 
   function _getQuoteLimitFor(address _for, uint256 _initialGas) internal view override returns (uint256 _credits) {
-    return _Keep3r.KPRH().getQuoteLimitFor(_for, _initialGas - gasleft());
+    return IKeep3rHelper(_Keep3r.keep3rHelper()).getRewardAmountFor(_for, _initialGas - gasleft());
   }
 
   // pays in bonded KP3R after execution
@@ -66,12 +68,12 @@ abstract contract Keep3r is Keep3rBase {
 
   // pays _amount in KP3R after execution
   function _paysKeeperInTokens(address _keeper, uint256 _amount) internal override {
-    _Keep3r.receipt(address(_Keep3r), _keeper, _amount);
+    revert("not implemented");
   }
 
   // pays _amount in bonded KP3R after execution
   function _paysKeeperAmount(address _keeper, uint256 _amount) internal override {
-    _Keep3r.workReceipt(_keeper, _amount);
+    _Keep3r.bondedPayment(_keeper, _amount);
   }
 
   // pays _amount in _credit after execution
@@ -80,11 +82,11 @@ abstract contract Keep3r is Keep3rBase {
     address _keeper,
     uint256 _amount
   ) internal override {
-    _Keep3r.receipt(_credit, _keeper, _amount);
+    revert("not implemented");
   }
 
   // pays _amount in ETH after execution
   function _paysKeeperEth(address _keeper, uint256 _amount) internal override {
-    _Keep3r.receiptETH(_keeper, _amount);
+    _Keep3r.directTokenPayment(WETH, _keeper, _amount);
   }
 }
