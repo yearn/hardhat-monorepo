@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import '@yearn/contract-utils/contracts/interfaces/abstract/IUtilsReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/interfaces/abstract/IUtilsReady.sol';
 
 interface IKeep3rEscrow is IUtilsReady {
   function returnLPsToGovernance() external;

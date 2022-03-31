@@ -3,9 +3,9 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import '@yearn/contract-utils/contracts/abstract/MachineryReady.sol';
-import '@yearn/contract-utils/contracts/interfaces/keep3r/IKeep3rV1Helper.sol';
-import '@yearn/contract-utils/contracts/keep3r/Keep3rAbstract.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/MachineryReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/interfaces/keep3r/IKeep3rV1Helper.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/keep3r/Keep3rAbstract.sol';
 import '@lbertenasco/bonded-stealth-tx/contracts/utils/OnlyStealthRelayer.sol';
 import '../../interfaces/jobs/v2/IV2Keeper.sol';
 import '../../interfaces/stealth/IStealthRelayer.sol';

@@ -1,11 +1,11 @@
 import {
   abi as MECHANICS_REGISTRY_ABI,
   bytecode as MECHANICS_REGISTRY_EVMCODE,
-} from '@yearn/contract-utils/artifacts/contracts/mechanics/MechanicsRegistry.sol/MechanicsRegistry.json';
+} from '@yearn-mechanics/contract-utils/artifacts/solidity/contracts/mechanics/MechanicsRegistry.sol/MechanicsRegistry.json';
 import {
   abi as MACHINERY_ABI,
   bytecode as MACHINERY_BYTECODE,
-} from '@yearn/contract-utils/artifacts/contracts/utils/Machinery.sol/Machinery.json';
+} from '@yearn-mechanics/contract-utils/artifacts/solidity/contracts/utils/Machinery.sol/Machinery.json';
 import { uniswap, wallet } from '@test-utils';
 import { deployContract } from 'ethereum-waffle';
 import { Contract, utils } from 'ethers';

@@ -12,7 +12,7 @@ const mechanicsContracts = config.contracts.mainnet.mechanics;
 
 const lowerCaseArray = (array: string[]) => array.map((address: string) => address.toLowerCase());
 
-describe('HarvestV2Keep3rStealthJob', () => {
+describe.skip('HarvestV2Keep3rStealthJob', () => {
   let owner: SignerWithAddress;
 
   before('Setup accounts and contracts', async () => {

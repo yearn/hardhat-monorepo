@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { FakeContract, MockContract, MockContractFactory, smock } from '@defi-wonderland/smock';
 import { Manageable, StealthSafeGuard, StealthSafeGuard__factory } from '@typechained';
 import { StealthRelayer } from '@yearn/stealth-txs/typechained';
-import ManageableArtifact from '@artifacts/@yearn/contract-utils/contracts/utils/Manageable.sol/Manageable.json';
+import ManageableArtifact from '@yearn-mechanics/contract-utils/artifacts/solidity/contracts/utils/Manageable.sol/Manageable.json';
 import StealthRelayerArtifact from '@yearn/stealth-txs/artifacts/contracts/StealthRelayer.sol/StealthRelayer.json';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';

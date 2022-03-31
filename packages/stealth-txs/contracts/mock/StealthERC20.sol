@@ -2,8 +2,8 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '@yearn/contract-utils/contracts/utils/Governable.sol';
-import '@yearn/contract-utils/contracts/utils/Manageable.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/utils/Governable.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/utils/Manageable.sol';
 import '../utils/OnlyStealthRelayer.sol';
 
 contract StealthERC20 is ERC20, Governable, Manageable, OnlyStealthRelayer {

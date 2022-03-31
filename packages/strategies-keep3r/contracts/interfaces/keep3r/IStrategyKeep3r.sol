@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
-import '@yearn/contract-utils/contracts/interfaces/keep3r/IKeep3r.sol';
+import '@yearn-mechanics/contract-utils/solidity/interfaces/keep3r/IKeep3r.sol';
 
 interface IStrategyKeep3r is IKeep3r {
   // Actions by Keeper

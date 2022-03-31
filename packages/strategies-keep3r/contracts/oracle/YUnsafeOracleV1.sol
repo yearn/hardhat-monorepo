@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.4;
 
-import '@yearn/contract-utils/contracts/abstract/UtilsReady.sol';
+import '@yearn-mechanics/contract-utils/solidity/contracts/abstract/UtilsReady.sol';
 
 import '../interfaces/oracle/IYOracle.sol';
 import '../interfaces/oracle/ISimpleOracle.sol';
