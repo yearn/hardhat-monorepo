@@ -253,6 +253,34 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: [], //only yswaps
     want: '0xfcef8a994209d6916eb2c86cdd2afd60aa6f54b1',
   },
+  {
+    name: 'Strategy_ProviderOfUSDTToHedgilSpookyJoint_wftm_usdt',
+    added: false,
+    address: '0xc7a336925674EFeef22cEB56364e3658B8a0D467',
+    tokensBeingDumped: [],
+    want: '0x049d68029688eAbF473097a2fC38ef61633A3C7A',
+  },
+  {
+    name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_usdt',
+    added: false,
+    address: '0x4183e99e7C3874F85d195698AFb7ee1289DA0AFe',
+    tokensBeingDumped: [],
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'Strategy_ProviderOfDAIToHedgilSpookyJoint_wftm_dai',
+    added: false,
+    address: '0x84f9E6d5D28Edf0AE873A4d84903716684f473D5',
+    tokensBeingDumped: [],
+    want: '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E',
+  },
+  {
+    name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_dai',
+    added: false,
+    address: '0x60fa432fc8494FE0b7A7654295e178F6F2f22405',
+    tokensBeingDumped: [],
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  }
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];
