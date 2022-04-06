@@ -280,6 +280,20 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     address: '0x60fa432fc8494FE0b7A7654295e178F6F2f22405',
     tokensBeingDumped: [],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'Strategy_ProviderOfMIMToHedgilSpookyJoint_wftm_mim',
+    added: false,
+    address: '0xD58003b2Bac011b67C108b24e5deb1B22c70Fd1f',
+    tokensBeingDumped: [],
+    want: '0x82f0B8B456c1A451378467398982d4834b6829c1',
+  },
+  {
+    name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_mim',
+    added: false,
+    address: '0x15faeCDDAD6f3073954b29761b94b0b28321586f',
+    tokensBeingDumped: [],
+    want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   }
 ];
 
