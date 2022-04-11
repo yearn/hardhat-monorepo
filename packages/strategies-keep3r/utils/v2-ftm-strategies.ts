@@ -287,6 +287,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     address: '0x15faeCDDAD6f3073954b29761b94b0b28321586f',
     tokensBeingDumped: [],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+  },
+  {
+    name: 'yfi_woofy Oxdai',
+    added: true,
+    address: '0xb99d6662127d9A3c68Bc949679f364E1739E2CA1',
+    tokensBeingDumped: [],
+    want: '0x29b0Da86e484E1C0029B56e817912d778aC0EC69',
   }
 ];
 
