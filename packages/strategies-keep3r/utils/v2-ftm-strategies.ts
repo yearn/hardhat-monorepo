@@ -289,7 +289,7 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
   {
-    name: 'yfi_woofy Oxdai',
+    name: 'yfi_woofy_veLp_Oxdao',
     added: true,
     address: '0xb99d6662127d9A3c68Bc949679f364E1739E2CA1',
     tokensBeingDumped: [],
