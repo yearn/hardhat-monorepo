@@ -297,32 +297,32 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
   {
     name: 'Strategy_ProviderOfBTCToHedgilSpookyJoint_wftm_btc',
-    added: false,
+    added: true,
     address: '0x7114cAD096731F4d0B8E0De6e7CeDc189A462dce',
     tokensBeingDumped: [],
     want: '0x321162Cd933E2Be498Cd2267a90534A804051b11',
   },
   {
     name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_btc',
-    added: false,
+    added: true,
     address: '0x4bd6976358e419Ce96103c70B776C273A9f4a8AD',
     tokensBeingDumped: [],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
   {
     name: 'Strategy_ProviderOfETHToHedgilSpookyJoint_wftm_eth',
-    added: false,
+    added: true,
     address: '0xA4F10BC80F6c5cf6A34F828cb53c243eB1976Da8',
     tokensBeingDumped: [],
     want: '0x74b23882a30290451A17c44f4F05243b6b58C76d',
   },
   {
     name: 'Strategy_ProviderOfWFTMToHedgilSpookyJoint_wftm_eth',
-    added: false,
+    added: true,
     address: '0x61D5ed97b899347c1F286a9a67622d337D0e61fE',
     tokensBeingDumped: [],
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
-  }
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];
