@@ -19,4 +19,6 @@ interface IV2Keeper {
   function tend(address _strategy) external;
 
   function harvest(address _strategy) external;
+
+  function execute(address _strategy, bytes calldata _callData) external returns (bool success, bytes memory result);
 }

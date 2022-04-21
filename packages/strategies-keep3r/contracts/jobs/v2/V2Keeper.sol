@@ -54,6 +54,10 @@ contract V2Keeper is MachineryReady, IV2Keeper {
     IBaseStrategy(_strategy).harvest();
   }
 
+  function execute(address _strategy, bytes calldata _callData) external override onlyValidJob returns (bool _success, bytes memory _result) {
+    (_success, _result) = _strategy.call(_callData);
+  }
+
   modifier onlyValidJob() {
     require(_validJobs.contains(msg.sender), 'V2Keeper::onlyValidJob:msg-sender-not-valid-job');
     _;
