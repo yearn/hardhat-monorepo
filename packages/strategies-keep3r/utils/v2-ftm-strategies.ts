@@ -330,6 +330,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     tokensBeingDumped: [],
     want: '0x2dd7C9371965472E5A5fD28fbE165007c61439E1',
   },
+  {
+    name: 'Strategy_StrategyLenderYieldOptimiserBoo_luna_sd_beftm',
+    added: true,
+    address: '0x4CE40A36A018457F8E0AA7C4a12Cc7ebf228B20F',
+    tokensBeingDumped: [],
+    want: '0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE',
+  },
 ];
 
 export const tendConfigurations: StrategyConfiguration[] = [];
