@@ -324,6 +324,13 @@ export const harvestConfigurations: HarvestConfiguration[] = [
     want: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
   },
   {
+    name: 'StrategyCurveStakerSpell',
+    added: false,
+    address: '0x26F698491Daf32771217ABc1356dae48c7230C75',
+    tokensBeingDumped: [],
+    want: '0x2dd7C9371965472E5A5fD28fbE165007c61439E1',
+  },
+  {
     name: 'Strategy_StrategyLenderYieldOptimiserBoo_luna_sd_beftm',
     added: true,
     address: '0x4CE40A36A018457F8E0AA7C4a12Cc7ebf228B20F',
