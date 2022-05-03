@@ -325,7 +325,7 @@ export const harvestConfigurations: HarvestConfiguration[] = [
   },
   {
     name: 'StrategyCurveStakerSpell',
-    added: false,
+    added: true,
     address: '0x26F698491Daf32771217ABc1356dae48c7230C75',
     tokensBeingDumped: [],
     want: '0x2dd7C9371965472E5A5fD28fbE165007c61439E1',
