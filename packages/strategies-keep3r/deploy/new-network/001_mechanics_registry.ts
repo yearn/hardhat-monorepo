@@ -19,7 +19,6 @@ const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnviro
     console.log('MechanicsRegistry already deployed at:', contracts.mechanicsRegistry[chainName]);
     return;
   }
-
   const deploy = await hre.deployments.deploy('MechanicsRegistry', {
     contract: 'MechanicsRegistry',
     from: deployer,

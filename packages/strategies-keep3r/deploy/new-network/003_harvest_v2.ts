@@ -4,14 +4,16 @@ import { getChainId, shouldVerifyContract } from '@utils/deploy';
 import { BigNumber, BigNumberish, utils } from 'ethers/lib/ethers';
 import * as contracts from '../../utils/contracts';
 import moment from 'moment';
-import { SUPPORTED_NETWORKS_IDS, NETWORK_ID_NAMES } from '@utils/network';
+import { SUPPORTED_NETWORKS_IDS, NETWORK_ID_NAMES, NETWORK_NAME_IDS } from '@utils/network';
 
 export const WORK_COOLDOWN: { [chainId: string]: BigNumberish } = {
-  '250': moment.duration('30', 'minutes').as('seconds'),
+  [NETWORK_NAME_IDS.fantom]: moment.duration('30', 'minutes').as('seconds'),
+  [NETWORK_NAME_IDS.arbitrumOne]: moment.duration('30', 'minutes').as('seconds'),
 };
 
 export const CALL_COST: { [chainId: string]: BigNumber } = {
-  '250': utils.parseEther('0.5'),
+  [NETWORK_NAME_IDS.fantom]: utils.parseEther('0.5'),
+  [NETWORK_NAME_IDS.arbitrumOne]: utils.parseEther('0.5'),
 };
 
 const deployFunction: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

@@ -6,6 +6,7 @@ export type ContractChainAddress = {
 
 export const weth: ContractChainAddress = {
   fantom: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  arbitrumOne: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
 };
 
 export const stealthVault: ContractChainAddress = {
@@ -39,12 +40,14 @@ export const mechanicsRegistry: ContractChainAddress = {
   mainnet: '0xE8d5A85758FE98F7Dce251CAd552691D49b499Bb',
   polygon: '0x7A99923aA2efa71178BB11294349EC1F6b23a814',
   fantom: '0x7f462B92F92114A2D57A03e5Ae2DB5DA28b77d73',
+  arbitrumOne: '0xe72d641f09a48cce6997377d13b2Ac7029c642b2',
 };
 
 export const v2Keeper: ContractChainAddress = {
   mainnet: '0x736D7e3c5a6CB2CE3B764300140ABF476F6CFCCF',
   polygon: '',
   fantom: '0xe72d641f09a48cce6997377d13b2Ac7029c642b2',
+  arbitrumOne: '0x292fd0E1De7648bA08691dBDe97313Cdcdc161cb',
 };
 
 export const curveClaimableTokensHelper: ContractChainAddress = {
@@ -108,6 +111,7 @@ export const tendV2DetachedJob: ContractChainAddress = {
 export const harvestV2DetachedJob: ContractChainAddress = {
   mainnet: '',
   fantom: '0x39cAcdb557CA1C4a6555E00203B4a00B1c1a94f8',
+  arbitrumOne: '0xC190B246e9fe7026240e464bf28c0ba645CD81c3',
 };
 
 export const yMechanicsDefaultOwner: ContractChainAddress = {
